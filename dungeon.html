@@ -3,8 +3,7 @@
 <head>
     <title>地牢（测试版）</title>
     <style>
-        .container { max-width: 600px; margin: 20px auto; padding: 20px; }
-        .input-group { margin: 10px 0; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
         input { width: 20px; padding: 8px; margin: 5px 0; }
         button { 
             padding: 8px 16px; 
@@ -28,7 +27,13 @@
             color: white;
         }
         #result { margin-top: 20px; white-space: pre-wrap; }
-        .error { color: red; margin-top: 5px; }
+        .attribute { display: flex; align-items: center; margin: 10px 0; }
+        .attribute label { width: 80px; }
+        .controls { display: flex; align-items: center; gap: 8px; }
+        .btn-control { padding: 4px 12px; }
+        .stat-value { min-width: 30px; text-align: center; }
+        .start-button { margin-top: 20px; padding: 10px 20px; }
+        .error { color: red; margin-top: 10px; } 
     </style>
 </head>
 <body>
@@ -67,25 +72,53 @@
     </div>
 
     <script>
-        let power = 1
-        let health = 1
-        let speed = 1
-        let charm = 1
-        let intelligent = 1
-        let perception = 1
-        function powersub() {
-            if (!power) {
-            let power = 1
-            }
-            if (power != 1) {
-            power -= 1
-            document.getElementById('power').textContent = stringify(power);
-            }
-        }
-        function poweradd() {
-            if (power != 10) {
-            power += 1}
-        }
+let points = 10; // 初始点数
+
+function adjustStat(statId, delta) {
+    const valueElem = document.getElementById(statId);
+    let currentValue = parseInt(valueElem.textContent);
+    
+    // 验证点数是否充足
+    if (delta > 0 && points <= 0) {
+        showError("点数不足！");
+        return;
+    }
+    
+    // 更新数值
+    currentValue += delta;
+    points -= delta;
+    
+    // 更新显示
+    valueElem.textContent = currentValue;
+    document.getElementById('point').textContent = `剩余点数：${points}`;
+    
+    // 禁用/启用按钮（可选）
+    updateButtonStates();
+}
+
+function showError(message) {
+    const errorElem = document.getElementById('error');
+    errorElem.textContent = message;
+    setTimeout(() => errorElem.textContent = '', 3000);
+}
+
+const attributes = ['力量', '健康', '速度', '魅力', '智力', '感知'];
+const container = document.querySelector('.attribute-list');
+
+attributes.forEach(attr => {
+    const id = attr.toLowerCase();
+    const html = `
+        <div class="attribute">
+            <label>${attr}</label>
+            <div class="controls">
+                <button type="button" class="btn-control" onclick="adjustStat('${id}', -1)">-</button>
+                <span id="${id}" class="stat-value">1</span>
+                <button type="button" class="btn-control" onclick="adjustStat('${id}', 1)">+</button>
+            </div>
+        </div>
+    `;
+    container.insertAdjacentHTML('beforeend', html);
+});
         function start() {
             // 清空错误提示和隐藏复制按钮
             document.getElementById('error').textContent = '';
