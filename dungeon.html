@@ -21,6 +21,9 @@
             color: white;
         }
         #buttoncontrol {
+            background: #9BD0E5;
+            color: white;
+        #buttonsubcontrol {
             background: #008CBA;
             color: white;
         }
@@ -32,16 +35,13 @@
     <div class="container">
         <h2>地牢（测试版）</h2>
         <div id=point></div>
-        <div class="input-group">
-            力量 <button type="buttoncontrol" onclick="powersub()">-</button><div id=power></div><button type="buttoncontrol" onclick="poweradd()">+</button>
-            健康<input type="number" id="health" placeholder="" required>
-            速度<input type="number" id="speed" placeholder="" required>
-            魅力<input type="number" id="charm" placeholder="" required>
-            智力<input type="number" id="intelligent" placeholder="" required>
-            感知<input type="number" id="perception" placeholder="" required>
-        </div>
-        <div>
-        </div>
+        <div>力量 <button type="buttoncontrol" onclick="powersub()">-</button><p id=power>1</p><button type="buttoncontrol" onclick="poweradd()">+</button></div>
+        <div>健康 <button type="buttoncontrol" onclick="healthsub()">-</button><p id=health>1</p><button type="buttoncontrol" onclick="healthadd()">+</button></div>
+        <div>速度 <button type="buttoncontrol" onclick="speedsub()">-</button><p id=speed>1</p><button type="buttoncontrol" onclick="speedadd()">+</button></div>
+        <div>魅力 <button type="buttoncontrol" onclick="charmsub()">-</button><p id=charm>1</p><button type="buttoncontrol" onclick="charmadd()">+</button></div>
+        <div>智力 <button type="buttoncontrol" onclick="intelligentsub()">-</button><p id=intelligent>1</p><button type="buttoncontrol" onclick="intelligentadd()">+</button></div>
+        <div>感知 <button type="buttoncontrol" onclick="perceptionsub()">-</button><p id=perception>1</p><button type="buttoncontrol" onclick="perceptionadd()">+</button></div>
+        <div></div>
         <button onclick="start()">开始游戏</button>
         <div id="error" class="error"></div>
         <div id="result"></div>
@@ -55,8 +55,13 @@
         let intelligent = 1
         let perception = 1
         function powersub() {
+            if (!power) {
+            let power = 1
+            }
             if (power != 1) {
-            power -= 1}
+            power -= 1
+            document.getElementById('power').textContent = stringify(power);
+            }
         }
         function poweradd() {
             if (power != 10) {
