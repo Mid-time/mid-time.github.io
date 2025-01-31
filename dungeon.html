@@ -54,6 +54,14 @@
         let charm = 1
         let intelligent = 1
         let perception = 1
+        function powersub() {
+            if (power != 1) {
+            power -= 1}
+        }
+        function poweradd() {
+            if (power != 10) {
+            power += 1}
+        }
         function start() {
             // 清空错误提示和隐藏复制按钮
             document.getElementById('error').textContent = '';
