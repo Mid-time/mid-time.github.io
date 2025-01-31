@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>随机数生成器</title>
+    <title>地牢（测试版）</title>
     <style>
         .container { max-width: 600px; margin: 20px auto; padding: 20px; }
         .input-group { margin: 10px 0; }
-        input { width: 120px; padding: 8px; margin: 5px 0; }
+        input { width: 20px; padding: 8px; margin: 5px 0; }
         button { 
             padding: 8px 16px; 
             background: #4CAF50; 
@@ -15,30 +15,29 @@
             margin: 5px;
         }
         #result { margin-top: 20px; white-space: pre-wrap; }
-        #copyBtn { background: #008CBA; display: none; }
         .error { color: red; margin-top: 5px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>随机数生成器</h2>
+        <h2>地牢（测试版）</h2>
         <div class="input-group">
-            <input type="number" id="min" placeholder="最小值（默认1）">
-            <input type="number" id="max" placeholder="最大值（必填）" required>
-            <input type="number" id="count" placeholder="生成数量（默认1）">
+            力量<input type="number" id="power" placeholder="" required>
+            健康<input type="number" id="health" placeholder="" required>
+            速度<input type="number" id="speed" placeholder="" required>
+            魅力<input type="number" id="charm" placeholder="" required>
+            智力<input type="number" id="intelligent" placeholder="" required>
+            感知<input type="number" id="perception" placeholder="" required>
         </div>
-        <button onclick="generate()">生成随机数</button>
-        <button id="copyBtn" onclick="copyResult()">复制结果</button>
+        <button onclick="start()">开始游戏</button>
         <div id="error" class="error"></div>
         <div id="result"></div>
     </div>
 
     <script>
-        function generate() {
+        function start() {
             // 清空错误提示和隐藏复制按钮
             document.getElementById('error').textContent = '';
-            document.getElementById('copyBtn').style.display = 'none';
-            document.getElementById('result').textContent = '';
 
             // 获取原始输入值
             const minInput = document.getElementById('min').value;
