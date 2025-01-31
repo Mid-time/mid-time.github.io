@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>地牢（测试版）</title>
+    <style>
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+        .attribute {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            gap: 10px;
+        }
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        button {
+            padding: 5px 12px;
+            cursor: pointer;
+            background: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button:hover {
+            background: #e0e0e0;
+        }
+        .stat-value {
+            min-width: 30px;
+            text-align: center;
+            font-weight: bold;
+        }
+        #point {
+            margin: 15px 0;
+            color: #666;
+        }
+        #error {
+            color: red;
+            margin: 10px 0;
+            min-height: 20px;
+        }
+        .start-button {
+            margin-top: 20px;
+            padding: 10px 25px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>地牢（测试版）</h2>
+        <div id="point">剩余点数：20</div>
+        <div id="attributes"></div>
+        <button class="start-button" onclick="startGame()">开始游戏</button>
+        <div id="error" role="alert"></div>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        // 初始配置
+        let points = 20; // 总点数
+        const minStatValue = 1; // 属性最小值
+        const attributes = ['力量', '健康', '速度', '魅力', '智力', '感知'];
+        const stats = {}; // 存储当前属性值
+
+        // 初始化属性列表
+        function initAttributes() {
+            const container = document.getElementById('attributes');
+            
+            attributes.forEach(attr => {
+                const id = attr.toLowerCase();
+                stats[id] = minStatValue; // 初始化属性值
+                
+                const html = `
+                    <div class="attribute">
+                        <span>${attr}</span>
+                        <div class="controls">
+                            <button onclick="adjustStat('${id}', -1)">-</button>
+                            <span id="${id}" class="stat-value">${minStatValue}</span>
+                            <button onclick="adjustStat('${id}', 1)">+</button>
+                        </div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', html);
+            });
+        }
+
+        // 调整属性值
+        function adjustStat(statId, delta) {
+            const valueElem = document.getElementById(statId);
+            let currentValue = parseInt(valueElem.textContent);
+            const newValue = currentValue + delta;
+
+            // 验证规则
+            if (delta > 0 && points <= 0) {
+                showError('点数不足！');
+                return;
+            }
+            if (newValue < minStatValue) {
+                showError('属性值不能低于 ' + minStatValue);
+                return;
+            }
+
+            // 更新数值和点数
+            currentValue = newValue;
+            points -= delta;
+            
+            valueElem.textContent = currentValue;
+            document.getElementById('point').textContent = `剩余点数：${points}`;
+            stats[statId] = currentValue;
+            
+            clearError();
+        }
+
+        // 开始游戏
+        function startGame() {
+            if (points > 0) {
+                showError('请先分配所有点数！');
+                return;
+            }
+            
+            const result = [];
+            for (const [key, value] of Object.entries(stats)) {
+                result.push(`${key}: ${value}`);
+            }
+            document.getElementById('result').textContent = 
+                `角色创建成功！属性：${result.join(', ')}`;
+        }
+
+        // 辅助函数
+        function showError(message) {
+            const errorElem = document.getElementById('error');
+            errorElem.textContent = message;
+            setTimeout(clearError, 2000);
+        }
+
+        function clearError() {
+            document.getElementById('error').textContent = '';
+        }
+
+        // 页面初始化
+        initAttributes();
+    </script>
+</body>
+</html>
