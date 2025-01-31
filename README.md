@@ -1,5 +1,5 @@
 # 这是主站
 ## 功能
-- [clicktest](https://mid-time.github.io/clicktest)
-- [dicetest](https://mid-time.github.io/dicetest)
+- [随机数生成器](https://mid-time.github.io/dice)
 ## 介绍
+- 欢迎加入QQ群 960719226
