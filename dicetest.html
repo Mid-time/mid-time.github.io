@@ -1,2 +1,50 @@
-<title>dicetest</title>
-<body>正文</body>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>随机数生成器</title>
+    <style>
+        .container { max-width: 600px; margin: 20px auto; padding: 20px; }
+        input { width: 200px; padding: 8px; }
+        button { padding: 8px 16px; background: #4CAF50; color: white; border: none; cursor: pointer; }
+        #result { margin-top: 20px; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>随机数生成器</h2>
+        <p>输入格式：最小值 最大值 生成数量（空格分隔）</p>
+        <input type="text" id="input" placeholder="例如：10 20 5">
+        <button onclick="generate()">生成随机数</button>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        function generate() {
+            // 获取输入并分割成数组
+            const input = document.getElementById('input').value.trim();
+            let a = input.split(/\s+/);
+            
+            // 输入验证
+            if (a.length < 3) {
+                alert("请输入至少三个数字！");
+                return;
+            }
+
+            // 补足长度并转换为数字
+            a = a.concat([0, 0]).slice(0, 3).map(Number);
+            
+            // 生成随机数
+            let output = "";
+            for (let i = 0; i < a[2]; i++) {
+                const min = Math.ceil(a[0]);
+                const max = Math.floor(a[1]);
+                const d = Math.floor(Math.random() * (max - min + 1)) + min;
+                output += d + " ";
+            }
+
+            // 显示结果
+            document.getElementById('result').textContent = output;
+        }
+    </script>
+</body>
+</html>
