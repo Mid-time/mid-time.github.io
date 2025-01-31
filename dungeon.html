@@ -79,7 +79,7 @@
             // 生成随机数
             let output = "";
             for (let i = 0; i < count; i++) {
-                const d = Math.floor(Math.random() * (max - min + 1)) + min;
+                const d = randint(min, max)
                 output += d + " ";
             }
 
@@ -98,6 +98,10 @@
         function showError(message) {
             document.getElementById('error').textContent = message;
         }
+
+        function randint(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
     </script>
 </body>
 </html>
