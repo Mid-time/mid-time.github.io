@@ -21,7 +21,7 @@
             color: white;
         }
         #buttoncontrol {
-            background: #2196F3;
+            background: #008CBA;
             color: white;
         }
         #result { margin-top: 20px; white-space: pre-wrap; }
@@ -32,12 +32,14 @@
     <div class="container">
         <h2>地牢（测试版）</h2>
         <div class="input-group">
-            力量<button type="button" id="power" placeholder="" required>
+            力量 <button type="buttoncontrol" onclick="if (power!=0) {power -= 1}"><div id=power></div>
             健康<input type="number" id="health" placeholder="" required>
             速度<input type="number" id="speed" placeholder="" required>
             魅力<input type="number" id="charm" placeholder="" required>
             智力<input type="number" id="intelligent" placeholder="" required>
             感知<input type="number" id="perception" placeholder="" required>
+        </div>
+        <div>
         </div>
         <button onclick="start()">开始游戏</button>
         <div id="error" class="error"></div>
