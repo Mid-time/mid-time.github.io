@@ -123,61 +123,6 @@ attributes.forEach(attr => {
             // 清空错误提示和隐藏复制按钮
             document.getElementById('error').textContent = '';
 
-            // 获取原始输入值
-            const minInput = document.getElementById('min').value;
-            const maxInput = document.getElementById('max').value;
-            const countInput = document.getElementById('count').value;
-
-            // 处理默认值并验证整数
-            let min = minInput === '' ? 1 : minInput;
-            let max = maxInput;
-            let count = countInput === '' ? 1 : countInput;
-
-            // 验证所有值为整数
-            const isInteger = (value) => /^-?\d+$/.test(value);
-            if (!isInteger(min) || !isInteger(max) || !isInteger(count)) {
-                showError("所有值必须为整数！");
-                return;
-            }
-
-            // 转换为数字
-            min = parseInt(min);
-            max = parseInt(max);
-            count = parseInt(count);
-
-            // 验证逻辑
-            if (!maxInput) {
-                showError("最大值必须填写！");
-                return;
-            }
-            if (max <= min) {
-                showError("最大值必须大于最小值！");
-                return;
-            }
-            if (count < 1) {
-                showError("生成数量必须至少为1！");
-                return;
-            }
-
-            // 生成随机数
-            let output = "";
-            for (let i = 0; i < count; i++) {
-                const d = randint(min, max)
-                output += d + " ";
-            }
-
-            // 显示结果和复制按钮
-            document.getElementById('result').textContent = output;
-            document.getElementById('copyBtn').style.display = 'inline-block';
-        }
-
-        function copyResult() {
-            const result = document.getElementById('result').textContent;
-            navigator.clipboard.writeText(result)
-                .then(() => alert("结果已复制！"))
-                .catch(err => alert("复制失败，请手动复制"));
-        }
-
         function showError(message) {
             document.getElementById('error').textContent = message;
         }
