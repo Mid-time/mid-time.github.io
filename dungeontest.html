@@ -67,6 +67,7 @@
         // 初始配置
         let points = 20; // 总点数
         const minStatValue = 1; // 属性最小值
+        const maxStatValue = 10; // 属性最大值
         const attributes = ['力量', '健康', '速度', '魅力', '智力', '感知'];
         const stats = {}; // 存储当前属性值
 
@@ -107,7 +108,10 @@
                 showError('属性值不能低于 ' + minStatValue);
                 return;
             }
-
+            if (newValue > maxStatValue) {
+                showError('属性值不能高于 ' + maxStatValue);
+                return;
+            }
             // 更新数值和点数
             currentValue = newValue;
             points -= delta;
