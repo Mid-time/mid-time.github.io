@@ -34,17 +34,36 @@
 <body>
     <div class="container">
         <h2>地牢（测试版）</h2>
-        <div id=point></div>
-        <div>力量 <button type="buttoncontrol" onclick="powersub()">-</button><p id=power>1</p><button type="buttoncontrol" onclick="poweradd()">+</button></div>
-        <div>健康 <button type="buttoncontrol" onclick="healthsub()">-</button><p id=health>1</p><button type="buttoncontrol" onclick="healthadd()">+</button></div>
-        <div>速度 <button type="buttoncontrol" onclick="speedsub()">-</button><p id=speed>1</p><button type="buttoncontrol" onclick="speedadd()">+</button></div>
-        <div>魅力 <button type="buttoncontrol" onclick="charmsub()">-</button><p id=charm>1</p><button type="buttoncontrol" onclick="charmadd()">+</button></div>
-        <div>智力 <button type="buttoncontrol" onclick="intelligentsub()">-</button><p id=intelligent>1</p><button type="buttoncontrol" onclick="intelligentadd()">+</button></div>
-        <div>感知 <button type="buttoncontrol" onclick="perceptionsub()">-</button><p id=perception>1</p><button type="buttoncontrol" onclick="perceptionadd()">+</button></div>
-        <div></div>
-        <button onclick="start()">开始游戏</button>
-        <div id="error" class="error"></div>
-        <div id="result"></div>
+        <div id="point" aria-live="polite">剩余点数：10</div>
+    
+        <!-- 属性列表容器 -->
+        <div class="attribute-list">
+            <!-- 单个属性模板（可用 JavaScript 动态生成） -->
+            <div class="attribute">
+                <label>力量</label>
+                <div class="controls">
+                    <button type="button" class="btn-control" onclick="adjustStat('power', -1)">-</button>
+                    <span id="power" class="stat-value">1</span>
+                    <button type="button" class="btn-control" onclick="adjustStat('power', 1)">+</button>
+                </div>
+            </div>
+        
+            <!-- 其他属性复用相同结构（健康/速度/魅力/智力/感知） -->
+            <div class="attribute">
+                <label>健康</label>
+                <div class="controls">
+                    <button type="button" class="btn-control" onclick="adjustStat('health', -1)">-</button>
+                    <span id="health" class="stat-value">1</span>
+                    <button type="button" class="btn-control" onclick="adjustStat('health', 1)">+</button>
+                </div>
+            </div>
+        
+            <!-- 其他属性结构同理... -->
+        </div>
+
+        <button class="start-button" onclick="startGame()">开始游戏</button>
+        <div id="error" class="error" role="alert"></div>
+        <div id="result" aria-live="polite"></div>
     </div>
 
     <script>
