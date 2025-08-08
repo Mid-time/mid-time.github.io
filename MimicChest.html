@@ -31,6 +31,9 @@
             .border-glow {
                 box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
             }
+            .panel-transition {
+                transition: all 0.3s ease-in-out;
+            }
         }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -41,15 +44,15 @@
         <header class="mb-8 bg-dark/70 rounded-lg p-4 border border-primary/30 border-glow">
             <div class="flex flex-wrap justify-between items-center gap-4">
                 <div class="flex items-center gap-2">
-                    <<i class="fa fa-heart text-secondary text-2xl"></</i>
+                    <i class="fa fa-heart text-secondary text-2xl"></i>
                     <span class="text-xl font-game">生命 2.25</span>
                 </div>
                 <div class="flex items-center gap-2">
-                    <<i class="fa fa-signal text-primary text-2xl"></</i>
+                    <i class="fa fa-signal text-primary text-2xl"></i>
                     <span class="text-xl font-game">第 15/15 层</span>
                 </div>
                 <div class="flex items-center gap-2">
-                    <<i class="fa fa-coins text-yellow-400 text-2xl"></</i>
+                    <i class="fa fa-coins text-yellow-400 text-2xl"></i>
                     <span class="text-xl font-game">金币 8</span>
                 </div>
             </div>
@@ -57,47 +60,36 @@
 
         <!-- 主要内容区 -->
         <main class="space-y-6">
-            <!-- 物品区域 -->
-            <section class="bg-dark/60 rounded-lg p-5 border border-primary/20 hover:border-primary/50 transition-all">
-                <h2 class="text-2xl font-game mb-3 flex items-center">
-                    <<i class="fa fa-cube mr-2 text-blue-400"></</i>物品：
-                </h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 p-2 bg-gray-900/50 rounded">
-                    <!-- 物品列表占位 -->
-                    <div class="p-2 border border-gray-700 rounded flex items-center gap-2">
-                        <<i class="fa fa-potion text-green-400"></</i>
-                        <span>空物品槽 1</span>
-                    </div>
-                    <div class="p-2 border border-gray-700 rounded flex items-center gap-2">
-                        <<i class="fa fa-shield text-blue-400"></</i>
-                        <span>空物品槽 2</span>
+            <!-- 游戏主区域 -->
+            <div class="bg-dark/60 rounded-lg p-5 border border-primary/20 hover:border-primary/50 transition-all min-h-[300px] flex flex-col justify-between">
+                <div class="flex-1 flex items-center justify-center">
+                    <p class="text-center text-gray-300 font-game">游戏主画面区域</p>
+                </div>
+                
+                <!-- 底部状态栏 -->
+                <div class="mt-4 bg-gray-900/70 rounded p-3">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <span class="font-game text-sm">当前状态: 探索中</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="font-game text-sm">难度:</span>
+                            <span class="text-orange-500 font-game">中等</span>
+                        </div>
                     </div>
                 </div>
-            </section>
-
-            <!-- 安排区域 -->
-            <section class="bg-dark/60 rounded-lg p-5 border border-primary/20 hover:border-primary/50 transition-all">
-                <h2 class="text-2xl font-game mb-3 flex items-center">
-                    <<i class="fa fa-list-ol mr-2 text-yellow-400"></</i>安排：
-                </h2>
-                <div class="p-3 bg-gray-900/50 rounded min-h-[100px]">
-                    <p class="text-gray-400 italic">无安排内容</p>
-                </div>
-            </section>
-
-            <!-- 难度区域 -->
-            <section class="bg-dark/60 rounded-lg p-5 border border-primary/20 hover:border-primary/50 transition-all">
-                <h2 class="text-2xl font-game mb-3 flex items-center">
-                    <<i class="fa fa-exclamation-triangle mr-2 text-orange-500"></</i>难度：
-                </h2>
-                <div class="flex items-center gap-4 p-3 bg-gray-900/50 rounded">
-                    <div class="flex-1">
-                        <input type="range" min="1" max="10" value="5" class="w-full accent-primary">
-                    </div>
-                    <span class="font-game text-lg">中等</span>
-                </div>
-            </section>
+            </div>
         </main>
+
+        <!-- 物品/装备按钮 -->
+        <div class="mt-6 flex justify-center gap-4">
+            <button id="items-btn" class="bg-primary/80 hover:bg-primary text-white font-game px-4 py-2 rounded transition-all">
+                <i class="fa fa-cube mr-2"></i>物品
+            </button>
+            <button id="equipment-btn" class="bg-secondary/80 hover:bg-secondary text-white font-game px-4 py-2 rounded transition-all">
+                <i class="fa fa-shield mr-2"></i>装备
+            </button>
+        </div>
 
         <!-- 页脚 -->
         <footer class="mt-10 text-center text-gray-500 text-sm">
@@ -105,13 +97,20 @@
         </footer>
     </div>
 
-    <script>
-        // 简单交互效果
-        document.querySelectorAll('section').forEach(section => {
-            section.addEventListener('click', () => {
-                section.classList.toggle('border-primary');
-            });
-        });
-    </script>
-</body>
-</html>
+    <!-- 物品侧边栏 -->
+    <div id="items-panel" class="fixed top-0 right-0 h-full w-80 bg-gray-900/95 backdrop-blur-sm z-10 transform translate-x-full panel-transition border-l border-primary/30 overflow-y-auto">
+        <div class="p-4">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-game flex items-center">
+                    <i class="fa fa-cube mr-2 text-blue-400"></i>物品栏
+                </h2>
+                <button id="close-items" class="text-gray-400 hover:text-white">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-3">
+                <div class="p-3 border border-gray-700 rounded flex items-center gap-3 hover:bg-gray-800/50 cursor-pointer">
+                    <i class="fa fa-potion text-green-400 text-xl"></i>
+                    <div>
+                        <p c
