@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mimic chest</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#8B5CF6',
+                        secondary: '#EC4899',
+                        dark: '#1F2937',
+                        light: '#F3F4F6'
+                    },
+                    fontFamily: {
+                        game: ['"Press Start 2P"', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .text-shadow {
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            }
+            .border-glow {
+                box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gradient-to-br from-dark to-gray-800 min-h-screen text-light">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- 顶部信息栏 -->
+        <header class="mb-8 bg-dark/70 rounded-lg p-4 border border-primary/30 border-glow">
+            <div class="flex flex-wrap justify-between items-center gap-4">
+                <div class="flex items-center gap-2">
+                    <<i class="fa fa-heart text-secondary text-2xl"></</i>
+                    <span class="text-xl font-game">生命 2.25</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <<i class="fa fa-signal text-primary text-2xl"></</i>
+                    <span class="text-xl font-game">第 15/15 层</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <<i class="fa fa-coins text-yellow-400 text-2xl"></</i>
+                    <span class="text-xl font-game">金币 8</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主要内容区 -->
+        <main class="space-y-6">
+            <!-- 物品区域 -->
+            <section class="bg-dark/60 rounded-lg p-5 border border-primary/20 hover:border-primary/50 transition-all">
+                <h2 class="text-2xl font-game mb-3 flex items-center">
+                    <<i class="fa fa-cube mr-2 text-blue-400"></</i>物品：
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 p-2 bg-gray-900/50 rounded">
+                    <!-- 物品列表占位 -->
+                    <div class="p-2 border border-gray-700 rounded flex items-center gap-2">
+                        <<i class="fa fa-potion text-green-400"></</i>
+                        <span>空物品槽 1</span>
+                    </div>
+                    <div class="p-2 border border-gray-700 rounded flex items-center gap-2">
+                        <<i class="fa fa-shield text-blue-400"></</i>
+                        <span>空物品槽 2</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 安排区域 -->
+            <section class="bg-dark/60 rounded-lg p-5 border border-primary/20 hover:border-primary/50 transition-all">
+                <h2 class="text-2xl font-game mb-3 flex items-center">
+                    <<i class="fa fa-list-ol mr-2 text-yellow-400"></</i>安排：
+                </h2>
+                <div class="p-3 bg-gray-900/50 rounded min-h-[100px]">
+                    <p class="text-gray-400 italic">无安排内容</p>
+                </div>
+            </section>
+
+            <!-- 难度区域 -->
+            <section class="bg-dark/60 rounded-lg p-5 border border-primary/20 hover:border-primary/50 transition-all">
+                <h2 class="text-2xl font-game mb-3 flex items-center">
+                    <<i class="fa fa-exclamation-triangle mr-2 text-orange-500"></</i>难度：
+                </h2>
+                <div class="flex items-center gap-4 p-3 bg-gray-900/50 rounded">
+                    <div class="flex-1">
+                        <input type="range" min="1" max="10" value="5" class="w-full accent-primary">
+                    </div>
+                    <span class="font-game text-lg">中等</span>
+                </div>
+            </section>
+        </main>
+
+        <!-- 页脚 -->
+        <footer class="mt-10 text-center text-gray-500 text-sm">
+            <p>mimic chest © 2023</p>
+        </footer>
+    </div>
+
+    <script>
+        // 简单交互效果
+        document.querySelectorAll('section').forEach(section => {
+            section.addEventListener('click', () => {
+                section.classList.toggle('border-primary');
+            });
+        });
+    </script>
+</body>
+</html>
