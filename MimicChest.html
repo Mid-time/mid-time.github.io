@@ -113,4 +113,115 @@
                 <div class="p-3 border border-gray-700 rounded flex items-center gap-3 hover:bg-gray-800/50 cursor-pointer">
                     <i class="fa fa-potion text-green-400 text-xl"></i>
                     <div>
-                        <p c
+                        <p class="font-game">治疗药水</p>
+                        <p class="text-xs text-gray-400">恢复1点生命值</p>
+                    </div>
+                </div>
+                
+                <div class="p-3 border border-gray-700 rounded flex items-center gap-3 hover:bg-gray-800/50 cursor-pointer">
+                    <i class="fa fa-bolt text-yellow-400 text-xl"></i>
+                    <div>
+                        <p class="font-game">闪电卷轴</p>
+                        <p class="text-xs text-gray-400">对敌人造成3点伤害</p>
+                    </div>
+                </div>
+                
+                <div class="p-3 border border-gray-700 rounded flex items-center gap-3 hover:bg-gray-800/50 cursor-pointer">
+                    <i class="fa fa-key text-purple-400 text-xl"></i>
+                    <div>
+                        <p class="font-game">黄金钥匙</p>
+                        <p class="text-xs text-gray-400">可打开特殊宝箱</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 装备侧边栏 -->
+    <div id="equipment-panel" class="fixed top-0 right-0 h-full w-80 bg-gray-900/95 backdrop-blur-sm z-10 transform translate-x-full panel-transition border-l border-primary/30 overflow-y-auto">
+        <div class="p-4">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-game flex items-center">
+                    <i class="fa fa-shield mr-2 text-blue-400"></i>装备栏
+                </h2>
+                <button id="close-equipment" class="text-gray-400 hover:text-white">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div class="p-3 border border-gray-700 rounded hover:bg-gray-800/50">
+                    <p class="font-game text-sm text-gray-400 mb-2">武器</p>
+                    <div class="flex items-center gap-3">
+                        <i class="fa fa-sword text-red-400 text-xl"></i>
+                        <div>
+                            <p class="font-game">钢铁长剑</p>
+                            <p class="text-xs text-gray-400">攻击力+2</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="p-3 border border-gray-700 rounded hover:bg-gray-800/50">
+                    <p class="font-game text-sm text-gray-400 mb-2">护甲</p>
+                    <div class="flex items-center gap-3">
+                        <i class="fa fa-vest text-blue-400 text-xl"></i>
+                        <div>
+                            <p class="font-game">锁子甲</p>
+                            <p class="text-xs text-gray-400">防御力+1</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="p-3 border border-gray-700 rounded hover:bg-gray-800/50">
+                    <p class="font-game text-sm text-gray-400 mb-2">饰品</p>
+                    <div class="flex items-center gap-3">
+                        <i class="fa fa-ring text-yellow-400 text-xl"></i>
+                        <div>
+                            <p class="font-game">幸运戒指</p>
+                            <p class="text-xs text-gray-400">暴击率+10%</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 侧边栏切换逻辑
+        const itemsBtn = document.getElementById('items-btn');
+        const equipmentBtn = document.getElementById('equipment-btn');
+        const itemsPanel = document.getElementById('items-panel');
+        const equipmentPanel = document.getElementById('equipment-panel');
+        const closeItems = document.getElementById('close-items');
+        const closeEquipment = document.getElementById('close-equipment');
+
+        itemsBtn.addEventListener('click', () => {
+            equipmentPanel.classList.add('translate-x-full');
+            itemsPanel.classList.toggle('translate-x-full');
+        });
+
+        equipmentBtn.addEventListener('click', () => {
+            itemsPanel.classList.add('translate-x-full');
+            equipmentPanel.classList.toggle('translate-x-full');
+        });
+
+        closeItems.addEventListener('click', () => {
+            itemsPanel.classList.add('translate-x-full');
+        });
+
+        closeEquipment.addEventListener('click', () => {
+            equipmentPanel.classList.add('translate-x-full');
+        });
+
+        // 点击外部关闭侧边栏
+        document.addEventListener('click', (e) => {
+            if (!itemsPanel.contains(e.target) && e.target !== itemsBtn) {
+                itemsPanel.classList.add('translate-x-full');
+            }
+            if (!equipmentPanel.contains(e.target) && e.target !== equipmentBtn) {
+                equipmentPanel.classList.add('translate-x-full');
+            }
+        });
+    </script>
+</body>
+</html>
