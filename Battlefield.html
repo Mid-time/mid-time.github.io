@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EoM战斗面板编辑器</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.5;
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .battle-panel {
+            flex: 2;
+            min-width: 500px;
+            background-color: #2a2a2a;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #444;
+        }
+        .editor-panel {
+            flex: 1;
+            min-width: 300px;
+            background-color: #2a2a2a;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #444;
+        }
+        .round-info {
+            font-weight: bold;
+            color: #ffcc00;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #444;
+        }
+        .character {
+            margin-bottom: 10px;
+            padding: 8px;
+            background-color: #333;
+            border-radius: 3px;
+        }
+        .character-name {
+            font-weight: bold;
+            color: #4da6ff;
+        }
+        .character-stats {
+            margin-left: 20px;
+            font-size: 0.9em;
+        }
+        .character-effects {
+            color: #ff9966;
+            font-size: 0.85em;
+        }
+        .friend-team {
+            border-left: 3px solid #4CAF50;
+            padding-left: 5px;
+        }
+        .enemy-team {
+            border-left: 3px solid #F44336;
+            padding-left: 5px;
+        }
+        .team-divider {
+            margin: 15px 0;
+            border-top: 1px dashed #555;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #aaa;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            background-color: #333;
+            color: #e0e0e0;
+            border: 1px solid #444;
+            border-radius: 3px;
+        }
+        button {
+            background-color: #4a4a4a;
+            color: #e0e0e0;
+            border: none;
+            padding: 8px 15px;
+            margin-top: 10px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #5a5a5a;
+        }
+        .effect-inputs {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .effect-inputs input {
+            flex: 1;
+        }
+        .tools {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #333;
+            border-radius: 5px;
+        }
+        .dice-result {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #252525;
+            border-radius: 3px;
+            text-align: center;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="battle-panel">
+            <div class="round-info">===== 第<span id="current-round">1</span>轮 =====</div>
+            
+            <div id="friend-team">
+                <div class="character friend-team">
+                    <div class="character-name">英雄 <span class="character-effects">燃烧1(3) 流血2(2)</span></div>
+                    <div class="character-stats">HP 85.00/100.00 MP 45.50/60.00 SP 30.00/50.00</div>
+                </div>
+            </div>
+            
+            <div class="team-divider"></div>
+            
+            <div id="enemy-team">
+                <div class="character enemy-team">
+                    <div class="character-name">魔物 <span class="character-effects">减速1(2)</span></div>
+                    <div class="character-stats">HP 120.00/150.00 MP 20.00/30.00 SP 10.00/20.00</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="editor-panel">
+            <h3>角色编辑器</h3>
+            
+            <div class="form-group">
+                <label for="team-select">队伍</label>
+                <select id="team-select">
+                    <option value="friend">友方</option>
+                    <option value="enemy">敌方</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="char-name">角色名称</label>
+                <input type="text" id="char-name" placeholder="输入角色名">
+            </div>
+            
+            <div class="form-group">
+                <label>属性值</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div>
+                        <label for="hp">HP</label>
+                        <input type="number" id="hp" step="0.01" min="0" value="100.00">
+                    </div>
+                    <div>
+                        <label for="max-hp">最大HP</label>
+                        <input type="number" id="max-hp" step="0.01" min="0" value="100.00">
+                    </div>
+                    <div>
+                        <label for="mp">MP</label>
+                        <input type="number" id="mp" step="0.01" min="0" value="50.00">
+                    </div>
+                    <div>
+                        <label for="max-mp">最大MP</label>
+                        <input type="number" id="max-mp" step="0.01" min="0" value="50.00">
+                    </div>
+                    <div>
+                        <label for="sp">SP</label>
+                        <input type="number" id="sp" step="0.01" min="0" value="30.00">
+                    </div>
+                    <div>
+                        <label for="max-sp">最大SP</label>
+                        <input type="number" id="max-sp" step="0.01" min="0" value="30.00">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="effects">效果 (格式: 效果名 等级(持续时间))</label>
+                <input type="text" id="effects" placeholder="例如: 燃烧1(3) 流血2(2)">
+            </div>
+            
+            <button id="add-char">添加角色</button>
+            <button id="update-char">更新角色</button>
+            <button id="remove-char">移除角色</button>
+            
+            <div class="tools">
+                <h3>工具</h3>
+                
+                <div>
+                    <label>回合控制</label>
+                    <div>
+                        <button id="next-round">下一回合</button>
+                        <button id="reset-round">重置回合</button>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 15px;">
+                    <label>骰子模拟器</label>
+                    <div>
+                        <input type="number" id="dice-count" min="1" max="10" value="1" style="width: 50px;">
+                        <span>d</span>
+                        <input type="number" id="dice-sides" min="2" max="100" value="6" style="width: 50px;">
+                        <button id="roll-dice">掷骰</button>
+                    </div>
+                    <div class="dice-result" id="dice-result"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 简单的骰子模拟器
+        document.getElementById('roll-dice').addEventListener('click', function() {
+            const count = parseInt(document.getElementById('dice-count').value) || 1;
+            const sides = parseInt(document.getElementById('dice-sides').value) || 6;
+            
+            let total = 0;
+            let rolls = [];
+            
+            for (let i = 0; i < count; i++) {
+                const roll = Math.floor(Math.random() * sides) + 1;
+                rolls.push(roll);
+                total += roll;
+            }
+            
+            let resultText = `结果: ${rolls.join(' + ')}`;
+            if (count > 1) {
+                resultText += ` = ${total}`;
+            }
+            
+            document.getElementById('dice-result').textContent = resultText;
+        });
+        
+        // 回合控制
+        let currentRound = 1;
+        document.getElementById('next-round').addEventListener('click', function() {
+            currentRound++;
+            document.getElementById('current-round').textContent = currentRound;
+        });
+        
+        document.getElementById('reset-round').addEventListener('click', function() {
+            currentRound = 1;
+            document.getElementById('current-round').textContent = currentRound;
+        });
+        
+        // 角色管理功能可以在这里添加
+        // 由于您要求不需要命令功能，这里只保留了骰子和回合控制
+    </script>
+</body>
+</html>
