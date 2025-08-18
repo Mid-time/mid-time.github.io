@@ -14,254 +14,255 @@
             line-height: 1.5;
         }
         .container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
+            max-width: 800px;
+            margin: 0 auto;
         }
         .battle-panel {
-            flex: 2;
-            min-width: 500px;
             background-color: #2a2a2a;
-            padding: 15px;
+            padding: 20px;
             border-radius: 5px;
             border: 1px solid #444;
+            margin-bottom: 20px;
+            white-space: pre-wrap;
         }
         .editor-panel {
-            flex: 1;
-            min-width: 300px;
             background-color: #2a2a2a;
-            padding: 15px;
+            padding: 20px;
+            border-radius: 5px;
+            border: 1px solid #444;
+            margin-bottom: 20px;
+        }
+        .tools-panel {
+            background-color: #2a2a2a;
+            padding: 20px;
             border-radius: 5px;
             border: 1px solid #444;
         }
-        .round-info {
-            font-weight: bold;
+        .round-line {
             color: #ffcc00;
-            margin-bottom: 15px;
-            padding-bottom: 5px;
-            border-bottom: 1px solid #444;
-        }
-        .character {
-            margin-bottom: 10px;
-            padding: 8px;
-            background-color: #333;
-            border-radius: 3px;
-        }
-        .character-name {
             font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .team-line {
+            margin-bottom: 10px;
+        }
+        .turn-line {
             color: #4da6ff;
+            font-weight: bold;
+            margin-top: 10px;
         }
-        .character-stats {
-            margin-left: 20px;
-            font-size: 0.9em;
-        }
-        .character-effects {
-            color: #ff9966;
-            font-size: 0.85em;
-        }
-        .friend-team {
-            border-left: 3px solid #4CAF50;
-            padding-left: 5px;
-        }
-        .enemy-team {
-            border-left: 3px solid #F44336;
-            padding-left: 5px;
-        }
-        .team-divider {
-            margin: 15px 0;
-            border-top: 1px dashed #555;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            color: #aaa;
-        }
-        input, select {
-            width: 100%;
-            padding: 8px;
+        .editable {
             background-color: #333;
-            color: #e0e0e0;
-            border: 1px solid #444;
-            border-radius: 3px;
+            border: 1px dashed #555;
+            padding: 2px 5px;
+            min-width: 50px;
+            display: inline-block;
+        }
+        .optional {
+            background-color: #333;
+            border: 1px dashed #777;
+            padding: 2px 5px;
+            min-width: 50px;
+            display: inline-block;
+            color: #aaa;
         }
         button {
             background-color: #4a4a4a;
             color: #e0e0e0;
             border: none;
             padding: 8px 15px;
-            margin-top: 10px;
+            margin: 5px;
             border-radius: 3px;
             cursor: pointer;
         }
         button:hover {
             background-color: #5a5a5a;
         }
-        .effect-inputs {
-            display: flex;
-            gap: 10px;
+        .calculator {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
             margin-top: 10px;
         }
-        .effect-inputs input {
-            flex: 1;
-        }
-        .tools {
-            margin-top: 20px;
-            padding: 15px;
+        .calculator-display {
+            grid-column: span 4;
             background-color: #333;
-            border-radius: 5px;
-        }
-        .dice-result {
-            margin-top: 10px;
             padding: 10px;
-            background-color: #252525;
-            border-radius: 3px;
-            text-align: center;
-            font-weight: bold;
+            text-align: right;
+            font-size: 1.2em;
+            margin-bottom: 5px;
+        }
+        .calculator-btn {
+            padding: 10px;
+        }
+        .span-2 {
+            grid-column: span 2;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="battle-panel">
-            <div class="round-info">===== 第<span id="current-round">1</span>轮 =====</div>
-            
-            <div id="friend-team">
-                <div class="character friend-team">
-                    <div class="character-name">英雄 <span class="character-effects">燃烧1(3) 流血2(2)</span></div>
-                    <div class="character-stats">HP 85.00/100.00 MP 45.50/60.00 SP 30.00/50.00</div>
-                </div>
-            </div>
-            
-            <div class="team-divider"></div>
-            
-            <div id="enemy-team">
-                <div class="character enemy-team">
-                    <div class="character-name">魔物 <span class="character-effects">减速1(2)</span></div>
-                    <div class="character-stats">HP 120.00/150.00 MP 20.00/30.00 SP 10.00/20.00</div>
-                </div>
-            </div>
+        <div class="battle-panel" id="battle-display">
+            <div class="round-line">===== 第<span class="editable" contenteditable="true">1</span>轮 =====</div>
+            <div class="team-line"><span class="editable" contenteditable="true">队伍A的内容</span></div>
+            <div class="team-line"><span class="editable" contenteditable="true">队伍B的内容</span></div>
+            <div class="team-line">[<span class="optional" contenteditable="true">队伍C的内容</span>]</div>
+            <div class="team-line">……</div>
+            <div class="turn-line">===== <span class="editable" contenteditable="true">角色名</span> 的回合 =====</div>
         </div>
-        
+
         <div class="editor-panel">
-            <h3>角色编辑器</h3>
-            
-            <div class="form-group">
-                <label for="team-select">队伍</label>
-                <select id="team-select">
-                    <option value="friend">友方</option>
-                    <option value="enemy">敌方</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label for="char-name">角色名称</label>
-                <input type="text" id="char-name" placeholder="输入角色名">
-            </div>
-            
-            <div class="form-group">
-                <label>属性值</label>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <div>
-                        <label for="hp">HP</label>
-                        <input type="number" id="hp" step="0.01" min="0" value="100.00">
-                    </div>
-                    <div>
-                        <label for="max-hp">最大HP</label>
-                        <input type="number" id="max-hp" step="0.01" min="0" value="100.00">
-                    </div>
-                    <div>
-                        <label for="mp">MP</label>
-                        <input type="number" id="mp" step="0.01" min="0" value="50.00">
-                    </div>
-                    <div>
-                        <label for="max-mp">最大MP</label>
-                        <input type="number" id="max-mp" step="0.01" min="0" value="50.00">
-                    </div>
-                    <div>
-                        <label for="sp">SP</label>
-                        <input type="number" id="sp" step="0.01" min="0" value="30.00">
-                    </div>
-                    <div>
-                        <label for="max-sp">最大SP</label>
-                        <input type="number" id="max-sp" step="0.01" min="0" value="30.00">
-                    </div>
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label for="effects">效果 (格式: 效果名 等级(持续时间))</label>
-                <input type="text" id="effects" placeholder="例如: 燃烧1(3) 流血2(2)">
-            </div>
-            
-            <button id="add-char">添加角色</button>
-            <button id="update-char">更新角色</button>
-            <button id="remove-char">移除角色</button>
-            
-            <div class="tools">
-                <h3>工具</h3>
-                
-                <div>
-                    <label>回合控制</label>
-                    <div>
-                        <button id="next-round">下一回合</button>
-                        <button id="reset-round">重置回合</button>
-                    </div>
-                </div>
-                
-                <div style="margin-top: 15px;">
-                    <label>骰子模拟器</label>
-                    <div>
-                        <input type="number" id="dice-count" min="1" max="10" value="1" style="width: 50px;">
-                        <span>d</span>
-                        <input type="number" id="dice-sides" min="2" max="100" value="6" style="width: 50px;">
-                        <button id="roll-dice">掷骰</button>
-                    </div>
-                    <div class="dice-result" id="dice-result"></div>
-                </div>
+            <button id="add-team-line">添加队伍行</button>
+            <button id="add-optional-team">添加可选队伍行</button>
+            <button id="copy-display">复制显示内容</button>
+        </div>
+
+        <div class="tools-panel">
+            <h3>计算器</h3>
+            <div class="calculator">
+                <div class="calculator-display" id="calc-display">0</div>
+                <button class="calculator-btn" onclick="calcInput('7')">7</button>
+                <button class="calculator-btn" onclick="calcInput('8')">8</button>
+                <button class="calculator-btn" onclick="calcInput('9')">9</button>
+                <button class="calculator-btn" onclick="calcOperation('/')">/</button>
+                <button class="calculator-btn" onclick="calcInput('4')">4</button>
+                <button class="calculator-btn" onclick="calcInput('5')">5</button>
+                <button class="calculator-btn" onclick="calcInput('6')">6</button>
+                <button class="calculator-btn" onclick="calcOperation('*')">×</button>
+                <button class="calculator-btn" onclick="calcInput('1')">1</button>
+                <button class="calculator-btn" onclick="calcInput('2')">2</button>
+                <button class="calculator-btn" onclick="calcInput('3')">3</button>
+                <button class="calculator-btn" onclick="calcOperation('-')">-</button>
+                <button class="calculator-btn" onclick="calcInput('0')">0</button>
+                <button class="calculator-btn" onclick="calcInput('.')">.</button>
+                <button class="calculator-btn" onclick="calculate()">=</button>
+                <button class="calculator-btn" onclick="calcOperation('+')">+</button>
+                <button class="calculator-btn span-2" onclick="clearCalc()">C</button>
+                <button class="calculator-btn span-2" onclick="backspaceCalc()">←</button>
             </div>
         </div>
     </div>
 
     <script>
-        // 简单的骰子模拟器
-        document.getElementById('roll-dice').addEventListener('click', function() {
-            const count = parseInt(document.getElementById('dice-count').value) || 1;
-            const sides = parseInt(document.getElementById('dice-sides').value) || 6;
+        // 添加队伍行
+        document.getElementById('add-team-line').addEventListener('click', function() {
+            const display = document.getElementById('battle-display');
+            const newLine = document.createElement('div');
+            newLine.className = 'team-line';
+            newLine.innerHTML = '<span class="editable" contenteditable="true">新队伍内容</span>';
             
-            let total = 0;
-            let rolls = [];
+            // 插入到最后一个非回合行之前
+            const turnLine = display.querySelector('.turn-line');
+            display.insertBefore(newLine, turnLine);
+        });
+
+        // 添加可选队伍行
+        document.getElementById('add-optional-team').addEventListener('click', function() {
+            const display = document.getElementById('battle-display');
+            const newLine = document.createElement('div');
+            newLine.className = 'team-line';
+            newLine.innerHTML = '[<span class="optional" contenteditable="true">可选队伍内容</span>]';
             
-            for (let i = 0; i < count; i++) {
-                const roll = Math.floor(Math.random() * sides) + 1;
-                rolls.push(roll);
-                total += roll;
+            // 插入到最后一个非回合行之前
+            const turnLine = display.querySelector('.turn-line');
+            display.insertBefore(newLine, turnLine);
+        });
+
+        // 复制显示内容
+        document.getElementById('copy-display').addEventListener('click', function() {
+            const display = document.getElementById('battle-display');
+            const textToCopy = display.innerText.replace(/\n\n/g, '\n'); // 移除多余空行
+            
+            navigator.clipboard.writeText(textToCopy).then(function() {
+                alert('内容已复制到剪贴板！');
+            }, function() {
+                // 如果剪贴板API不可用，使用备用方法
+                const textarea = document.createElement('textarea');
+                textarea.value = textToCopy;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                alert('内容已复制到剪贴板！');
+            });
+        });
+
+        // 计算器功能
+        let currentInput = '0';
+        let previousInput = '';
+        let operation = null;
+        let resetInput = false;
+
+        function updateDisplay() {
+            document.getElementById('calc-display').textContent = currentInput;
+        }
+
+        function calcInput(num) {
+            if (currentInput === '0' || resetInput) {
+                currentInput = num;
+                resetInput = false;
+            } else {
+                currentInput += num;
+            }
+            updateDisplay();
+        }
+
+        function calcOperation(op) {
+            if (operation !== null) calculate();
+            previousInput = currentInput;
+            operation = op;
+            resetInput = true;
+        }
+
+        function calculate() {
+            let result;
+            const prev = parseFloat(previousInput);
+            const current = parseFloat(currentInput);
+            
+            if (isNaN(prev) || isNaN(current)) return;
+            
+            switch (operation) {
+                case '+':
+                    result = prev + current;
+                    break;
+                case '-':
+                    result = prev - current;
+                    break;
+                case '*':
+                    result = prev * current;
+                    break;
+                case '/':
+                    result = prev / current;
+                    break;
+                default:
+                    return;
             }
             
-            let resultText = `结果: ${rolls.join(' + ')}`;
-            if (count > 1) {
-                resultText += ` = ${total}`;
+            currentInput = result.toString();
+            operation = null;
+            resetInput = true;
+            updateDisplay();
+        }
+
+        function clearCalc() {
+            currentInput = '0';
+            previousInput = '';
+            operation = null;
+            updateDisplay();
+        }
+
+        function backspaceCalc() {
+            if (currentInput.length === 1) {
+                currentInput = '0';
+            } else {
+                currentInput = currentInput.slice(0, -1);
             }
-            
-            document.getElementById('dice-result').textContent = resultText;
-        });
-        
-        // 回合控制
-        let currentRound = 1;
-        document.getElementById('next-round').addEventListener('click', function() {
-            currentRound++;
-            document.getElementById('current-round').textContent = currentRound;
-        });
-        
-        document.getElementById('reset-round').addEventListener('click', function() {
-            currentRound = 1;
-            document.getElementById('current-round').textContent = currentRound;
-        });
-        
-        // 角色管理功能可以在这里添加
-        // 由于您要求不需要命令功能，这里只保留了骰子和回合控制
+            updateDisplay();
+        }
+
+        // 初始化显示
+        updateDisplay();
     </script>
 </body>
 </html>
+  
