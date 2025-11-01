@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>神秘回响物品计算器</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌌</text></svg>">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #8e44ad;
+            --accent-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --dark-color: #34495e;
+            --success-color: #2ecc71;
+            --warning-color: #f39c12;
+            --background-color: #f5f7fa;
+            --card-color: #ffffff;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: var(--background-color);
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--card-color);
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        header {
+            background: var(--primary-color);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        h1 {
+            margin-bottom: 10px;
+        }
+        
+        .description {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .section {
+            background: var(--card-color);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+        
+        .section-title {
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--secondary-color);
+            color: var(--primary-color);
+        }
+        
+        .calculator {
+            grid-column: 1 / -1;
+            background: var(--light-color);
+            border-radius: 8px;
+            padding: 15px;
+        }
+        
+        .calculator-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 10px;
+        }
+        
+        .calculator-item {
+            background: var(--card-color);
+            border-radius: 6px;
+            padding: 10px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            display: grid;
+            grid-template-rows: auto auto;
+            gap: 8px;
+        }
+        
+        .calculator-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        
+        .calculator-item-name {
+            font-weight: bold;
+            font-size: 0.9rem;
+            flex: 1;
+        }
+        
+        .calculator-item-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 3px;
+            margin-top: 3px;
+        }
+        
+        .calculator-tag {
+            background: var(--secondary-color);
+            color: white;
+            padding: 1px 5px;
+            border-radius: 8px;
+            font-size: 0.7rem;
+        }
+        
+        .calculator-item-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: var(--dark-color);
+        }
+        
+        .calculator-item-description {
+            font-size: 0.8rem;
+            color: #666;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            line-height: 1.2;
+        }
+        
+        .calculator-item-controls {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .quantity-input {
+            width: 50px;
+            padding: 3px;
+            text-align: center;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+        
+        .calculator-item-cost {
+            font-weight: bold;
+        }
+        
+        .filter-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 1rem;
+        }
+        
+        .tag-filter {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 5px;
+        }
+        
+        .tag-option {
+            background: #eee;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .tag-option.selected {
+            background: var(--secondary-color);
+            color: white;
+        }
+        
+        .cost-range {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .cost-range input {
+            width: 80px;
+        }
+        
+        .sort-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .sort-group select {
+            flex: 1;
+        }
+        
+        button {
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #7d3c98;
+        }
+        
+        .btn-danger {
+            background: var(--accent-color);
+        }
+        
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+        
+        .btn-success {
+            background: var(--success-color);
+        }
+        
+        .btn-success:hover {
+            background: #27ae60;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .item-list {
+            max-height: 500px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+        }
+        
+        .item-card {
+            background: var(--light-color);
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--secondary-color);
+        }
+        
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+        
+        .item-name {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: var(--primary-color);
+        }
+        
+        .item-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin: 5px 0;
+        }
+        
+        .tag {
+            background: var(--secondary-color);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+        
+        .item-description {
+            margin: 10px 0;
+            line-height: 1.5;
+            font-size: 0.9rem;
+        }
+        
+        .item-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: var(--dark-color);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 30px;
+            color: #7f8c8d;
+        }
+        
+        .status-message {
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .help-text {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .pagination button {
+            padding: 5px 10px;
+        }
+        
+        .pagination-info {
+            font-size: 0.9rem;
+            color: var(--dark-color);
+        }
+        
+        .total-cost {
+            text-align: right;
+            font-weight: bold;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #ddd;
+        }
+        
+        .weight-status {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            background: #f8f9fa;
+        }
+        
+        .weight-status.light {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .weight-status.normal {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .weight-status.heavy {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .weight-status.overloaded {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .preset-section {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
+        }
+        
+        .preset-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .preset-btn {
+            background: var(--primary-color);
+        }
+        
+        .preset-btn:hover {
+            background: #1a252f;
+        }
+        
+        .currency-display {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>神秘回响物品计算器</h1>
+            <p class="description">基于《神秘回响》规则书v0.8.1的物品管理与负重计算工具</p>
+        </header>
+        
+        <!-- 第一部分：计算器 -->
+        <div class="calculator">
+            <h2 class="section-title">当前计算物品</h2>
+            <div id="calculator-items" class="calculator-grid">
+                <div class="empty-state">计算器为空，请从筛选结果中添加物品</div>
+            </div>
+            <div id="total-cost" class="total-cost"></div>
+            <div id="weight-status" class="weight-status">
+                <div>总重量: <span id="total-weight">0</span></div>
+                <div>负重状态: <span id="carry-status">轻快</span></div>
+            </div>
+            
+            <div class="preset-section">
+                <h3>预设装备包</h3>
+                <div class="preset-buttons">
+                    <button class="preset-btn" data-preset="warrior">战士装备包</button>
+                    <button class="preset-btn" data-preset="mage">法师装备包</button>
+                    <button class="preset-btn" data-preset="rogue">游荡者装备包</button>
+                    <button class="btn-danger" id="clear-calculator">清空计算器</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <!-- 第二部分：筛选器 -->
+            <div class="section">
+                <h2 class="section-title">物品筛选</h2>
+                
+                <div class="filter-group">
+                    <label>角色属性</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div>
+                            <label for="character-strength">力量</label>
+                            <input type="number" id="character-strength" min="0" max="12" value="5">
+                        </div>
+                        <div>
+                            <label for="character-endurance">耐性</label>
+                            <input type="number" id="character-endurance" min="0" max="12" value="5">
+                        </div>
+                    </div>
+                    <div class="help-text">根据规则书v0.8.1，属性区间为0-12</div>
+                </div>
+                
+                <div id="status-message"></div>
+                
+                <div class="filter-group">
+                    <label>物品类型筛选</label>
+                    <div id="tag-filter" class="tag-filter">
+                        <!-- 标签将通过JavaScript动态添加 -->
+                    </div>
+                    <div class="help-text">点击标签进行筛选，再次点击取消</div>
+                </div>
+                
+                <div class="filter-group">
+                    <label>名称搜索</label>
+                    <input type="text" id="name-filter" placeholder="输入物品名称...">
+                </div>
+                
+                <div class="filter-group">
+                    <label>价格范围（铜币）</label>
+                    <div class="cost-range">
+                        <input type="number" id="min-cost" placeholder="最低" min="0">
+                        <span>至</span>
+                        <input type="number" id="max-cost" placeholder="最高" min="0">
+                    </div>
+                </div>
+                
+                <div class="filter-group">
+                    <label>排序方式</label>
+                    <div class="sort-group">
+                        <select id="sort-by">
+                            <option value="name-asc">名称 A-Z</option>
+                            <option value="name-desc">名称 Z-A</option>
+                            <option value="cost-asc">价格 低到高</option>
+                            <option value="cost-desc">价格 高到低</option>
+                            <option value="weight-asc">重量 轻到重</option>
+                            <option value="weight-desc">重量 重到轻</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button type="button" id="apply-filter">应用筛选</button>
+                    <button type="button" id="clear-filter">清除筛选</button>
+                </div>
+            </div>
+            
+            <!-- 第三部分：筛选结果 -->
+            <div class="section">
+                <h2 class="section-title">筛选结果</h2>
+                <div id="item-list" class="item-list">
+                    <div class="empty-state">请设置筛选条件并点击"应用筛选"</div>
+                </div>
+                
+                <!-- 分页控件 -->
+                <div id="pagination" class="pagination" style="display: none;">
+                    <button id="prev-page">上一页</button>
+                    <span id="page-info" class="pagination-info">第 1 页，共 1 页</span>
+                    <button id="next-page">下一页</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 神秘回响物品计算器
+        class EchoMysteriaCalculator {
+            constructor() {
+                // 从GitHub加载CSV物品数据
+                this.items = [];
+                this.filteredItems = [];
+                this.calculatorItems = this.loadCalculatorItems();
+                this.selectedTags = new Set();
+                this.currentFilter = {};
+                
+                // 分页相关
+                this.currentPage = 1;
+                this.itemsPerPage = 5;
+                
+                // 排序相关
+                this.sortBy = 'name-asc';
+                
+                // 角色属性
+                this.characterStrength = 5;
+                this.characterEndurance = 5;
+                
+                this.initializeEventListeners();
+                this.loadItemsFromCSV();
+                this.renderCalculator();
+            }
+            
+            // 从GitHub加载CSV文件
+            async loadItemsFromCSV() {
+                try {
+                    this.showStatus('正在从CSV文件加载物品数据...', 'info');
+                    
+                    // 使用示例数据，实际使用时替换为您的GitHub仓库URL
+                    const response = await fetch('./echo_items.csv');
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const csvText = await response.text();
+                    this.items = this.parseCSV(csvText);
+                    this.showStatus(`成功加载 ${this.items.length} 个物品`, 'success');
+                    this.renderTagFilter();
+                } catch (error) {
+                    console.error('加载物品数据失败:', error);
+                    this.showStatus('加载物品数据失败，使用示例数据', 'error');
+                    
+                    // 使用示例数据作为后备
+                    this.items = this.getSampleData();
+                    this.renderTagFilter();
+                }
+            }
+            
+            // 解析CSV数据
+            parseCSV(csvText) {
+                const lines = csvText.trim().split('\n');
+                const headers = lines[0].split(',').map(header => header.trim());
+                
+                const items = [];
+                
+                for (let i = 1; i < lines.length; i++) {
+                    if (lines[i].trim() === '') continue;
+                    
+                    const values = this.parseCSVLine(lines[i]);
+                    const item = {};
+                    
+                    headers.forEach((header, index) => {
+                        let value = values[index] || '';
+                        
+                        // 处理不同的数据类型
+                        if (header === 'tags') {
+                            // 将标签字符串分割为数组
+                            value = value.split(';').map(tag => tag.trim()).filter(tag => tag !== '');
+                        } else if (header === 'cost' || header === 'weight') {
+                            value = parseFloat(value) || 0;
+                        } else if (header === 'legality') {
+                            value = parseInt(value) || 5;
+                        }
+                        
+                        item[header] = value;
+                    });
+                    
+                    // 确保有id字段
+                    if (!item.id) {
+                        item.id = i;
+                    }
+                    
+                    items.push(item);
+                }
+                
+                return items;
+            }
+            
+            // 解析CSV行，处理引号内的逗号
+            parseCSVLine(line) {
+                const result = [];
+                let current = '';
+                let inQuotes = false;
+                
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+                    
+                    if (char === '"') {
+                        inQuotes = !inQuotes;
+                    } else if (char === ',' && !inQuotes) {
+                        result.push(current);
+                        current = '';
+                    } else {
+                        current += char;
+                    }
+                }
+                
+                result.push(current);
+                return result;
+            }
+            
+            // 示例数据（当CSV加载失败时使用）
+            getSampleData() {
+                return [
+                    {
+                        "id": 1,
+                        "name": "铁剑",
+                        "type": "武器",
+                        "subtype": "剑",
+                        "tags": ["武器", "近战", "金属"],
+                        "description": "标准铁制长剑，造成流血2-6伤害，15%概率施加流血I 1-3",
+                        "cost": 9000,
+                        "weight": 20,
+                        "legality": 4
+                    },
+                    {
+                        "id": 2,
+                        "name": "皮革大衣",
+                        "type": "护甲",
+                        "subtype": "身体",
+                        "tags": ["护甲", "皮革"],
+                        "description": "皮革制成的护甲，提供物理护甲0.3和魔法护甲0.3",
+                        "cost": 4500,
+                        "weight": 5,
+                        "legality": 5
+                    },
+                    {
+                        "id": 3,
+                        "name": "治疗药水",
+                        "type": "消耗品",
+                        "subtype": "药水",
+                        "tags": ["消耗品", "治疗"],
+                        "description": "饮用后恢复6点生命值，但会抑制HP恢复",
+                        "cost": 500,
+                        "weight": 1,
+                        "legality": 5
+                    },
+                    {
+                        "id": 4,
+                        "name": "木弓",
+                        "type": "武器",
+                        "subtype": "弓",
+                        "tags": ["武器", "远程", "木质"],
+                        "description": "木制长弓，箭矢伤害2-6，蓄力时伤害4-6，命中率+5%",
+                        "cost": 6000,
+                        "weight": 6,
+                        "legality": 4
+                    },
+                    {
+                        "id": 5,
+                        "name": "蓝玉法杖",
+                        "type": "武器",
+                        "subtype": "法杖",
+                        "tags": ["武器", "魔法", "法杖"],
+                        "description": "蕴含冰魔法的法杖，造成冰冻1-8伤害，20%概率施加冰冻I 1",
+                        "cost": 12500,
+                        "weight": 12,
+                        "legality": 4
+                    },
+                    {
+                        "id": 6,
+                        "name": "旅人风衣",
+                        "type": "护甲",
+                        "subtype": "大衣",
+                        "tags": ["护甲", "布甲"],
+                        "description": "适合旅行的风衣，提供CP+5和+10%闪避率",
+                        "cost": 9000,
+                        "weight": 3,
+                        "legality": 5
+                    },
+                    {
+                        "id": 7,
+                        "name": "布包",
+                        "type": "容器",
+                        "subtype": "背包",
+                        "tags": ["容器", "背包"],
+                        "description": "增加4点负重容量",
+                        "cost": 2500,
+                        "weight": 1,
+                        "legality": 5
+                    },
+                    {
+                        "id": 8,
+                        "name": "火把",
+                        "type": "工具",
+                        "subtype": "照明",
+                        "tags": ["工具", "照明"],
+                        "description": "提供光芒+1",
+                        "cost": 200,
+                        "weight": 1,
+                        "legality": 5
+                    },
+                    {
+                        "id": 9,
+                        "name": "安全帽",
+                        "type": "护甲",
+                        "subtype": "头",
+                        "tags": ["护甲", "头盔"],
+                        "description": "保护头部，提供物理护甲1",
+                        "cost": 4000,
+                        "weight": 2,
+                        "legality": 5
+                    },
+                    {
+                        "id": 10,
+                        "name": "铁盾",
+                        "type": "武器",
+                        "subtype": "盾",
+                        "tags": ["武器", "盾牌"],
+                        "description": "铁制盾牌，打击2-4伤害，20%概率施加混乱I 1-3，招架3-8伤害",
+                        "cost": 10000,
+                        "weight": 10,
+                        "legality": 4
+                    }
+                ];
+            }
+            
+            // 从localStorage加载计算器物品
+            loadCalculatorItems() {
+                const stored = localStorage.getItem('echo-calculator-items');
+                return stored ? JSON.parse(stored) : [];
+            }
+            
+            // 保存计算器物品到localStorage
+            saveCalculatorItems() {
+                localStorage.setItem('echo-calculator-items', JSON.stringify(this.calculatorItems));
+            }
+            
+            // 初始化事件监听器
+            initializeEventListeners() {
+                // 筛选应用
+                document.getElementById('apply-filter').addEventListener('click', () => {
+                    this.applyFilter();
+                });
+                
+                // 清除筛选
+                document.getElementById('clear-filter').addEventListener('click', () => {
+                    this.clearFilter();
+                });
+                
+                // 排序选择
+                document.getElementById('sort-by').addEventListener('change', (e) => {
+                    this.sortBy = e.target.value;
+                    this.applyFilter();
+                });
+                
+                // 分页按钮
+                document.getElementById('prev-page').addEventListener('click', () => {
+                    this.prevPage();
+                });
+                
+                document.getElementById('next-page').addEventListener('click', () => {
+                    this.nextPage();
+                });
+                
+                // 角色属性变化
+                document.getElementById('character-strength').addEventListener('change', (e) => {
+                    this.characterStrength = parseInt(e.target.value) || 5;
+                    this.renderCalculator();
+                });
+                
+                document.getElementById('character-endurance').addEventListener('change', (e) => {
+                    this.characterEndurance = parseInt(e.target.value) || 5;
+                    this.renderCalculator();
+                });
+                
+                // 预设装备包
+                document.querySelectorAll('.preset-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const preset = e.target.dataset.preset;
+                        this.applyPreset(preset);
+                    });
+                });
+                
+                // 清空计算器
+                document.getElementById('clear-calculator').addEventListener('click', () => {
+                    this.clearCalculator();
+                });
+            }
+            
+            // 显示状态消息
+            showStatus(message, type) {
+                const statusElement = document.getElementById('status-message');
+                statusElement.textContent = message;
+                statusElement.className = 'status-message';
+                
+                if (type === 'success') {
+                    statusElement.classList.add('status-success');
+                } else if (type === 'error') {
+                    statusElement.classList.add('status-error');
+                }
+                
+                // 3秒后自动清除成功消息
+                if (type === 'success') {
+                    setTimeout(() => {
+                        statusElement.textContent = '';
+                        statusElement.className = 'status-message';
+                    }, 3000);
+                }
+            }
+            
+            // 应用筛选
+            applyFilter() {
+                // 获取筛选条件
+                const nameFilter = document.getElementById('name-filter').value.toLowerCase();
+                const minCost = document.getElementById('min-cost').value ? parseFloat(document.getElementById('min-cost').value) : null;
+                const maxCost = document.getElementById('max-cost').value ? parseFloat(document.getElementById('max-cost').value) : null;
+                
+                // 筛选物品
+                this.filteredItems = this.items.filter(item => {
+                    // 标签筛选
+                    if (this.selectedTags.size > 0) {
+                        const hasSelectedTag = Array.from(this.selectedTags).some(tag => 
+                            item.tags.includes(tag)
+                        );
+                        if (!hasSelectedTag) return false;
+                    }
+                    
+                    // 名称筛选
+                    if (nameFilter && !item.name.toLowerCase().includes(nameFilter)) {
+                        return false;
+                    }
+                    
+                    // 价格筛选
+                    if (minCost !== null && item.cost < minCost) return false;
+                    if (maxCost !== null && item.cost > maxCost) return false;
+                    
+                    return true;
+                });
+                
+                // 应用排序
+                this.applySorting();
+                
+                // 重置到第一页
+                this.currentPage = 1;
+                
+                // 渲染筛选结果
+                this.renderFilterResults();
+            }
+            
+            // 应用排序
+            applySorting() {
+                switch(this.sortBy) {
+                    case 'name-asc':
+                        this.filteredItems.sort((a, b) => a.name.localeCompare(b.name));
+                        break;
+                    case 'name-desc':
+                        this.filteredItems.sort((a, b) => b.name.localeCompare(a.name));
+                        break;
+                    case 'cost-asc':
+                        this.filteredItems.sort((a, b) => a.cost - b.cost);
+                        break;
+                    case 'cost-desc':
+                        this.filteredItems.sort((a, b) => b.cost - a.cost);
+                        break;
+                    case 'weight-asc':
+                        this.filteredItems.sort((a, b) => a.weight - b.weight);
+                        break;
+                    case 'weight-desc':
+                        this.filteredItems.sort((a, b) => b.weight - a.weight);
+                        break;
+                }
+            }
+            
+            // 清除筛选
+            clearFilter() {
+                document.getElementById('name-filter').value = '';
+                document.getElementById('min-cost').value = '';
+                document.getElementById('max-cost').value = '';
+                document.getElementById('sort-by').value = 'name-asc';
+                
+                this.selectedTags.clear();
+                this.sortBy = 'name-asc';
+                this.renderTagFilter();
+                
+                this.filteredItems = [];
+                this.renderFilterResults();
+                
+                // 隐藏分页控件
+                document.getElementById('pagination').style.display = 'none';
+            }
+            
+            // 渲染标签筛选器
+            renderTagFilter() {
+                const tagFilter = document.getElementById('tag-filter');
+                
+                // 获取所有标签
+                const allTags = [...new Set(this.items.flatMap(item => item.tags))];
+                
+                // 清空现有标签
+                tagFilter.innerHTML = '';
+                
+                // 添加标签选项
+                allTags.forEach(tag => {
+                    const tagElement = document.createElement('div');
+                    tagElement.className = 'tag-option';
+                    if (this.selectedTags.has(tag)) {
+                        tagElement.classList.add('selected');
+                    }
+                    tagElement.textContent = tag;
+                    tagElement.addEventListener('click', () => {
+                        if (this.selectedTags.has(tag)) {
+                            this.selectedTags.delete(tag);
+                            tagElement.classList.remove('selected');
+                        } else {
+                            this.selectedTags.add(tag);
+                            tagElement.classList.add('selected');
+                        }
+                    });
+                    
+                    tagFilter.appendChild(tagElement);
+                });
+            }
+            
+            // 渲染筛选结果
+            renderFilterResults() {
+                const itemList = document.getElementById('item-list');
+                const pagination = document.getElementById('pagination');
+                
+                // 清空列表
+                itemList.innerHTML = '';
+                
+                if (this.filteredItems.length === 0) {
+                    itemList.innerHTML = '<div class="empty-state">没有找到匹配的物品</div>';
+                    pagination.style.display = 'none';
+                    return;
+                }
+                
+                // 计算分页
+                const totalPages = Math.ceil(this.filteredItems.length / this.itemsPerPage);
+                const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+                const endIndex = Math.min(startIndex + this.itemsPerPage, this.filteredItems.length);
+                const pageItems = this.filteredItems.slice(startIndex, endIndex);
+                
+                // 渲染当前页的物品
+                pageItems.forEach(item => {
+                    const itemCard = document.createElement('div');
+                    itemCard.className = 'item-card';
+                    
+                    itemCard.innerHTML = `
+                        <div class="item-header">
+                            <div class="item-name">${this.escapeHtml(item.name)}</div>
+                            <button class="btn-success add-to-calculator" data-id="${item.id}">添加到计算器</button>
+                        </div>
+                        <div class="item-tags">
+                            ${item.tags.map(tag => `<span class="tag">${this.escapeHtml(tag)}</span>`).join('')}
+                        </div>
+                        <div class="item-description">${this.escapeHtml(item.description)}</div>
+                        <div class="item-footer">
+                            <div>价格: ${this.formatCurrency(item.cost)}</div>
+                            <div>重量: ${item.weight}</div>
+                            <div>类型: ${item.type} - ${item.subtype}</div>
+                        </div>
+                    `;
+                    
+                    itemList.appendChild(itemCard);
+                });
+                
+                // 更新分页信息
+                document.getElementById('page-info').textContent = 
+                    `第 ${this.currentPage} 页，共 ${totalPages} 页 (${this.filteredItems.length} 个物品)`;
+                
+                // 显示分页控件
+                pagination.style.display = 'flex';
+                
+                // 更新分页按钮状态
+                document.getElementById('prev-page').disabled = this.currentPage === 1;
+                document.getElementById('next-page').disabled = this.currentPage === totalPages;
+                
+                // 添加事件监听器
+                document.querySelectorAll('.add-to-calculator').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const itemId = e.target.dataset.id;
+                        this.addToCalculator(itemId);
+                    });
+                });
+            }
+            
+            // 上一页
+            prevPage() {
+                if (this.currentPage > 1) {
+                    this.currentPage--;
+                    this.renderFilterResults();
+                }
+            }
+            
+            // 下一页
+            nextPage() {
+                const totalPages = Math.ceil(this.filteredItems.length / this.itemsPerPage);
+                if (this.currentPage < totalPages) {
+                    this.currentPage++;
+                    this.renderFilterResults();
+                }
+            }
+            
+            // 添加到计算器
+            addToCalculator(itemId) {
+                const item = this.items.find(i => i.id == itemId);
+                if (!item) return;
+                
+                // 检查是否已存在
+                const existingItem = this.calculatorItems.find(i => i.id == itemId);
+                
+                if (existingItem) {
+                    existingItem.quantity += 1;
+                } else {
+                    this.calculatorItems.push({
+                        ...item,
+                        quantity: 1
+                    });
+                }
+                
+                this.saveCalculatorItems();
+                this.renderCalculator();
+                this.showStatus(`已添加 ${item.name} 到计算器`, 'success');
+            }
+            
+            // 从计算器移除物品
+            removeFromCalculator(itemId) {
+                this.calculatorItems = this.calculatorItems.filter(item => item.id != itemId);
+                this.saveCalculatorItems();
+                this.renderCalculator();
+            }
+            
+            // 更新计算器物品数量
+            updateQuantity(itemId, newQuantity) {
+                const item = this.calculatorItems.find(i => i.id == itemId);
+                if (!item) return;
+                
+                // 确保数量是正整数
+                newQuantity = parseInt(newQuantity);
+                if (isNaN(newQuantity) || newQuantity < 0) {
+                    newQuantity = 0;
+                }
+                
+                if (newQuantity === 0) {
+                    this.removeFromCalculator(itemId);
+                } else {
+                    item.quantity = newQuantity;
+                    this.saveCalculatorItems();
+                    this.renderCalculator();
+                }
+            }
+            
+            // 渲染计算器
+            renderCalculator() {
+                const calculatorElement = document.getElementById('calculator-items');
+                const totalCostElement = document.getElementById('total-cost');
+                const totalWeightElement = document.getElementById('total-weight');
+                const carryStatusElement = document.getElementById('carry-status');
+                const weightStatusElement = document.getElementById('weight-status');
+                
+                // 清空计算器
+                calculatorElement.innerHTML = '';
+                
+                if (this.calculatorItems.length === 0) {
+                    calculatorElement.innerHTML = '<div class="empty-state">计算器为空，请从筛选结果中添加物品</div>';
+                    totalCostElement.textContent = '';
+                    totalWeightElement.textContent = '0';
+                    carryStatusElement.textContent = '轻快';
+                    weightStatusElement.className = 'weight-status light';
+                    return;
+                }
+                
+                // 计算总消耗和总重量
+                let totalCost = 0;
+                let totalWeight = 0;
+                
+                // 渲染计算器物品
+                this.calculatorItems.forEach(item => {
+                    const itemCost = item.cost * item.quantity;
+                    const itemWeight = item.weight * item.quantity;
+                    totalCost += itemCost;
+                    totalWeight += itemWeight;
+                    
+                    const itemElement = document.createElement('div');
+                    itemElement.className = 'calculator-item';
+                    
+                    itemElement.innerHTML = `
+                        <div class="calculator-item-header">
+                            <div class="calculator-item-name">${this.escapeHtml(item.name)}</div>
+                            <div class="calculator-item-tags">
+                                ${item.tags.map(tag => `<span class="calculator-tag">${this.escapeHtml(tag)}</span>`).join('')}
+                            </div>
+                        </div>
+                        <div class="calculator-item-details">
+                            <div class="calculator-item-description">${this.escapeHtml(item.description)}</div>
+                            <div class="calculator-item-controls">
+                                <input type="number" class="quantity-input" value="${item.quantity}" min="0" data-id="${item.id}">
+                                <span class="calculator-item-cost">${this.formatCurrency(itemCost)}</span>
+                                <button class="btn-danger remove-btn" data-id="${item.id}">删除</button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    calculatorElement.appendChild(itemElement);
+                });
+                
+                // 更新总消耗和总重量
+                totalCostElement.innerHTML = `<span class="currency-display">总价格: ${this.formatCurrency(totalCost)}</span>`;
+                totalWeightElement.textContent = totalWeight;
+                
+                // 计算负重状态
+                const carryCapacity = 20 + this.characterStrength + this.characterEndurance * 30;
+                const carryPercentage = totalWeight / carryCapacity;
+                
+                let statusText = '';
+                let statusClass = '';
+                
+                if (carryPercentage <= 0.25) {
+                    statusText = '轻快';
+                    statusClass = 'light';
+                } else if (carryPercentage <= 0.5) {
+                    statusText = '正常';
+                    statusClass = 'normal';
+                } else if (carryPercentage <= 1) {
+                    statusText = '缓慢';
+                    statusClass = 'heavy';
+                } else {
+                    statusText = '超重';
+                    statusClass = 'overloaded';
+                }
+                
+                carryStatusElement.textContent = statusText;
+                weightStatusElement.className = `weight-status ${statusClass}`;
+                
+                // 添加事件监听器
+                document.querySelectorAll('.quantity-input').forEach(input => {
+                    input.addEventListener('change', (e) => {
+                        const itemId = e.target.dataset.id;
+                        const newQuantity = parseInt(e.target.value);
+                        this.updateQuantity(itemId, newQuantity);
+                    });
+                    
+                    input.addEventListener('blur', (e) => {
+                        const itemId = e.target.dataset.id;
+                        const newQuantity = parseInt(e.target.value);
+                        this.updateQuantity(itemId, newQuantity);
+                    });
+                });
+                
+                document.querySelectorAll('.remove-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const itemId = e.target.dataset.id;
+                        this.removeFromCalculator(itemId);
+                    });
+                });
+            }
+            
+            // 应用预设装备包
+            applyPreset(presetName) {
+                // 清空当前计算器
+                this.calculatorItems = [];
+                
+                // 根据预设添加物品
+                switch(presetName) {
+                    case 'warrior':
+                        this.addToCalculator(1); // 铁剑
+                        this.addToCalculator(2); // 皮革大衣
+                        this.addToCalculator(9); // 安全帽
+                        this.addToCalculator(3); // 治疗药水
+                        this.addToCalculator(3); // 治疗药水
+                        break;
+                    case 'mage':
+                        this.addToCalculator(5); // 蓝玉法杖
+                        this.addToCalculator(6); // 旅人风衣
+                        this.addToCalculator(7); // 布包
+                        this.addToCalculator(8); // 火把
+                        break;
+                    case 'rogue':
+                        this.addToCalculator(4); // 木弓
+                        this.addToCalculator(6); // 旅人风衣
+                        this.addToCalculator(8); // 火把
+                        this.addToCalculator(8); // 火把
+                        break;
+                }
+                
+                this.showStatus(`已应用 ${presetName} 装备包`, 'success');
+            }
+            
+            // 清空计算器
+            clearCalculator() {
+                this.calculatorItems = [];
+                this.saveCalculatorItems();
+                this.renderCalculator();
+                this.showStatus('计算器已清空', 'success');
+            }
+            
+            // 货币格式化
+            formatCurrency(copper) {
+                // 根据规则书：1金(G) = 100银(S) = 10000铜(C)
+                const gold = Math.floor(copper / 10000);
+                const silver = Math.floor((copper % 10000) / 100);
+                const copperRemainder = copper % 100;
+                
+                let result = [];
+                if (gold > 0) result.push(`${gold}G`);
+                if (silver > 0) result.push(`${silver}S`);
+                if (copperRemainder > 0 || result.length === 0) result.push(`${copperRemainder}C`);
+                
+                return result.join(' ');
+            }
+            
+            // HTML转义函数
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new EchoMysteriaCalculator();
+        });
+    </script>
+</body>
+</html>
