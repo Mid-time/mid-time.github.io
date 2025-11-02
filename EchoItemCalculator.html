@@ -583,7 +583,7 @@
                     this.showStatus('正在从CSV文件加载物品数据...', 'info');
                     
                     // 使用示例数据，实际使用时替换为您的GitHub仓库URL
-                    const response = await fetch('./echo_items.csv');
+                    const response = await fetch('./echo_item.csv');
                     
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`);
