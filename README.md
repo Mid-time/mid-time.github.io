@@ -12,7 +12,7 @@
 - 战斗视图（移动端优化） [Go](https://mid-time.github.io/EchoOfMysteria/EchoBattleViewMobile)
 - 规则书 [Download](https://mid-time.github.io/EchoOfMysteria/Echo_Of_Mysteria_Rulebook_v0.8.1)
 - 角色卡
-[Download](https://mid-time.github.io/EchoOfMysteria/Echo_Of_Mysteria_Character_Sheet v0.8.1)
+[Download](https://mid-time.github.io/EchoOfMysteria/Echo_Of_Mysteria_Character_Sheet_v0.8.1)
 
 
 ### 观测：其他可能性
