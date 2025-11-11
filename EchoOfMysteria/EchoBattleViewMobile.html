@@ -1,0 +1,2393 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>战斗轮视图 - 移动端</title>
+    <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --secondary-color: #6b8cbc;
+            --light-color: #f5f7fa;
+            --dark-color: #2c3e50;
+            --success-color: #5cb85c;
+            --danger-color: #d9534f;
+            --warning-color: #f0ad4e;
+            --hp-color: #e74c3c;
+            --mp-color: #3498db;
+            --sanity-color: #f39c12;
+            --speed-color: #ff9800;
+            --reason-color: #2196F3;
+            --stamina-color: #8a2be2;
+            --team1-color: #4a6fa5;
+            --team2-color: #d9534f;
+            --positive-color: #2196F3; /* 正面 - 蓝色 */
+            --negative-color: #9C27B0; /* 负面 - 紫色 */
+            --greater-color: #4CAF50;  /* 大于 - 绿色 */
+            --less-color: #F44336;     /* 小于 - 红色 */
+            --equal-color: #FFC107;    /* 等于 - 黄色 */
+            --selected-color: #e3f2fd; /* 选中状态背景色 */
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--light-color);
+            color: var(--dark-color);
+            padding: 10px 10px 70px; /* 底部留出导航栏空间 */
+            line-height: 1.6;
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .round-header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 0;
+            font-size: 1.5rem;
+        }
+        
+        .round-input {
+            width: 50px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        
+        .description {
+            color: var(--dark-color);
+            opacity: 0.8;
+            margin-bottom: 15px;
+            font-style: italic;
+        }
+        
+        /* 视图容器 */
+        .view-container {
+            display: none;
+        }
+        
+        .view-container.active {
+            display: block;
+        }
+        
+        /* 战斗视图样式 */
+        .battle-view {
+            margin-bottom: 20px;
+        }
+        
+        .battle-character {
+            background-color: white;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        
+        .battle-character.selected {
+            background-color: var(--selected-color);
+            border: 2px solid var(--primary-color);
+        }
+        
+        .battle-character-info {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            grid-template-rows: auto auto;
+            gap: 8px;
+        }
+        
+        .battle-speed {
+            font-weight: bold;
+            color: var(--speed-color);
+            font-size: 1.1rem;
+            text-align: center;
+            padding: 4px;
+            border-radius: 4px;
+            background-color: rgba(255, 152, 0, 0.1); /* 半透明橙色背景 */
+        }
+        
+        .battle-team {
+            font-size: 0.8rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            text-align: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .team1 {
+            background-color: rgba(74, 111, 165, 0.1);
+            color: var(--team1-color);
+        }
+        
+        .team2 {
+            background-color: rgba(217, 83, 79, 0.1);
+            color: var(--team2-color);
+        }
+        
+        .battle-hp {
+            text-align: right;
+            font-weight: bold;
+            color: var(--hp-color);
+        }
+        
+        .battle-hp .stamina-part {
+            color: var(--stamina-color); /* 耐久部分使用紫色 */
+        }
+        
+        .battle-reason {
+            color: var(--reason-color);
+            font-weight: bold;
+            text-align: center;
+            padding: 4px;
+            border-radius: 4px;
+            background-color: rgba(33, 150, 243, 0.1); /* 半透明蓝色背景 */
+        }
+        
+        .battle-name {
+            text-align: center;
+            font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .battle-bars {
+            width: 45%;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-left: 10px;
+        }
+        
+        .hp-stamina-container {
+            height: 12px;
+            background-color: #e0e0e0;
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .hp-bar-fill {
+            height: 100%;
+            border-radius: 6px;
+            background-color: var(--hp-color);
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 2;
+        }
+        
+        .stamina-bar-fill {
+            height: 100%;
+            border-radius: 6px;
+            background-color: var(--stamina-color);
+            position: absolute;
+            top: 0;
+            z-index: 1;
+        }
+        
+        .dual-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .dual-bar-container {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .dual-bar-value {
+            font-size: 0.8rem;
+            font-weight: bold;
+            width: 25px;
+        }
+        
+        .sanity-value {
+            color: var(--sanity-color);
+        }
+        
+        .mp-value {
+            color: var(--mp-color);
+        }
+        
+        .dual-bar-fill {
+            flex: 1;
+            height: 8px;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .stat-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+        }
+        
+        .sanity-bar {
+            background-color: var(--sanity-color);
+        }
+        
+        .mp-bar {
+            background-color: var(--mp-color);
+        }
+        
+        /* 队伍视图样式 */
+        .team-view {
+            margin-bottom: 20px;
+        }
+        
+        .team-group {
+            margin-bottom: 15px;
+        }
+        
+        .team-header {
+            background-color: white;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            font-weight: 600;
+            color: var(--primary-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .team-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .team-action-btn {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+        
+        .team-toggle {
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+        
+        .team-content {
+            padding-left: 20px;
+        }
+        
+        .team-character {
+            background-color: white;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .team-character.selected {
+            background-color: var(--selected-color);
+            border: 2px solid var(--primary-color);
+        }
+        
+        .team-character-info {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr 1fr 1fr 1fr;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .team-stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .team-stat-label {
+            font-size: 0.7rem;
+            color: #777;
+            margin-bottom: 2px;
+        }
+        
+        .team-stat-value {
+            font-weight: bold;
+        }
+        
+        .team-speed {
+            color: var(--speed-color);
+        }
+        
+        .team-hp-value {
+            color: var(--hp-color);
+        }
+        
+        .team-hp-value .stamina-part {
+            color: var(--stamina-color); /* 耐久部分使用紫色 */
+        }
+        
+        .team-sanity-value {
+            color: var(--sanity-color);
+        }
+        
+        .team-mp-value {
+            color: var(--mp-color);
+        }
+        
+        .team-reason-value {
+            color: var(--reason-color);
+        }
+        
+        .team-name {
+            text-align: center;
+            font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        /* 虚线框样式 */
+        .dashed-box {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            color: #999;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .dashed-box:hover {
+            background-color: #f5f5f5;
+            border-color: #aaa;
+            color: #666;
+        }
+        
+        /* 骰池视图样式 */
+        .dice-pool-section {
+            background-color: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .dice-pool-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+        
+        .dice-pool-item {
+            margin-bottom: 15px;
+            padding: 12px;
+            background-color: #f9f9f9;
+            border-radius: 6px;
+            position: relative;
+        }
+        
+        .dice-pool-header {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .dice-type-selector {
+            flex: 1;
+            min-width: 120px;
+        }
+        
+        .dice-type-selector select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+            font-size: 0.9rem; /* 移动端优化 */
+        }
+        
+        .dice-note {
+            flex: 2;
+            min-width: 150px;
+        }
+        
+        .dice-note input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9rem; /* 移动端优化 */
+        }
+        
+        .delete-dice-pool {
+            background: none;
+            border: none;
+            color: var(--danger-color);
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 5px;
+        }
+        
+        .dice-pool-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .dice-control-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .sanity-effect-selector {
+            min-width: 100px;
+        }
+        
+        .sanity-effect-selector select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+            font-size: 0.9rem; /* 移动端优化 */
+        }
+        
+        .dice-input {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .dice-input input {
+            width: 60px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 0.9rem; /* 移动端优化 */
+        }
+        
+        .dice-input.small input {
+            width: 50px;
+        }
+        
+        .dice-input.medium input {
+            width: 70px;
+        }
+        
+        .expression-input {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .expression-input input {
+            width: 100px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9rem; /* 移动端优化 */
+        }
+        
+        .generate-dice {
+            padding: 8px 15px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem; /* 移动端优化 */
+        }
+        
+        .generate-dice:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        .dice-results {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        
+        .dice-result {
+            background-color: var(--light-color);
+            border-radius: 4px;
+            padding: 8px 12px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        /* 骰子结果样式 */
+        .positive-result {
+            border: 2px solid var(--positive-color);
+        }
+        
+        .negative-result {
+            border: 2px solid var(--negative-color);
+        }
+        
+        .greater-result {
+            border: 2px solid var(--greater-color);
+        }
+        
+        .less-result {
+            border: 2px solid var(--less-color);
+        }
+        
+        .equal-result {
+            border: 2px solid var(--equal-color);
+        }
+        
+        /* 底部导航栏 */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+        
+        .nav-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #777;
+            transition: color 0.2s;
+        }
+        
+        .nav-btn.active {
+            color: var(--primary-color);
+        }
+        
+        .nav-label {
+            font-size: 0.7rem;
+            margin-top: 3px;
+        }
+        
+        /* 操作栏 */
+        .action-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: white;
+            display: none;
+            justify-content: space-around;
+            padding: 10px 0;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1001;
+        }
+        
+        .action-bar.active {
+            display: flex;
+        }
+        
+        .action-btn {
+            padding: 10px 15px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+        
+        .action-btn:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        .action-btn.danger {
+            background-color: var(--danger-color);
+        }
+        
+        .action-btn.danger:hover {
+            background-color: #c9302c;
+        }
+        
+        .action-btn.secondary {
+            background-color: #e0e0e0;
+            color: #333;
+        }
+        
+        .action-btn.secondary:hover {
+            background-color: #d0d0d0;
+        }
+        
+        /* 模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1100;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #777;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            font-size: 0.9rem; /* 移动端优化 */
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9rem; /* 移动端优化 */
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+        }
+        
+        .short-input {
+            width: 80px;
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        /* 批量移动模态框中的下拉框样式 */
+        .batch-move-select {
+            width: 100%;
+            padding: 10px;
+            font-size: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        /* 空状态样式 */
+        .empty-state {
+            text-align: center;
+            color: #999;
+            padding: 20px;
+            font-style: italic;
+        }
+        
+        /* 控制按钮区域 */
+        .controls {
+            display: none; /* 隐藏原有的控制按钮 */
+        }
+        
+        /* 响应式调整 - 移动端优化 */
+        @media (max-width: 480px) {
+            .form-row {
+                flex-direction: column;
+            }
+            
+            .short-input {
+                width: 100%;
+            }
+            
+            .dice-pool-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            .dice-pool-controls {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .dice-control-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
+                width: 100%;
+            }
+            
+            .dice-input, .expression-input {
+                width: 100%;
+            }
+            
+            .dice-input input, .expression-input input {
+                width: 100%;
+                max-width: 120px;
+            }
+            
+            .dice-input.small input {
+                max-width: 80px;
+            }
+            
+            .dice-input.medium input {
+                max-width: 100px;
+            }
+            
+            .action-btn {
+                padding: 8px 12px;
+                font-size: 0.8rem;
+            }
+            
+            .battle-bars, .team-bars {
+                width: 40%;
+            }
+            
+            .team-character-info {
+                grid-template-columns: 1fr 2fr 1fr;
+                grid-template-rows: auto auto;
+            }
+            
+            /* 骰池视图优化 */
+            .dice-type-selector, .dice-note {
+                min-width: 100%;
+            }
+            
+            .dice-type-selector select, .dice-note input {
+                font-size: 0.85rem;
+                padding: 6px 8px;
+            }
+            
+            .sanity-effect-selector {
+                min-width: 100%;
+            }
+            
+            .sanity-effect-selector select {
+                font-size: 0.85rem;
+                padding: 6px 8px;
+            }
+            
+            .generate-dice {
+                font-size: 0.85rem;
+                padding: 6px 12px;
+            }
+            
+            /* 角色编辑模态框优化 */
+            .modal-content {
+                padding: 15px;
+            }
+            
+            .modal-title {
+                font-size: 1.1rem;
+            }
+            
+            .form-group {
+                margin-bottom: 12px;
+            }
+            
+            label {
+                font-size: 0.85rem;
+            }
+            
+            input, textarea, select {
+                font-size: 0.85rem;
+                padding: 6px 8px;
+            }
+            
+            .form-row {
+                gap: 8px;
+            }
+            
+            .modal-footer {
+                margin-top: 15px;
+            }
+            
+            /* 战斗视图优化 */
+            .battle-character {
+                padding: 10px;
+            }
+            
+            .battle-character-info {
+                gap: 6px;
+            }
+            
+            .battle-speed, .battle-reason {
+                font-size: 1rem;
+                padding: 3px;
+            }
+            
+            .battle-name {
+                font-size: 0.9rem;
+            }
+            
+            .battle-hp {
+                font-size: 0.9rem;
+            }
+            
+            /* 队伍视图优化 */
+            .team-character {
+                padding: 10px;
+            }
+            
+            .team-stat-label {
+                font-size: 0.65rem;
+            }
+            
+            .team-stat-value {
+                font-size: 0.85rem;
+            }
+            
+            .team-name {
+                font-size: 0.9rem;
+            }
+        }
+        
+        /* 超小屏幕优化 */
+        @media (max-width: 360px) {
+            .battle-character-info {
+                grid-template-columns: 1fr 2fr 1fr;
+                grid-template-rows: auto auto;
+            }
+            
+            .team-character-info {
+                grid-template-columns: 1fr 2fr 1fr;
+                grid-template-rows: auto auto;
+            }
+            
+            .dice-pool-item {
+                padding: 10px;
+            }
+            
+            .dice-pool-header {
+                gap: 6px;
+            }
+            
+            .modal-content {
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="round-header">
+                <h1>第</h1>
+                <input type="number" class="round-input" id="round-input" value="1" min="1">
+                <h1>轮</h1>
+            </div>
+            <p class="description">powered by Mid</p>
+        </header>
+        
+        <!-- 战斗视图 -->
+        <div class="view-container battle-view active" id="battle-view">
+            <div id="battle-characters">
+                <!-- 战斗角色将在这里显示 -->
+            </div>
+        </div>
+        
+        <!-- 队伍视图 -->
+        <div class="view-container team-view" id="team-view">
+            <div id="team-groups">
+                <!-- 队伍和角色将在这里显示 -->
+            </div>
+            <div class="dashed-box" id="new-team-box">+ 新建队伍</div>
+        </div>
+        
+        <!-- 骰池视图 -->
+        <div class="view-container" id="dice-view">
+            <div class="dice-pool-section">
+                <h3 class="dice-pool-title">骰子池</h3>
+                <div id="dice-pools">
+                    <!-- 骰池将在这里显示 -->
+                </div>
+                <div class="dashed-box" id="new-dice-pool-box">+ 新建骰池</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 底部导航栏 -->
+    <div class="bottom-nav">
+        <button class="nav-btn active" data-view="battle-view">
+            <span>⚔️</span>
+            <span class="nav-label">战斗</span>
+        </button>
+        <button class="nav-btn" data-view="team-view">
+            <span>👥</span>
+            <span class="nav-label">队伍</span>
+        </button>
+        <button class="nav-btn" data-view="dice-view">
+            <span>🎲</span>
+            <span class="nav-label">骰池</span>
+        </button>
+        <button class="nav-btn" id="clear-all-btn">
+            <span>🗑️</span>
+            <span class="nav-label">清除</span>
+        </button>
+    </div>
+    
+    <!-- 操作栏 -->
+    <div class="action-bar" id="action-bar">
+        <button class="action-btn" id="edit-character-btn">编辑</button>
+        <button class="action-btn" id="move-character-btn">移动</button>
+        <button class="action-btn danger" id="delete-character-btn">删除</button>
+        <button class="action-btn secondary" id="cancel-action-btn">取消</button>
+    </div>
+    
+    <!-- 新建/编辑角色模态框 -->
+    <div class="modal" id="character-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="character-modal-title">新建角色</div>
+                <button class="close-modal">&times;</button>
+            </div>
+            <form id="character-form">
+                <input type="hidden" id="character-id">
+                <input type="hidden" id="character-team-id" value="team1">
+                <div class="form-group">
+                    <label for="character-name">角色名称</label>
+                    <input type="text" id="character-name" placeholder="实体">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="character-speed">速度</label>
+                        <input type="number" id="character-speed" min="0" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="character-reason">理智</label>
+                        <input type="number" id="character-reason" value="0">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="character-stamina">耐久</label>
+                        <input type="number" id="character-stamina" min="0" value="0" class="short-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="character-hp">当前体力</label>
+                        <input type="number" id="character-hp" min="0" value="0" class="short-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="character-hp-max">体力上限</label>
+                        <input type="number" id="character-hp-max" min="0" value="0" class="short-input">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="character-mp">当前魔力</label>
+                        <input type="number" id="character-mp" min="0" value="0" class="short-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="character-mp-max">魔力上限</label>
+                        <input type="number" id="character-mp-max" min="0" value="0" class="short-input">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="character-sanity">当前清醒</label>
+                        <input type="number" id="character-sanity" min="0" value="0" class="short-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="character-sanity-max">清醒上限</label>
+                        <input type="number" id="character-sanity-max" min="0" value="0" class="short-input">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="character-effect">状态效果</label>
+                    <input type="text" id="character-effect" placeholder="例如: 中毒, 流血, 强化">
+                </div>
+                
+                <div class="form-group">
+                    <label for="character-description">其他描述</label>
+                    <textarea id="character-description" rows="3"></textarea>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="cancel-btn">取消</button>
+                    <button type="submit">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- 新建/编辑队伍模态框 -->
+    <div class="modal" id="team-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="team-modal-title">新建队伍</div>
+                <button class="close-modal">&times;</button>
+            </div>
+            <form id="team-form">
+                <input type="hidden" id="team-id">
+                <div class="form-group">
+                    <label for="team-name">队伍名称</label>
+                    <input type="text" id="team-name" placeholder="队伍3">
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="cancel-btn">取消</button>
+                    <button type="submit">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- 批量移动队伍选择模态框 -->
+    <div class="modal" id="batch-move-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">选择目标队伍</div>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="form-group">
+                <label for="target-team-select">目标队伍</label>
+                <select id="target-team-select" class="batch-move-select">
+                    <!-- 选项将通过JavaScript动态添加 -->
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="cancel-btn">取消</button>
+                <button type="button" id="confirm-batch-move-btn">确认移动</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 初始化数据
+        let teams = [
+            { id: 'team1', name: '友方', characters: [], expanded: true },
+            { id: 'team2', name: '敌方', characters: [], expanded: true }
+        ];
+        
+        let characters = [];
+        let nextCharacterId = 1;
+        let nextTeamId = 3;
+        let dicePools = [];
+        let editingCharacter = null;
+        let editingTeam = null;
+        let selectedCharacter = null;
+        
+        // DOM元素
+        const characterModal = document.getElementById('character-modal');
+        const teamModal = document.getElementById('team-modal');
+        const batchMoveModal = document.getElementById('batch-move-modal');
+        const characterForm = document.getElementById('character-form');
+        const teamForm = document.getElementById('team-form');
+        const clearAllBtn = document.getElementById('clear-all-btn');
+        const closeModalBtns = document.querySelectorAll('.close-modal, .cancel-btn');
+        const roundInput = document.getElementById('round-input');
+        const dicePoolsContainer = document.getElementById('dice-pools');
+        const battleCharactersContainer = document.getElementById('battle-characters');
+        const teamGroupsContainer = document.getElementById('team-groups');
+        const navBtns = document.querySelectorAll('.nav-btn');
+        const viewContainers = document.querySelectorAll('.view-container');
+        const actionBar = document.getElementById('action-bar');
+        const editCharacterBtn = document.getElementById('edit-character-btn');
+        const moveCharacterBtn = document.getElementById('move-character-btn');
+        const deleteCharacterBtn = document.getElementById('delete-character-btn');
+        const cancelActionBtn = document.getElementById('cancel-action-btn');
+        const targetTeamSelect = document.getElementById('target-team-select');
+        const confirmBatchMoveBtn = document.getElementById('confirm-batch-move-btn');
+        const newTeamBox = document.getElementById('new-team-box');
+        const newDicePoolBox = document.getElementById('new-dice-pool-box');
+        
+        // 事件监听
+        newTeamBox.addEventListener('click', () => {
+            editingTeam = null;
+            document.getElementById('team-modal-title').textContent = '新建队伍';
+            teamModal.style.display = 'flex';
+            document.getElementById('team-name').value = '';
+        });
+        
+        newDicePoolBox.addEventListener('click', addDicePool);
+        
+        clearAllBtn.addEventListener('click', clearAllData);
+        
+        closeModalBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                characterModal.style.display = 'none';
+                teamModal.style.display = 'none';
+                batchMoveModal.style.display = 'none';
+            });
+        });
+        
+        characterForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const teamId = document.getElementById('character-team-id').value;
+            
+            if (editingCharacter) {
+                updateCharacter();
+            } else {
+                createCharacter(teamId);
+            }
+            characterModal.style.display = 'none';
+            saveToLocalStorage();
+        });
+        
+        teamForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (editingTeam) {
+                updateTeam();
+            } else {
+                createTeam();
+            }
+            teamModal.style.display = 'none';
+            teamForm.reset();
+            saveToLocalStorage();
+        });
+        
+        roundInput.addEventListener('change', () => {
+            saveToLocalStorage();
+        });
+        
+        // 导航按钮事件
+        navBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const viewId = btn.getAttribute('data-view');
+                
+                // 更新活动视图
+                viewContainers.forEach(container => {
+                    container.classList.remove('active');
+                });
+                document.getElementById(viewId).classList.add('active');
+                
+                // 更新活动导航按钮
+                navBtns.forEach(navBtn => {
+                    navBtn.classList.remove('active');
+                });
+                btn.classList.add('active');
+                
+                // 隐藏操作栏
+                hideActionBar();
+            });
+        });
+        
+        // 操作栏事件
+        editCharacterBtn.addEventListener('click', () => {
+            if (selectedCharacter) {
+                editCharacter(selectedCharacter);
+                hideActionBar();
+            }
+        });
+        
+        moveCharacterBtn.addEventListener('click', () => {
+            if (selectedCharacter) {
+                showMoveCharacterModal(selectedCharacter);
+                hideActionBar();
+            }
+        });
+        
+        deleteCharacterBtn.addEventListener('click', () => {
+            if (selectedCharacter) {
+                deleteCharacter(selectedCharacter);
+                hideActionBar();
+            }
+        });
+        
+        cancelActionBtn.addEventListener('click', hideActionBar);
+        
+        confirmBatchMoveBtn.addEventListener('click', performMove);
+        
+        // 创建角色
+        function createCharacter(teamId) {
+            const name = document.getElementById('character-name').value || '实体';
+            const speed = parseInt(document.getElementById('character-speed').value) || 0;
+            const reason = parseInt(document.getElementById('character-reason').value) || 0;
+            const effect = document.getElementById('character-effect').value || '';
+            const stamina = parseInt(document.getElementById('character-stamina').value) || 0;
+            const hp = parseInt(document.getElementById('character-hp').value) || 0;
+            const hpMax = parseInt(document.getElementById('character-hp-max').value) || 0;
+            const mp = parseInt(document.getElementById('character-mp').value) || 0;
+            const mpMax = parseInt(document.getElementById('character-mp-max').value) || 0;
+            const sanity = parseInt(document.getElementById('character-sanity').value) || 0;
+            const sanityMax = parseInt(document.getElementById('character-sanity-max').value) || 0;
+            const description = document.getElementById('character-description').value || '';
+            
+            const character = {
+                id: `character-${nextCharacterId++}`,
+                name,
+                speed,
+                reason,
+                effect,
+                stamina,
+                hp,
+                hpMax,
+                mp,
+                mpMax,
+                sanity,
+                sanityMax,
+                description,
+                teamId: teamId,
+                lastEdit: Date.now()
+            };
+            
+            characters.push(character);
+            
+            // 将角色添加到对应队伍
+            const team = teams.find(t => t.id === teamId);
+            if (team) {
+                team.characters.push(character);
+            }
+            
+            renderAllViews();
+        }
+        
+        // 更新角色 - 修复了实时更新问题
+        function updateCharacter() {
+            const id = document.getElementById('character-id').value;
+            const name = document.getElementById('character-name').value || '实体';
+            const speed = parseInt(document.getElementById('character-speed').value) || 0;
+            const reason = parseInt(document.getElementById('character-reason').value) || 0;
+            const effect = document.getElementById('character-effect').value || '';
+            const stamina = parseInt(document.getElementById('character-stamina').value) || 0;
+            const hp = parseInt(document.getElementById('character-hp').value) || 0;
+            const hpMax = parseInt(document.getElementById('character-hp-max').value) || 0;
+            const mp = parseInt(document.getElementById('character-mp').value) || 0;
+            const mpMax = parseInt(document.getElementById('character-mp-max').value) || 0;
+            const sanity = parseInt(document.getElementById('character-sanity').value) || 0;
+            const sanityMax = parseInt(document.getElementById('character-sanity-max').value) || 0;
+            const description = document.getElementById('character-description').value || '';
+            
+            const characterIndex = characters.findIndex(c => c.id === id);
+            if (characterIndex !== -1) {
+                // 直接更新角色对象而不是创建新对象
+                const character = characters[characterIndex];
+                character.name = name;
+                character.speed = speed;
+                character.reason = reason;
+                character.effect = effect;
+                character.stamina = stamina;
+                character.hp = hp;
+                character.hpMax = hpMax;
+                character.mp = mp;
+                character.mpMax = mpMax;
+                character.sanity = sanity;
+                character.sanityMax = sanityMax;
+                character.description = description;
+                character.lastEdit = Date.now();
+                
+                // 更新队伍中的角色引用
+                teams.forEach(team => {
+                    const teamCharIndex = team.characters.findIndex(c => c.id === id);
+                    if (teamCharIndex !== -1) {
+                        team.characters[teamCharIndex] = character;
+                    }
+                });
+                
+                renderAllViews();
+            }
+        }
+        
+        // 编辑角色
+        function editCharacter(characterId) {
+            const character = characters.find(c => c.id === characterId);
+            if (!character) return;
+            
+            editingCharacter = character;
+            document.getElementById('character-modal-title').textContent = '编辑角色';
+            
+            document.getElementById('character-id').value = character.id;
+            document.getElementById('character-team-id').value = character.teamId;
+            document.getElementById('character-name').value = character.name;
+            document.getElementById('character-speed').value = character.speed;
+            document.getElementById('character-reason').value = character.reason;
+            document.getElementById('character-effect').value = character.effect;
+            document.getElementById('character-stamina').value = character.stamina || 0;
+            document.getElementById('character-hp').value = character.hp;
+            document.getElementById('character-hp-max').value = character.hpMax;
+            document.getElementById('character-mp').value = character.mp;
+            document.getElementById('character-mp-max').value = character.mpMax;
+            document.getElementById('character-sanity').value = character.sanity;
+            document.getElementById('character-sanity-max').value = character.sanityMax;
+            document.getElementById('character-description').value = character.description;
+            
+            characterModal.style.display = 'flex';
+        }
+        
+        // 删除角色
+        function deleteCharacter(characterId) {
+            const character = characters.find(c => c.id === characterId);
+            if (!character) return;
+            
+            if (confirm(`确定要删除角色 ${character.name} 吗？`)) {
+                // 从所有队伍中移除角色
+                teams.forEach(team => {
+                    const index = team.characters.findIndex(c => c.id === characterId);
+                    if (index !== -1) {
+                        team.characters.splice(index, 1);
+                    }
+                });
+                
+                // 从角色数组中移除
+                const characterIndex = characters.findIndex(c => c.id === characterId);
+                if (characterIndex !== -1) {
+                    characters.splice(characterIndex, 1);
+                }
+                
+                renderAllViews();
+                saveToLocalStorage();
+            }
+        }
+        
+        // 渲染所有视图
+        function renderAllViews() {
+            renderBattleView();
+            renderTeamView();
+            saveToLocalStorage();
+        }
+        
+        // 渲染战斗视图 - 修复了耐久颜色显示问题
+        function renderBattleView() {
+            // 获取所有角色并按速度排序
+            const allCharacters = [];
+            teams.forEach(team => {
+                team.characters.forEach(character => {
+                    // 找到角色所属队伍
+                    const teamInfo = teams.find(t => t.characters.some(c => c.id === character.id));
+                    allCharacters.push({
+                        ...character,
+                        teamId: teamInfo ? teamInfo.id : 'unknown',
+                        teamName: teamInfo ? teamInfo.name : '未知'
+                    });
+                });
+            });
+            
+            allCharacters.sort((a, b) => {
+                if (b.speed !== a.speed) {
+                    return b.speed - a.speed;
+                }
+                // 速度相同时，最后编辑的角色在左侧
+                return b.lastEdit - a.lastEdit;
+            });
+            
+            battleCharactersContainer.innerHTML = '';
+            
+            if (allCharacters.length === 0) {
+                const emptyState = document.createElement('div');
+                emptyState.className = 'empty-state';
+                emptyState.textContent = '暂无角色';
+                battleCharactersContainer.appendChild(emptyState);
+                return;
+            }
+            
+            allCharacters.forEach(character => {
+                const characterElement = document.createElement('div');
+                characterElement.className = 'battle-character';
+                if (selectedCharacter === character.id) {
+                    characterElement.classList.add('selected');
+                }
+                
+                // 计算百分比
+                const totalHp = (character.hpMax || 0) + (character.stamina || 0);
+                const hpPercent = totalHp > 0 ? Math.min(100, (character.hp / totalHp) * 100) : 0;
+                const staminaPercent = totalHp > 0 ? Math.min(100, ((character.stamina || 0) / totalHp) * 100) : 0;
+                const mpPercent = character.mpMax > 0 ? Math.min(100, (character.mp / character.mpMax) * 100) : 0;
+                const sanityPercent = character.sanityMax > 0 ? Math.min(100, (character.sanity / character.sanityMax) * 100) : 0;
+                
+                // 显示血量数字 - 如果有耐久则显示为"血量+耐久"，耐久部分使用紫色
+                const hpDisplay = character.stamina > 0 ? 
+                    `${character.hp}<span class="stamina-part">+${character.stamina}</span>` : 
+                    `${character.hp}`;
+                
+                // 队伍样式
+                const teamClass = character.teamId === 'team1' ? 'team1' : 'team2';
+                
+                characterElement.innerHTML = `
+                    <div class="battle-character-info">
+                        <div class="battle-speed">${character.speed}</div>
+                        <div class="battle-team ${teamClass}">${character.teamName}</div>
+                        <div class="battle-hp">${hpDisplay}</div>
+                        <div class="battle-reason">${character.reason}</div>
+                        <div class="battle-name">${character.name}</div>
+                    </div>
+                    <div class="battle-bars">
+                        <div class="hp-stamina-container">
+                            <div class="hp-bar-fill" style="width: ${hpPercent}%"></div>
+                            <div class="stamina-bar-fill" style="width: ${staminaPercent}%; left: ${hpPercent}%"></div>
+                        </div>
+                        <div class="dual-bars">
+                            <div class="dual-bar-container">
+                                <div class="dual-bar-value sanity-value">${character.sanity}</div>
+                                <div class="dual-bar-fill">
+                                    <div class="stat-bar-fill sanity-bar" style="width: ${sanityPercent}%"></div>
+                                </div>
+                            </div>
+                            <div class="dual-bar-container">
+                                <div class="dual-bar-value mp-value">${character.mp}</div>
+                                <div class="dual-bar-fill">
+                                    <div class="stat-bar-fill mp-bar" style="width: ${mpPercent}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // 添加点击事件
+                characterElement.addEventListener('click', () => {
+                    if (selectedCharacter === character.id) {
+                        // 如果已经选中，取消选中
+                        selectedCharacter = null;
+                        characterElement.classList.remove('selected');
+                        hideActionBar();
+                    } else {
+                        // 取消之前选中的角色
+                        document.querySelectorAll('.battle-character.selected').forEach(el => {
+                            el.classList.remove('selected');
+                        });
+                        
+                        // 选中当前角色
+                        selectedCharacter = character.id;
+                        characterElement.classList.add('selected');
+                        showActionBar();
+                    }
+                });
+                
+                battleCharactersContainer.appendChild(characterElement);
+            });
+        }
+        
+        // 渲染队伍视图
+        function renderTeamView() {
+            teamGroupsContainer.innerHTML = '';
+            
+            teams.forEach(team => {
+                const teamGroup = document.createElement('div');
+                teamGroup.className = 'team-group';
+                
+                const teamHeader = document.createElement('div');
+                teamHeader.className = 'team-header';
+                
+                // 为自定义队伍添加编辑和删除按钮
+                let actionsHTML = '';
+                if (team.id !== 'team1' && team.id !== 'team2') {
+                    actionsHTML = `
+                        <div class="team-actions">
+                            <button class="team-action-btn edit-team-btn" data-team-id="${team.id}">✏️</button>
+                            <button class="team-action-btn delete-team-btn" data-team-id="${team.id}">🗑️</button>
+                        </div>
+                    `;
+                }
+                
+                teamHeader.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span class="team-toggle">${team.expanded ? '▼' : '▶'}</span>
+                        <span>${team.name}</span>
+                    </div>
+                    ${actionsHTML}
+                `;
+                
+                // 添加展开/折叠事件
+                const toggleBtn = teamHeader.querySelector('.team-toggle');
+                toggleBtn.addEventListener('click', () => {
+                    team.expanded = !team.expanded;
+                    renderTeamView();
+                });
+                
+                // 添加编辑和删除事件
+                if (team.id !== 'team1' && team.id !== 'team2') {
+                    const editBtn = teamHeader.querySelector('.edit-team-btn');
+                    const deleteBtn = teamHeader.querySelector('.delete-team-btn');
+                    
+                    editBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        editTeam(team.id);
+                    });
+                    
+                    deleteBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        deleteTeam(team.id);
+                    });
+                }
+                
+                teamGroup.appendChild(teamHeader);
+                
+                if (team.expanded) {
+                    const teamContent = document.createElement('div');
+                    teamContent.className = 'team-content';
+                    
+                    if (team.characters.length === 0) {
+                        const emptyState = document.createElement('div');
+                        emptyState.className = 'empty-state';
+                        emptyState.textContent = '暂无角色';
+                        teamContent.appendChild(emptyState);
+                    } else {
+                        team.characters.forEach(character => {
+                            const characterElement = document.createElement('div');
+                            characterElement.className = 'team-character';
+                            if (selectedCharacter === character.id) {
+                                characterElement.classList.add('selected');
+                            }
+                            
+                            // 显示体力/上限，如果有耐久则显示为"体力+耐久/上限"
+                            const hpDisplay = character.stamina > 0 ? 
+                                `${character.hp}<span class="stamina-part">+${character.stamina}</span>/${character.hpMax}` : 
+                                `${character.hp}/${character.hpMax}`;
+                            
+                            characterElement.innerHTML = `
+                                <div class="team-character-info">
+                                    <div class="team-stat-item">
+                                        <div class="team-stat-label">速度</div>
+                                        <div class="team-stat-value team-speed">${character.speed}</div>
+                                    </div>
+                                    <div class="team-name">${character.name}</div>
+                                    <div class="team-stat-item">
+                                        <div class="team-stat-label">体力</div>
+                                        <div class="team-stat-value team-hp-value">${hpDisplay}</div>
+                                    </div>
+                                    <div class="team-stat-item">
+                                        <div class="team-stat-label">混乱</div>
+                                        <div class="team-stat-value team-sanity-value">${character.sanity}/${character.sanityMax}</div>
+                                    </div>
+                                    <div class="team-stat-item">
+                                        <div class="team-stat-label">魔力</div>
+                                        <div class="team-stat-value team-mp-value">${character.mp}/${character.mpMax}</div>
+                                    </div>
+                                    <div class="team-stat-item">
+                                        <div class="team-stat-label">理智</div>
+                                        <div class="team-stat-value team-reason-value">${character.reason}</div>
+                                    </div>
+                                </div>
+                            `;
+                            
+                            // 添加点击事件
+                            characterElement.addEventListener('click', () => {
+                                if (selectedCharacter === character.id) {
+                                    // 如果已经选中，取消选中
+                                    selectedCharacter = null;
+                                    characterElement.classList.remove('selected');
+                                    hideActionBar();
+                                } else {
+                                    // 取消之前选中的角色
+                                    document.querySelectorAll('.team-character.selected').forEach(el => {
+                                        el.classList.remove('selected');
+                                    });
+                                    
+                                    // 选中当前角色
+                                    selectedCharacter = character.id;
+                                    characterElement.classList.add('selected');
+                                    showActionBar();
+                                }
+                            });
+                            
+                            teamContent.appendChild(characterElement);
+                        });
+                    }
+                    
+                    // 添加新建角色的虚线框
+                    const addCharacterBox = document.createElement('div');
+                    addCharacterBox.className = 'dashed-box';
+                    addCharacterBox.textContent = '+ 新建角色';
+                    addCharacterBox.addEventListener('click', () => {
+                        editingCharacter = null;
+                        document.getElementById('character-modal-title').textContent = '新建角色';
+                        document.getElementById('character-team-id').value = team.id;
+                        characterModal.style.display = 'flex';
+                        characterForm.reset();
+                    });
+                    
+                    teamContent.appendChild(addCharacterBox);
+                    teamGroup.appendChild(teamContent);
+                }
+                
+                teamGroupsContainer.appendChild(teamGroup);
+            });
+        }
+        
+        // 显示操作栏
+        function showActionBar() {
+            actionBar.classList.add('active');
+        }
+        
+        // 隐藏操作栏
+        function hideActionBar() {
+            actionBar.classList.remove('active');
+            selectedCharacter = null;
+            
+            // 取消所有选中状态
+            document.querySelectorAll('.battle-character.selected, .team-character.selected').forEach(el => {
+                el.classList.remove('selected');
+            });
+        }
+        
+        // 显示移动角色模态框
+        function showMoveCharacterModal(characterId) {
+            // 填充队伍选择下拉框
+            targetTeamSelect.innerHTML = '';
+            teams.forEach(team => {
+                const option = document.createElement('option');
+                option.value = team.id;
+                option.textContent = team.name;
+                targetTeamSelect.appendChild(option);
+            });
+            
+            // 设置当前角色ID
+            targetTeamSelect.setAttribute('data-character-id', characterId);
+            
+            batchMoveModal.style.display = 'flex';
+        }
+        
+        // 执行移动
+        function performMove() {
+            const targetTeamId = targetTeamSelect.value;
+            const characterId = targetTeamSelect.getAttribute('data-character-id');
+            const targetTeam = teams.find(t => t.id === targetTeamId);
+            
+            if (!targetTeam) {
+                alert('目标队伍不存在');
+                return;
+            }
+            
+            const character = characters.find(c => c.id === characterId);
+            if (!character) return;
+            
+            // 从原队伍中移除
+            teams.forEach(team => {
+                const index = team.characters.findIndex(c => c.id === characterId);
+                if (index !== -1) {
+                    team.characters.splice(index, 1);
+                }
+            });
+            
+            // 添加到目标队伍
+            targetTeam.characters.push(character);
+            
+            renderAllViews();
+            batchMoveModal.style.display = 'none';
+        }
+        
+        // 创建队伍
+        function createTeam() {
+            const name = document.getElementById('team-name').value || '队伍3';
+            
+            const team = {
+                id: `team${nextTeamId++}`,
+                name,
+                characters: [],
+                expanded: true
+            };
+            
+            teams.push(team);
+            renderTeamView();
+            saveToLocalStorage();
+        }
+
+        // 更新队伍
+        function updateTeam() {
+            const id = document.getElementById('team-id').value;
+            const name = document.getElementById('team-name').value || '队伍';
+            
+            const teamIndex = teams.findIndex(t => t.id === id);
+            if (teamIndex !== -1) {
+                teams[teamIndex].name = name;
+                
+                renderTeamView();
+                saveToLocalStorage();
+            }
+        }
+
+        // 编辑队伍
+        function editTeam(teamId) {
+            const team = teams.find(t => t.id === teamId);
+            if (!team) return;
+            
+            editingTeam = team;
+            document.getElementById('team-modal-title').textContent = '编辑队伍';
+            
+            document.getElementById('team-id').value = team.id;
+            document.getElementById('team-name').value = team.name;
+            
+            teamModal.style.display = 'flex';
+        }
+
+        // 删除队伍
+        function deleteTeam(teamId) {
+            const team = teams.find(t => t.id === teamId);
+            if (!team) return;
+            
+            if (confirm(`确定要删除队伍 ${team.name} 吗？此操作将同时删除队伍中的所有角色！`)) {
+                // 从teams数组中移除队伍
+                const teamIndex = teams.findIndex(t => t.id === teamId);
+                if (teamIndex !== -1) {
+                    teams.splice(teamIndex, 1);
+                }
+                
+                renderTeamView();
+                saveToLocalStorage();
+            }
+        }
+        
+        // 骰池功能
+        function addDicePool() {
+            const poolId = `dice-pool-${Date.now()}`;
+            const dicePool = {
+                id: poolId,
+                type: 'normal', // 'normal', 'sanity', 'expression', 'judgment'
+                count: 1,
+                min: 1,
+                max: 20,
+                sanity: 0, // 理智骰池专用
+                effect: 'positive', // 正面/负面
+                expressionCount: 1, // 解析骰池重复次数
+                expression: '1d6', // 解析骰池表达式
+                compareValue: 10, // 判断骰池比较值
+                note: ''
+            };
+            
+            dicePools.push(dicePool);
+            renderDicePool(dicePool);
+            saveToLocalStorage();
+        }
+        
+        // 创建骰池元素但不添加到DOM
+        function createDicePoolElement(dicePool, noteValue = '') {
+            const poolElement = document.createElement('div');
+            poolElement.className = 'dice-pool-item';
+            poolElement.setAttribute('data-pool-id', dicePool.id); // 添加data-pool-id属性
+            
+            // 保存备注值
+            if (noteValue) {
+                dicePool.note = noteValue;
+            }
+            
+            // 骰池头部 - 类型选择、备注、删除按钮
+            let headerHTML = `
+                <div class="dice-pool-header">
+                    <div class="dice-type-selector">
+                        <select class="dice-type">
+                            <option value="normal" ${dicePool.type === 'normal' ? 'selected' : ''}>常规骰池</option>
+                            <option value="sanity" ${dicePool.type === 'sanity' ? 'selected' : ''}>理智骰池</option>
+                            <option value="expression" ${dicePool.type === 'expression' ? 'selected' : ''}>解析骰池</option>
+                            <option value="judgment" ${dicePool.type === 'judgment' ? 'selected' : ''}>判断骰池</option>
+                        </select>
+                    </div>
+                    <div class="dice-note">
+                        <input type="text" class="dice-note-input" placeholder="骰池备注" value="${dicePool.note || ''}">
+                    </div>
+                    <button class="delete-dice-pool" title="删除骰池">🗑️</button>
+                </div>
+            `;
+            
+            // 根据骰池类型渲染不同的控制界面
+            let controlsHTML = '';
+            
+            if (dicePool.type === 'sanity') {
+                controlsHTML = `
+                    <div class="dice-pool-controls">
+                        <div class="dice-control-row">
+                            <div class="sanity-effect-selector">
+                                <select class="sanity-effect">
+                                    <option value="positive" ${dicePool.effect === 'positive' ? 'selected' : ''}>正面</option>
+                                    <option value="negative" ${dicePool.effect === 'negative' ? 'selected' : ''}>负面</option>
+                                </select>
+                            </div>
+                            <span>生成</span>
+                            <div class="dice-input small">
+                                <input type="number" class="dice-count" value="${dicePool.count || 1}" min="1">
+                            </div>
+                            <span>个从</span>
+                            <div class="dice-input small">
+                                <input type="number" class="dice-min" value="${dicePool.min || 1}">
+                            </div>
+                            <span>到</span>
+                            <div class="dice-input small">
+                                <input type="number" class="dice-max" value="${dicePool.max || 20}">
+                            </div>
+                            <span>的随机数，理智</span>
+                            <div class="dice-input small">
+                                <input type="number" class="dice-sanity" value="${dicePool.sanity || 0}" min="-50" max="50">
+                            </div>
+                        </div>
+                        <div class="dice-control-row">
+                            <button class="generate-dice">生成</button>
+                        </div>
+                    </div>
+                `;
+            } else if (dicePool.type === 'expression') {
+                controlsHTML = `
+                    <div class="dice-pool-controls">
+                        <div class="dice-control-row">
+                            <span>生成</span>
+                            <div class="dice-input small">
+                                <input type="number" class="expression-count" value="${dicePool.expressionCount || 1}" min="1">
+                            </div>
+                            <span>#</span>
+                            <div class="expression-input">
+                                <input type="text" class="dice-expression" value="${dicePool.expression || '1d6'}" placeholder="例如: 2d6+1">
+                            </div>
+                        </div>
+                        <div class="dice-control-row">
+                            <button class="generate-dice">生成</button>
+                        </div>
+                    </div>
+                `;
+            } else if (dicePool.type === 'judgment') {
+                controlsHTML = `
+                    <div class="dice-pool-controls">
+                        <div class="dice-control-row">
+                            <span>生成</span>
+                            <div class="dice-input small">
+                                <input type="number" class="dice-count" value="${dicePool.count || 1}" min="1">
+                            </div>
+                            <span>个从</span>
+                            <div class="dice-input small">
+                                <input type="number" class="dice-min" value="${dicePool.min || 1}">
+                            </div>
+                            <span>到</span>
+                            <div class="dice-input small">
+                                <input type="number" class="dice-max" value="${dicePool.max || 20}">
+                            </div>
+                            <span>的随机数，与</span>
+                            <div class="dice-input small">
+                                <input type="number" class="compare-value" value="${dicePool.compareValue || 10}">
+                            </div>
+                            <span>比较</span>
+                        </div>
+                        <div class="dice-control-row">
+                            <button class="generate-dice">生成</button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                controlsHTML = `
+                    <div class="dice-pool-controls">
+                        <div class="dice-control-row">
+                            <span>生成</span>
+                            <div class="dice-input small">
+                                <input type="number" class="dice-count" value="${dicePool.count || 1}" min="1">
+                            </div>
+                            <span>个从</span>
+                            <div class="dice-input small">
+                                <input type="number" class="dice-min" value="${dicePool.min || 1}">
+                            </div>
+                            <span>到</span>
+                            <div class="dice-input small">
+                                <input type="number" class="dice-max" value="${dicePool.max || 20}">
+                            </div>
+                            <span>的随机数</span>
+                        </div>
+                        <div class="dice-control-row">
+                            <button class="generate-dice">生成</button>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            poolElement.innerHTML = headerHTML + controlsHTML + '<div class="dice-results"></div>';
+            
+            // 添加事件监听
+            setupDicePoolEvents(poolElement, dicePool);
+            
+            return poolElement;
+        }
+        
+        // 渲染骰池 - 优化后的紧凑布局
+        function renderDicePool(dicePool, noteValue = '') {
+            const poolElement = createDicePoolElement(dicePool, noteValue);
+            dicePoolsContainer.appendChild(poolElement);
+        }
+        
+        // 设置骰池事件监听
+        function setupDicePoolEvents(poolElement, dicePool) {
+            // 添加事件监听
+            const typeSelector = poolElement.querySelector('.dice-type');
+            typeSelector.value = dicePool.type;
+            typeSelector.addEventListener('change', () => {
+                const poolIndex = dicePools.findIndex(p => p.id === dicePool.id);
+                if (poolIndex !== -1) {
+                    dicePools[poolIndex].type = typeSelector.value;
+                    
+                    // 保存当前骰池的位置和状态
+                    const currentPosition = Array.from(dicePoolsContainer.children).indexOf(poolElement);
+                    const currentNote = poolElement.querySelector('.dice-note-input').value;
+                    
+                    // 重新渲染骰池，但保持位置
+                    poolElement.remove();
+                    
+                    // 重新渲染骰池到原来的位置
+                    if (currentPosition >= 0 && currentPosition < dicePoolsContainer.children.length) {
+                        // 插入到原来的位置
+                        const nextElement = dicePoolsContainer.children[currentPosition];
+                        dicePoolsContainer.insertBefore(createDicePoolElement(dicePools[poolIndex], currentNote), nextElement);
+                    } else {
+                        // 如果位置无效，添加到末尾
+                        renderDicePool(dicePools[poolIndex], currentNote);
+                    }
+                }
+                saveToLocalStorage();
+            });
+            
+            const generateBtn = poolElement.querySelector('.generate-dice');
+            generateBtn.addEventListener('click', () => {
+                // 使用骰池ID而不是索引
+                if (dicePool.type === 'sanity') {
+                    generateSanityDicePool(dicePool.id);
+                } else if (dicePool.type === 'expression') {
+                    generateExpressionDicePool(dicePool.id);
+                } else if (dicePool.type === 'judgment') {
+                    generateJudgmentDicePool(dicePool.id);
+                } else {
+                    generateDicePool(dicePool.id);
+                }
+                // 添加点击反馈
+                generateBtn.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    generateBtn.style.transform = '';
+                }, 100);
+            });
+            
+            const noteInput = poolElement.querySelector('.dice-note-input');
+            noteInput.addEventListener('change', () => {
+                const poolIndex = dicePools.findIndex(p => p.id === dicePool.id);
+                if (poolIndex !== -1) {
+                    dicePools[poolIndex].note = noteInput.value;
+                }
+                saveToLocalStorage();
+            });
+            
+            // 常规骰池事件
+            if (dicePool.type === 'normal' || dicePool.type === 'sanity' || dicePool.type === 'judgment') {
+                const countInput = poolElement.querySelector('.dice-count');
+                countInput.addEventListener('change', () => {
+                    const poolIndex = dicePools.findIndex(p => p.id === dicePool.id);
+                    if (poolIndex !== -1) {
+                        dicePools[poolIndex].count = parseInt(countInput.value) || 1;
+                    }
+                    saveToLocalStorage();
+                });
+                
+                const minInput = poolElement.querySelector('.dice-min');
+                minInput.addEventListener('change', () => {
+                    const poolIndex = dicePools.findIndex(p => p.id === dicePool.id);
+                    if (poolIndex !== -1) {
+                        dicePools[poolIndex].min = parseInt(minInput.value) || 1;
+                    }
+                    saveToLocalStorage();
+                });
+                
+                const maxInput = poolElement.querySelector('.dice-max');
+                maxInput.addEventListener('change', () => {
+                    const poolIndex = dicePools.findIndex(p => p.id === dicePool.id);
+                    if (poolIndex !== -1) {
+                        dicePools[poolIndex].max = parseInt(maxInput.value) || 20;
+                    }
+                    saveToLocalStorage();
+                });
+            }
+            
+            // 理智骰池专用事件
+            if (dicePool.type === 'sanity') {
+                const sanityInput = poolElement.querySelector('.dice-sanity');
+                sanityInput.addEventListener('change', () => {
+                    const poolIndex = dicePools.findIndex(p => p.id === dicePool.id);
+                    if (poolIndex !== -1) {
+                        dicePools[poolIndex].sanity = parseInt(sanityInput.value) || 0;
+                    }
+                    saveToLocalStorage();
+                });
+                
+                const effectSelector = poolElement.querySelector('.sanity-effect');
+                effectSelector.value = dicePool.effect || 'positive';
+                effectSelector.addEventListener('change', () => {
+                    const poolIndex = dicePools.findIndex(p => p.id === dicePool.id);
+                    if (poolIndex !== -1) {
+                        dicePools[poolIndex].effect = effectSelector.value;
+                    }
+                    saveToLocalStorage();
+                });
+            }
+            
+            // 解析骰池专用事件
+            if (dicePool.type === 'expression') {
+                const countInput = poolElement.querySelector('.expression-count');
+                countInput.addEventListener('change', () => {
+                    const poolIndex = dicePools.findIndex(p => p.id === dicePool.id);
+                    if (poolIndex !== -1) {
+                        dicePools[poolIndex].expressionCount = parseInt(countInput.value) || 1;
+                    }
+                    saveToLocalStorage();
+                });
+                
+                const expressionInput = poolElement.querySelector('.dice-expression');
+                expressionInput.addEventListener('change', () => {
+                    const poolIndex = dicePools.findIndex(p => p.id === dicePool.id);
+                    if (poolIndex !== -1) {
+                        dicePools[poolIndex].expression = expressionInput.value || '1d6';
+                    }
+                    saveToLocalStorage();
+                });
+            }
+            
+            // 判断骰池专用事件
+            if (dicePool.type === 'judgment') {
+                const compareInput = poolElement.querySelector('.compare-value');
+                compareInput.addEventListener('change', () => {
+                    const poolIndex = dicePools.findIndex(p => p.id === dicePool.id);
+                    if (poolIndex !== -1) {
+                        dicePools[poolIndex].compareValue = parseInt(compareInput.value) || 10;
+                    }
+                    saveToLocalStorage();
+                });
+            }
+            
+            const removeBtn = poolElement.querySelector('.delete-dice-pool');
+            removeBtn.addEventListener('click', () => {
+                dicePools = dicePools.filter(p => p.id !== dicePool.id);
+                poolElement.remove();
+                saveToLocalStorage();
+            });
+        }
+        
+        // 生成常规骰池随机数
+        function generateDicePool(poolId) {
+            const poolIndex = dicePools.findIndex(p => p.id === poolId);
+            if (poolIndex === -1) return;
+            
+            const dicePool = dicePools[poolIndex];
+            // 使用ID查找元素
+            const poolElement = document.querySelector(`[data-pool-id="${poolId}"]`);
+            if (!poolElement) return;
+            
+            const resultsElement = poolElement.querySelector('.dice-results');
+            
+            resultsElement.innerHTML = '';
+            
+            let results = [];
+            for (let i = 0; i < dicePool.count; i++) {
+                const randomNum = Math.floor(Math.random() * (dicePool.max - dicePool.min + 1)) + dicePool.min;
+                results.push(randomNum);
+                const resultElement = document.createElement('div');
+                resultElement.className = 'dice-result';
+                resultElement.innerHTML = `<span>${randomNum}</span>`;
+                resultsElement.appendChild(resultElement);
+            }
+        }
+        
+        // 生成理智骰池随机数
+        function generateSanityDicePool(poolId) {
+            const poolIndex = dicePools.findIndex(p => p.id === poolId);
+            if (poolIndex === -1) return;
+            
+            const dicePool = dicePools[poolIndex];
+            // 使用ID查找元素
+            const poolElement = document.querySelector(`[data-pool-id="${poolId}"]`);
+            if (!poolElement) return;
+            
+            const resultsElement = poolElement.querySelector('.dice-results');
+            
+            resultsElement.innerHTML = '';
+            
+            let results = [];
+            for (let i = 0; i < dicePool.count; i++) {
+                // 理智骰池算法 - 颠倒逻辑
+                const sanityCheck = Math.floor(Math.random() * 100) + 1; // 1-100
+                
+                // 根据正面/负面选择调整理智值
+                const adjustedSanity = dicePool.effect === 'negative' ? -dicePool.sanity : dicePool.sanity;
+                const sanityThreshold = adjustedSanity + 50; // 理智+50作为阈值
+                
+                let randomNum;
+                if (sanityCheck > sanityThreshold) {
+                    // 当大于阈值时：从最小值到中间值生成小数值
+                    const midPoint = Math.floor((dicePool.min + dicePool.max) / 2);
+                    randomNum = Math.floor(Math.random() * (midPoint - dicePool.min + 1)) + dicePool.min;
+                } else {
+                    // 当小于等于阈值时：从中间值到最大值生成大数值
+                    const midPoint = Math.floor((dicePool.min + dicePool.max + 1) / 2);
+                    randomNum = Math.floor(Math.random() * (dicePool.max - midPoint + 1)) + midPoint;
+                }
+                
+                results.push(randomNum);
+                const resultElement = document.createElement('div');
+                resultElement.className = 'dice-result';
+                
+                // 根据结果大小添加样式
+                const midPoint = Math.floor((dicePool.min + dicePool.max) / 2);
+                if (randomNum > midPoint) {
+                    resultElement.classList.add('positive-result');
+                } else {
+                    resultElement.classList.add('negative-result');
+                }
+                
+                resultElement.innerHTML = `<span>${randomNum}</span>`;
+                resultsElement.appendChild(resultElement);
+            }
+        }
+        
+        // 生成解析骰池随机数
+        function generateExpressionDicePool(poolId) {
+            const poolIndex = dicePools.findIndex(p => p.id === poolId);
+            if (poolIndex === -1) return;
+            
+            const dicePool = dicePools[poolIndex];
+            // 使用ID查找元素
+            const poolElement = document.querySelector(`[data-pool-id="${poolId}"]`);
+            if (!poolElement) return;
+            
+            const resultsElement = poolElement.querySelector('.dice-results');
+            
+            resultsElement.innerHTML = '';
+            
+            let results = [];
+            for (let i = 0; i < dicePool.expressionCount; i++) {
+                try {
+                    const result = parseDiceExpression(dicePool.expression);
+                    results.push(result);
+                    const resultElement = document.createElement('div');
+                    resultElement.className = 'dice-result';
+                    resultElement.innerHTML = `<span>${result}</span>`;
+                    resultsElement.appendChild(resultElement);
+                } catch (error) {
+                    const resultElement = document.createElement('div');
+                    resultElement.className = 'dice-result';
+                    resultElement.style.color = 'var(--danger-color)';
+                    resultElement.innerHTML = `<span>错误: ${error.message}</span>`;
+                    resultsElement.appendChild(resultElement);
+                    break;
+                }
+            }
+        }
+        
+        // 生成判断骰池随机数
+        function generateJudgmentDicePool(poolId) {
+            const poolIndex = dicePools.findIndex(p => p.id === poolId);
+            if (poolIndex === -1) return;
+            
+            const dicePool = dicePools[poolIndex];
+            // 使用ID查找元素
+            const poolElement = document.querySelector(`[data-pool-id="${poolId}"]`);
+            if (!poolElement) return;
+            
+            const resultsElement = poolElement.querySelector('.dice-results');
+            
+            resultsElement.innerHTML = '';
+            
+            let results = [];
+            for (let i = 0; i < dicePool.count; i++) {
+                const randomNum = Math.floor(Math.random() * (dicePool.max - dicePool.min + 1)) + dicePool.min;
+                results.push(randomNum);
+                const resultElement = document.createElement('div');
+                resultElement.className = 'dice-result';
+                
+                // 根据比较结果添加样式
+                if (randomNum > dicePool.compareValue) {
+                    resultElement.classList.add('greater-result');
+                } else if (randomNum < dicePool.compareValue) {
+                    resultElement.classList.add('less-result');
+                } else {
+                    resultElement.classList.add('equal-result');
+                }
+                
+                resultElement.innerHTML = `<span>${randomNum}</span>`;
+                resultsElement.appendChild(resultElement);
+            }
+        }
+        
+        // 解析骰子表达式
+        function parseDiceExpression(expression) {
+            // 移除所有空格
+            expression = expression.replace(/\s/g, '');
+            
+            // 检查表达式是否为空
+            if (!expression) {
+                throw new Error('表达式为空');
+            }
+            
+            // 使用正则表达式匹配骰子表达式
+            // 支持格式: XdY, XdY+Z, XdY-Z, dY, dY+Z, dY-Z
+            const diceRegex = /^(\d+)?d(\d+)([+-]\d+)?$/i;
+            const match = expression.match(diceRegex);
+            
+            if (!match) {
+                throw new Error('无效的骰子表达式');
+            }
+            
+            const count = match[1] ? parseInt(match[1]) : 1;
+            const sides = parseInt(match[2]);
+            const modifier = match[3] ? parseInt(match[3]) : 0;
+            
+            // 验证参数
+            if (count < 1 || count > 100) {
+                throw new Error('骰子数量必须在1-100之间');
+            }
+            
+            if (sides < 1 || sides > 1000) {
+                throw new Error('骰子面数必须在1-1000之间');
+            }
+            
+            // 计算骰子结果
+            let total = 0;
+            for (let i = 0; i < count; i++) {
+                total += Math.floor(Math.random() * sides) + 1;
+            }
+            
+            // 应用修正值
+            total += modifier;
+            
+            return total;
+        }
+        
+        // 清除所有数据
+        function clearAllData() {
+            if (confirm('确定要清除所有数据吗？此操作不可撤销！')) {
+                // 重置数据
+                teams = [
+                    { id: 'team1', name: '友方', characters: [], expanded: true },
+                    { id: 'team2', name: '敌方', characters: [], expanded: true }
+                ];
+                characters = [];
+                nextCharacterId = 1;
+                nextTeamId = 3;
+                dicePools = [];
+                roundInput.value = 1;
+                selectedCharacter = null;
+                
+                // 清除DOM
+                renderAllViews();
+                
+                // 清除骰池
+                dicePoolsContainer.innerHTML = '';
+                
+                // 隐藏操作栏
+                hideActionBar();
+                
+                // 清除本地存储
+                localStorage.removeItem('battleRoundViewData');
+            }
+        }
+        
+        // 保存到本地存储
+        function saveToLocalStorage() {
+            const data = {
+                teams,
+                characters,
+                nextCharacterId,
+                nextTeamId,
+                dicePools,
+                round: roundInput.value
+            };
+            localStorage.setItem('battleRoundViewData', JSON.stringify(data));
+        }
+        
+        // 从本地存储加载
+        function loadFromLocalStorage() {
+            const savedData = localStorage.getItem('battleRoundViewData');
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                
+                teams = data.teams || [
+                    { id: 'team1', name: '友方', characters: [], expanded: true },
+                    { id: 'team2', name: '敌方', characters: [], expanded: true }
+                ];
+                characters = data.characters || [];
+                nextCharacterId = data.nextCharacterId || 1;
+                nextTeamId = data.nextTeamId || 3;
+                dicePools = data.dicePools || [];
+                roundInput.value = data.round || 1;
+                
+                // 重新渲染所有视图
+                renderAllViews();
+                
+                // 重新渲染骰池
+                dicePoolsContainer.innerHTML = '';
+                dicePools.forEach(pool => {
+                    renderDicePool(pool);
+                });
+            }
+        }
+        
+        // 页面加载完成后初始化
+        window.addEventListener('DOMContentLoaded', () => {
+            loadFromLocalStorage();
+        });
+    </script>
+</body>
+</html>
