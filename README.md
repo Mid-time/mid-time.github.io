@@ -4,14 +4,18 @@
 深洋藏匿着恐惧与迷途，也倒映着失路者的残影
 
 ### 观测：神秘回响（TRPG规则书）
-- 物品购买计算器 [Go](https://mid-time.github.io/EchoItemCalculator)
-- 战斗视图 [Go](https://mid-time.github.io/EchoBattleView)
+- 物品购买计算器（旧）
+*可使用* [Go](https://mid-time.github.io/EchoItemCalculator)
+- 物品购买计算器（新）
+*此新版本存在无法读取内容的bug* [Go](https://mid-time.github.io/EchoOfMysteria/EchoItemCalculator)
+- 战斗视图 [Go](https://mid-time.github.io/EchoOfMysteria/EchoBattleView)
+- 战斗视图（移动端优化） [Go](https://mid-time.github.io/EchoOfMysteria/EchoBattleViewMobile)
+
 
 ### 观测：其他可能性
 - 随机抽奖系统（只是模型） [Go](https://mid-time.github.io/LotterySystem)
 
 ### 观测：发光已不再
-- 随机数生成的初稿，一个简单的网页 [Go](https://mid-time.github.io/dice)
 - 本来是一个益智小游戏，可是最后没实现 [Go](https://mid-time.github.io/MimicChest)
 - 一个角色生成器，同样，没有实现 [Go](https://mid-time.github.io/dungeontest)
 
