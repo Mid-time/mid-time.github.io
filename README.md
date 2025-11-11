@@ -10,8 +10,8 @@
 *此新版本存在无法读取内容的bug* [Go](https://mid-time.github.io/EchoOfMysteria/EchoItemCalculator)
 - 战斗视图 [Go](https://mid-time.github.io/EchoOfMysteria/EchoBattleView)
 - 战斗视图（移动端优化） [Go](https://mid-time.github.io/EchoOfMysteria/EchoBattleViewMobile)
-- 规则书 [Download](https://mid-time.github.io/EchoOfMysteria/Echo_Of_Mysteria_Rulebook_v0.8.1)
-- 角色卡
+- 规则书*当前下载链接不可用* [Download](https://mid-time.github.io/EchoOfMysteria/Echo_Of_Mysteria_Rulebook_v0.8.1)
+- 角色卡*当前下载链接不可用*
 [Download](https://mid-time.github.io/EchoOfMysteria/Echo_Of_Mysteria_Character_Sheet_v0.8.1)
 
 
