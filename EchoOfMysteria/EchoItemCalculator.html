@@ -814,17 +814,17 @@
             constructor() {
                 this.dataSources = {
                     items: [
-                        { type: 'local', url: './Item.csv', priority: 3 },
+                        { type: 'local', url: './EchoItemCalculator/Item.csv', priority: 3 },
                         { type: 'localStorage', key: 'echo_items_cache', priority: 2 },
                         { type: 'builtin', data: this.getBuiltinItems(), priority: 1 }
                     ],
                     mapping: [
-                        { type: 'local', url: './ItemType.csv', priority: 3 },
+                        { type: 'local', url: './EchoItemCalculator/ItemType.csv', priority: 3 },
                         { type: 'localStorage', key: 'echo_mapping_cache', priority: 2 },
                         { type: 'builtin', data: this.getBuiltinTypeMapping(), priority: 1 }
                     ],
                     presets: [
-                        { type: 'local', url: './ItemBuildinPreset.csv', priority: 3 },
+                        { type: 'local', url: './EchoItemCalculator/ItemBuildinPreset.csv', priority: 3 },
                         { type: 'localStorage', key: 'echo_presets_cache', priority: 2 },
                         { type: 'builtin', data: this.getBuiltinPresets(), priority: 1 }
                     ]
