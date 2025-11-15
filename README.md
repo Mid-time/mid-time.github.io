@@ -3,16 +3,13 @@
 ## 瞭望台
 深洋藏匿着恐惧与迷途，也倒映着失路者的残影
 
-### 观测：神秘回响（TRPG规则书）
-- 物品购买计算器（旧）
-*可使用* [Go](https://mid-time.github.io/EchoItemCalculator)
-- 物品购买计算器（新）
-*此新版本存在无法读取内容的bug* [Go](https://mid-time.github.io/EchoOfMysteria/EchoItemCalculator)
+### 观测：神秘回响（TRPG）
+- 物品购买计算器 [Go](https://mid-time.github.io/EchoOfMysteria/EchoItemCalculator)
 - 战斗视图 [Go](https://mid-time.github.io/EchoOfMysteria/EchoBattleView)
 - 战斗视图（移动端优化） [Go](https://mid-time.github.io/EchoOfMysteria/EchoBattleViewMobile)
-- 规则书*当前下载链接不可用* [Download](https://mid-time.github.io/EchoOfMysteria/Echo_Of_Mysteria_Rulebook_v0.8.1)
-- 角色卡*当前下载链接不可用*
-[Download](https://mid-time.github.io/EchoOfMysteria/Echo_Of_Mysteria_Character_Sheet_v0.8.1)
+- 规则书 [Download](https://mid-time.github.io/EchoOfMysteria/EchoOfMysteriaRulebook_v0.8.1)
+- 角色卡
+[Download](https://mid-time.github.io/EchoOfMysteria/EchoOfMysteriaCharacterSheet_v0.8.1)
 
 
 ### 观测：其他可能性
