@@ -11,6 +11,9 @@
 - 角色卡 v0.8.1
 [Download](https://mid-time.github.io/EchoOfMysteria/EchoOfMysteriaCharacterSheet.xlsx)
 
+### 观测：桌游
+- 恶魔骰 [Go](https://mid-time.github.io/CheatDice)
+
 
 ### 观测：其他可能性
 - 随机抽奖系统（只是模型） [Go](https://mid-time.github.io/LotterySystem)
