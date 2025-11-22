@@ -886,7 +886,8 @@
             maxRound: 0,
             gameInProgress: false,
             usedDice: [], // 记录开骰中用到的骰子
-            lastWinner: null // 记录上一轮获胜者
+            lastWinner: null, // 记录上一轮获胜者
+            diceRevealed: false // 新增：标记骰子是否已揭露
         };
 
         // DOM元素
@@ -1009,6 +1010,7 @@
             gameState.gameInProgress = true;
             gameState.usedDice = [];
             gameState.lastWinner = null;
+            gameState.diceRevealed = false; // 重置骰子揭露状态
             
             // 更新UI
             updateDiceDisplay();
@@ -1092,7 +1094,8 @@
                 playerScore: gameState.playerScore,
                 isPlayerTurn: gameState.isPlayerTurn,
                 gameInProgress: gameState.gameInProgress,
-                lastWinner: gameState.lastWinner
+                lastWinner: gameState.lastWinner,
+                diceRevealed: gameState.diceRevealed
             };
             localStorage.setItem('demonDiceGameState', JSON.stringify(state));
         }
@@ -1112,6 +1115,7 @@
                 gameState.isPlayerTurn = state.isPlayerTurn;
                 gameState.gameInProgress = state.gameInProgress;
                 gameState.lastWinner = state.lastWinner || null;
+                gameState.diceRevealed = state.diceRevealed || false;
                 
                 // 更新UI
                 updateDiceDisplay();
@@ -1140,7 +1144,7 @@
             return dice;
         }
 
-        // 更新骰子显示
+        // 更新骰子显示 - 修复：根据diceRevealed状态显示AI骰子
         function updateDiceDisplay() {
             // 玩家骰子
             playerDiceContainer.innerHTML = '';
@@ -1162,12 +1166,20 @@
                 playerDiceContainer.appendChild(diceEl);
             });
             
-            // AI骰子 - 初始隐藏
+            // AI骰子 - 根据diceRevealed状态决定显示内容
             aiDiceContainer.innerHTML = '';
             gameState.aiDice.forEach((value, index) => {
                 const diceEl = document.createElement('div');
-                diceEl.className = 'dice ai-dice';
-                diceEl.textContent = '?';
+                
+                if (gameState.diceRevealed || gameState.gameOver) {
+                    // 如果骰子已揭露或游戏结束，显示真实点数
+                    diceEl.className = 'dice';
+                    diceEl.textContent = diceFaces[value];
+                } else {
+                    // 否则显示问号
+                    diceEl.className = 'dice ai-dice';
+                    diceEl.textContent = '?';
+                }
                 
                 // 检查是否为用到的骰子并添加发光效果
                 if (gameState.usedDice.includes(index + 5)) { // AI骰子索引从5开始
@@ -1183,26 +1195,10 @@
             });
         }
 
-        // 显示AI骰子
+        // 显示AI骰子 - 修复：直接设置diceRevealed状态并更新显示
         function revealAiDice() {
-            aiDiceContainer.innerHTML = '';
-            gameState.aiDice.forEach((value, index) => {
-                const diceEl = document.createElement('div');
-                diceEl.className = 'dice';
-                diceEl.textContent = diceFaces[value];
-                
-                // 检查是否为用到的骰子并添加发光效果
-                if (gameState.usedDice.includes(index + 5)) { // AI骰子索引从5开始
-                    // 根据获胜方决定颜色
-                    if (gameState.lastWinner === 'player') {
-                        diceEl.classList.add('glow-green');
-                    } else if (gameState.lastWinner === 'ai') {
-                        diceEl.classList.add('glow-red');
-                    }
-                }
-                
-                aiDiceContainer.appendChild(diceEl);
-            });
+            gameState.diceRevealed = true;
+            updateDiceDisplay();
         }
 
         // 更新玩家状态
@@ -1317,7 +1313,7 @@
             currentCallDisplay.textContent = displayText;
         }
 
-        // AI叫骰算法 - 修复bug
+        // AI叫骰算法
         function aiCall() {
             // 更新回合指示器
             gameState.isPlayerTurn = false;
@@ -1461,7 +1457,7 @@
             return score;
         }
 
-        // 生成最佳叫骰 - 修复bug
+        // 生成最佳叫骰
         function generateBestCall() {
             const currentCall = gameState.currentCall;
             const aiDice = gameState.aiDice;
@@ -1543,7 +1539,7 @@
             return points;
         }
 
-        // 开骰 - 修复bug
+        // 开骰 - 修复：确保AI骰子被揭露
         function openDice(isAiOpening = false) {
             // 显示所有骰子
             revealAiDice();
@@ -1630,7 +1626,7 @@
             // 合并用到的骰子
             gameState.usedDice = [...usedPlayerDice, ...usedAiDice];
             
-            // 比较结果 - 修复bug
+            // 比较结果
             const isCallValid = actualCount >= gameState.currentCall.count;
             
             // 计算奖励/惩罚
