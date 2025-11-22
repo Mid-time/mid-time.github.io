@@ -494,7 +494,7 @@
             display: none !important;
         }
         
-        .rules-modal, .surrender-modal {
+        .rules-modal, .surrender-modal, .result-modal {
             position: fixed;
             top: 0;
             left: 0;
@@ -507,7 +507,7 @@
             z-index: 1000;
         }
         
-        .rules-content, .surrender-content {
+        .rules-content, .surrender-content, .result-content {
             background-color: #1e1e2e;
             padding: 25px;
             border-radius: 15px;
@@ -516,9 +516,10 @@
             overflow-y: auto;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             position: relative;
+            text-align: center;
         }
         
-        .rules-content h2, .surrender-content h2 {
+        .rules-content h2, .surrender-content h2, .result-content h2 {
             color: #ff6b6b;
             margin-bottom: 15px;
             text-align: center;
@@ -584,6 +585,13 @@
         .confirm-no {
             background-color: #7f8c8d;
             color: white;
+        }
+        
+        .click-continue {
+            font-size: 0.8rem;
+            color: #a5b1c2;
+            margin-top: 15px;
+            font-style: italic;
         }
         
         @media (max-width: 768px) {
@@ -743,8 +751,6 @@
                 <div class="call-count">叫骰数量: <span id="call-count-value">0</span></div>
                 <div class="point-count">点数数量: <span id="point-count-value">0</span></div>
             </div>
-            
-            <div id="result" class="result hidden"></div>
         </div>
     </div>
     
@@ -792,6 +798,15 @@
             </div>
         </div>
     </div>
+    
+    <!-- 结果弹窗 -->
+    <div id="result-modal" class="result-modal hidden">
+        <div class="result-content">
+            <h2 id="result-title">游戏结果</h2>
+            <p id="result-message"></p>
+            <div class="click-continue">点击任意位置继续</div>
+        </div>
+    </div>
 
     <script>
         // 游戏状态
@@ -830,7 +845,6 @@
         ];
         const callCountValue = document.getElementById('call-count-value');
         const pointCountValue = document.getElementById('point-count-value');
-        const resultDiv = document.getElementById('result');
         const currentCallDisplay = document.getElementById('current-call-display');
         const turnIndicator = document.getElementById('turn-indicator');
         const healthValue = document.getElementById('health-value');
@@ -845,6 +859,9 @@
         const surrenderModal = document.getElementById('surrender-modal');
         const surrenderYes = document.getElementById('surrender-yes');
         const surrenderNo = document.getElementById('surrender-no');
+        const resultModal = document.getElementById('result-modal');
+        const resultTitle = document.getElementById('result-title');
+        const resultMessage = document.getElementById('result-message');
 
         // 骰子面表示 - 修改为中文数字
         const diceFaces = {
@@ -874,6 +891,18 @@
         // 隐藏放弃确认
         function hideSurrenderModal() {
             surrenderModal.classList.add('hidden');
+        }
+
+        // 显示结果弹窗
+        function showResultModal(title, message) {
+            resultTitle.textContent = title;
+            resultMessage.textContent = message;
+            resultModal.classList.remove('hidden');
+        }
+
+        // 隐藏结果弹窗
+        function hideResultModal() {
+            resultModal.classList.add('hidden');
         }
 
         // 更新满血状态显示
@@ -918,7 +947,6 @@
             updateCallInfo();
             updatePlayerStats();
             updateTurnIndicator();
-            resultDiv.classList.add('hidden');
             currentCallDisplay.textContent = "暂无叫骰";
             
             // 如果玩家生命值为0，重置生命值
@@ -1019,7 +1047,6 @@
                 updatePlayerStats();
                 updateTurnIndicator();
                 updateCallDisplay();
-                resultDiv.classList.add('hidden');
                 
                 // 更新满血显示
                 updateFullHealthDisplay();
@@ -1411,7 +1438,7 @@
             return points;
         }
 
-        // 开骰
+        // 开骰 - 修复bug
         function openDice(isAiOpening = false) {
             // 显示所有骰子
             revealAiDice();
@@ -1427,6 +1454,7 @@
             // 计算实际存在的骰子数量（包括万能骰子1）
             let actualCount = 0;
             const callArray = gameState.currentCall.callArray;
+            let wildDiceRemaining = diceCounts[1]; // 万能骰子数量
             
             for (let i = 0; i < callArray.length; i++) {
                 const point = i + 2;
@@ -1435,39 +1463,40 @@
                 if (required > 0) {
                     // 实际有这个点数的骰子数量
                     const actualForPoint = diceCounts[point];
-                    // 加上万能骰子（点数1）
-                    const actualWithWild = actualForPoint + diceCounts[1];
+                    
+                    // 计算需要多少万能骰子来补足
+                    const neededWild = Math.max(0, required - actualForPoint);
+                    const wildUsed = Math.min(neededWild, wildDiceRemaining);
                     
                     // 这个点数的骰子实际存在数量
-                    actualCount += Math.min(required, actualWithWild);
+                    actualCount += actualForPoint + wildUsed;
                     
-                    // 更新万能骰子数量（被使用后减少）
-                    diceCounts[1] = Math.max(0, diceCounts[1] - Math.max(0, required - actualForPoint));
+                    // 更新万能骰子数量
+                    wildDiceRemaining -= wildUsed;
                 }
             }
             
-            // 比较结果
+            // 比较结果 - 修复bug
             const isCallValid = actualCount >= gameState.currentCall.count;
-            
-            // 显示结果
-            resultDiv.classList.remove('hidden');
             
             // 计算奖励/惩罚
             const diceCount = gameState.currentCall.count;
             const dicePoints = gameState.currentCall.points;
             
+            let title, message;
+            
             if (isAiOpening) {
                 // AI开骰
                 if (isCallValid) {
-                    resultDiv.textContent = "恶魔开骰成功，你输了！";
-                    resultDiv.className = "result lose";
+                    title = "恶魔开骰成功";
+                    message = "你输了！恶魔的开骰是正确的。";
                     
                     // 玩家失败，扣除生命值
                     gameState.playerHealth -= diceCount;
                     if (gameState.playerHealth < 0) gameState.playerHealth = 0;
                 } else {
-                    resultDiv.textContent = "恶魔开骰失败，你赢了！";
-                    resultDiv.className = "result win";
+                    title = "恶魔开骰失败";
+                    message = "你赢了！恶魔的开骰是错误的。";
                     
                     // 玩家获胜，获得分数和恢复生命值
                     const scoreGain = Math.floor(diceCount * dicePoints / 2);
@@ -1481,20 +1510,20 @@
                         gameState.playerHealth = 20;
                     }
                     
-                    resultDiv.innerHTML += `<br>获得 ${scoreGain} 分，恢复 ${healthGain} 点生命值`;
+                    message += `\n获得 ${scoreGain} 分，恢复 ${healthGain} 点生命值`;
                 }
             } else {
                 // 玩家开骰
                 if (isCallValid) {
-                    resultDiv.textContent = "你开骰失败，你输了！";
-                    resultDiv.className = "result lose";
+                    title = "你开骰失败";
+                    message = "你输了！你的开骰是错误的。";
                     
                     // 玩家失败，扣除生命值
                     gameState.playerHealth -= diceCount;
                     if (gameState.playerHealth < 0) gameState.playerHealth = 0;
                 } else {
-                    resultDiv.textContent = "你开骰成功，你赢了！";
-                    resultDiv.className = "result win";
+                    title = "你开骰成功";
+                    message = "你赢了！你的开骰是正确的。";
                     
                     // 玩家获胜，获得分数和恢复生命值
                     const scoreGain = Math.floor(diceCount * dicePoints / 2);
@@ -1508,7 +1537,7 @@
                         gameState.playerHealth = 20;
                     }
                     
-                    resultDiv.innerHTML += `<br>获得 ${scoreGain} 分，恢复 ${healthGain} 点生命值`;
+                    message += `\n获得 ${scoreGain} 分，恢复 ${healthGain} 点生命值`;
                 }
             }
             
@@ -1530,39 +1559,17 @@
             
             gameState.gameOver = true;
             
-            // 添加重新开始按钮
-            const restartBtn = document.createElement('button');
-            restartBtn.textContent = '再来一局';
-            restartBtn.style.marginTop = '10px';
-            restartBtn.onclick = () => {
-                gameState.round++;
-                gameState.gameInProgress = true;
-                initGame();
-            };
-            resultDiv.appendChild(restartBtn);
-            
-            // 添加返回主菜单按钮
-            const menuBtn = document.createElement('button');
-            menuBtn.textContent = '返回主菜单';
-            menuBtn.style.marginTop = '10px';
-            menuBtn.style.marginLeft = '10px';
-            menuBtn.onclick = () => {
-                gameState.gameInProgress = false;
-                saveGameState();
-                returnToMenu();
-            };
-            resultDiv.appendChild(menuBtn);
+            // 显示结果弹窗
+            showResultModal(title, message);
             
             // 更新玩家状态
             updatePlayerStats();
             
             // 检查玩家是否死亡
             if (gameState.playerHealth <= 0) {
-                setTimeout(() => {
-                    gameState.gameInProgress = false;
-                    saveGameState();
-                    returnToMenu();
-                }, 3000);
+                // 玩家死亡，设置游戏状态为未进行中
+                gameState.gameInProgress = false;
+                saveGameState();
             } else {
                 // 保存游戏状态
                 saveGameState();
@@ -1587,43 +1594,21 @@
             // 保存游戏数据
             saveGameData();
             
-            // 显示所有骰子
-            revealAiDice();
-            
-            // 显示结果
-            resultDiv.classList.remove('hidden');
-            resultDiv.textContent = "你放弃了游戏！";
-            resultDiv.className = "result";
-            resultDiv.innerHTML += `<br>本轮得分: ${gameState.playerScore}，轮次: ${gameState.round}`;
-            
-            // 添加重新开始按钮
-            const restartBtn = document.createElement('button');
-            restartBtn.textContent = '重新开始';
-            restartBtn.style.marginTop = '10px';
-            restartBtn.onclick = () => {
-                gameState.playerHealth = 20;
-                gameState.playerScore = 0;
-                gameState.round = 1;
-                gameState.gameInProgress = true;
-                initGame();
-            };
-            resultDiv.appendChild(restartBtn);
-            
-            // 添加返回主菜单按钮
-            const menuBtn = document.createElement('button');
-            menuBtn.textContent = '返回主菜单';
-            menuBtn.style.marginTop = '10px';
-            menuBtn.style.marginLeft = '10px';
-            menuBtn.onclick = () => {
-                gameState.gameInProgress = false;
-                saveGameState();
-                returnToMenu();
-            };
-            resultDiv.appendChild(menuBtn);
-            
-            gameState.gameOver = true;
+            // 设置游戏状态为未进行中
             gameState.gameInProgress = false;
             saveGameState();
+            
+            // 直接返回主菜单
+            returnToMenu();
+        }
+
+        // 清除本地存储
+        function clearLocalStorage() {
+            localStorage.removeItem('demonDiceGame');
+            localStorage.removeItem('demonDiceGameState');
+            gameState.highScore = 0;
+            gameState.maxRound = 0;
+            updateMenuStats();
         }
 
         // 初始化事件监听器
@@ -1671,6 +1656,22 @@
 
             surrenderNo.addEventListener('click', hideSurrenderModal);
 
+            // 结果弹窗点击事件
+            resultModal.addEventListener('click', () => {
+                hideResultModal();
+                
+                // 检查玩家是否死亡
+                if (gameState.playerHealth <= 0) {
+                    // 玩家死亡，返回主菜单
+                    returnToMenu();
+                } else {
+                    // 玩家还有生命值，继续游戏
+                    gameState.round++;
+                    gameState.gameInProgress = true;
+                    initGame();
+                }
+            });
+
             // 添加点击模态框背景关闭功能
             rulesModal.addEventListener('click', function(e) {
                 if (e.target === this) {
@@ -1704,6 +1705,9 @@
             
             // 更新菜单统计
             updateMenuStats();
+            
+            // 清除本地存储（根据需求）
+            // clearLocalStorage();
         }
 
         // 页面加载完成后启动游戏
@@ -1712,6 +1716,7 @@
         // 全局函数，可以在控制台调用
         window.hideRules = hideRules;
         window.showRules = showRules;
+        window.clearLocalStorage = clearLocalStorage;
     </script>
 </body>
 </html>
