@@ -885,7 +885,8 @@
             highScore: 0,
             maxRound: 0,
             gameInProgress: false,
-            usedDice: [] // 记录开骰中用到的骰子
+            usedDice: [], // 记录开骰中用到的骰子
+            lastWinner: null // 记录上一轮获胜者
         };
 
         // DOM元素
@@ -1007,6 +1008,7 @@
             gameState.isPlayerTurn = true;
             gameState.gameInProgress = true;
             gameState.usedDice = [];
+            gameState.lastWinner = null;
             
             // 更新UI
             updateDiceDisplay();
@@ -1089,7 +1091,8 @@
                 playerHealth: gameState.playerHealth,
                 playerScore: gameState.playerScore,
                 isPlayerTurn: gameState.isPlayerTurn,
-                gameInProgress: gameState.gameInProgress
+                gameInProgress: gameState.gameInProgress,
+                lastWinner: gameState.lastWinner
             };
             localStorage.setItem('demonDiceGameState', JSON.stringify(state));
         }
@@ -1108,6 +1111,7 @@
                 gameState.playerScore = state.playerScore;
                 gameState.isPlayerTurn = state.isPlayerTurn;
                 gameState.gameInProgress = state.gameInProgress;
+                gameState.lastWinner = state.lastWinner || null;
                 
                 // 更新UI
                 updateDiceDisplay();
@@ -1147,7 +1151,12 @@
                 
                 // 检查是否为用到的骰子并添加发光效果
                 if (gameState.usedDice.includes(index)) {
-                    diceEl.classList.add('glow-green');
+                    // 根据获胜方决定颜色
+                    if (gameState.lastWinner === 'player') {
+                        diceEl.classList.add('glow-green');
+                    } else if (gameState.lastWinner === 'ai') {
+                        diceEl.classList.add('glow-red');
+                    }
                 }
                 
                 playerDiceContainer.appendChild(diceEl);
@@ -1162,7 +1171,12 @@
                 
                 // 检查是否为用到的骰子并添加发光效果
                 if (gameState.usedDice.includes(index + 5)) { // AI骰子索引从5开始
-                    diceEl.classList.add('glow-red');
+                    // 根据获胜方决定颜色
+                    if (gameState.lastWinner === 'player') {
+                        diceEl.classList.add('glow-green');
+                    } else if (gameState.lastWinner === 'ai') {
+                        diceEl.classList.add('glow-red');
+                    }
                 }
                 
                 aiDiceContainer.appendChild(diceEl);
@@ -1179,7 +1193,12 @@
                 
                 // 检查是否为用到的骰子并添加发光效果
                 if (gameState.usedDice.includes(index + 5)) { // AI骰子索引从5开始
-                    diceEl.classList.add('glow-red');
+                    // 根据获胜方决定颜色
+                    if (gameState.lastWinner === 'player') {
+                        diceEl.classList.add('glow-green');
+                    } else if (gameState.lastWinner === 'ai') {
+                        diceEl.classList.add('glow-red');
+                    }
                 }
                 
                 aiDiceContainer.appendChild(diceEl);
@@ -1547,6 +1566,7 @@
             const usedPlayerDice = [];
             const usedAiDice = [];
             
+            // 修复开骰判定逻辑 - 精确计算每个点数的实际数量
             for (let i = 0; i < callArray.length; i++) {
                 const point = i + 2;
                 const required = callArray[i];
@@ -1565,34 +1585,42 @@
                     // 更新万能骰子数量
                     wildDiceRemaining -= wildUsed;
                     
-                    // 记录用到的骰子
+                    // 记录用到的骰子 - 只记录实际需要的数量
                     // 记录玩家骰子中该点数的骰子
+                    let playerCount = 0;
                     gameState.playerDice.forEach((value, index) => {
-                        if (value === point && usedPlayerDice.length < actualForPoint) {
+                        if (value === point && playerCount < Math.min(actualForPoint, required)) {
                             usedPlayerDice.push(index);
+                            playerCount++;
                         }
                     });
                     
                     // 记录AI骰子中该点数的骰子
+                    let aiCount = 0;
                     gameState.aiDice.forEach((value, index) => {
-                        if (value === point && usedAiDice.length < actualForPoint) {
+                        if (value === point && aiCount < Math.min(actualForPoint - playerCount, required - playerCount)) {
                             usedAiDice.push(index + 5); // AI骰子索引从5开始
+                            aiCount++;
                         }
                     });
                     
                     // 记录万能骰子
                     if (wildUsed > 0) {
                         // 记录玩家万能骰子
+                        let playerWildCount = 0;
                         gameState.playerDice.forEach((value, index) => {
-                            if (value === 1 && !usedPlayerDice.includes(index) && usedPlayerDice.length < actualForPoint + wildUsed) {
+                            if (value === 1 && !usedPlayerDice.includes(index) && playerWildCount < wildUsed) {
                                 usedPlayerDice.push(index);
+                                playerWildCount++;
                             }
                         });
                         
                         // 记录AI万能骰子
+                        let aiWildCount = 0;
                         gameState.aiDice.forEach((value, index) => {
-                            if (value === 1 && !usedAiDice.includes(index + 5) && usedAiDice.length < actualForPoint + wildUsed) {
+                            if (value === 1 && !usedAiDice.includes(index + 5) && aiWildCount < wildUsed - playerWildCount) {
                                 usedAiDice.push(index + 5); // AI骰子索引从5开始
+                                aiWildCount++;
                             }
                         });
                     }
@@ -1610,12 +1638,14 @@
             const dicePoints = gameState.currentCall.points;
             
             let title, message;
+            let winner = null;
             
             if (isAiOpening) {
                 // AI开骰
                 if (isCallValid) {
                     title = "恶魔开骰成功";
                     message = "你输了！恶魔的开骰是正确的。";
+                    winner = 'ai';
                     
                     // 玩家失败，扣除生命值
                     gameState.playerHealth -= diceCount;
@@ -1623,6 +1653,7 @@
                 } else {
                     title = "恶魔开骰失败";
                     message = "你赢了！恶魔的开骰是错误的。";
+                    winner = 'player';
                     
                     // 玩家获胜，获得分数和恢复生命值
                     const scoreGain = Math.floor(diceCount * dicePoints / 2);
@@ -1643,6 +1674,7 @@
                 if (isCallValid) {
                     title = "你开骰失败";
                     message = "你输了！你的开骰是错误的。";
+                    winner = 'ai';
                     
                     // 玩家失败，扣除生命值
                     gameState.playerHealth -= diceCount;
@@ -1650,6 +1682,7 @@
                 } else {
                     title = "你开骰成功";
                     message = "你赢了！你的开骰是正确的。";
+                    winner = 'player';
                     
                     // 玩家获胜，获得分数和恢复生命值
                     const scoreGain = Math.floor(diceCount * dicePoints / 2);
@@ -1666,6 +1699,9 @@
                     message += `\n获得 ${scoreGain} 分，恢复 ${healthGain} 点生命值`;
                 }
             }
+            
+            // 记录获胜方
+            gameState.lastWinner = winner;
             
             // 更新最高得分和最长轮次
             if (gameState.playerScore > gameState.highScore) {
