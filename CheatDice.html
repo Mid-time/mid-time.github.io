@@ -16,7 +16,7 @@
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             color: #e6e6e6;
             line-height: 1.6;
-            padding: 20px;
+            padding: 10px;
             min-height: 100vh;
             position: relative;
         }
@@ -28,8 +28,97 @@
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             overflow: hidden;
-            padding: 20px;
+            padding: 15px;
             position: relative;
+        }
+        
+        .main-menu {
+            text-align: center;
+            padding: 20px 0;
+        }
+        
+        .game-title {
+            font-size: 3.5rem;
+            color: #ff6b6b;
+            text-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+            margin-bottom: 20px;
+        }
+        
+        .game-subtitle {
+            font-size: 1.2rem;
+            color: #a5b1c2;
+            margin-bottom: 30px;
+        }
+        
+        .menu-stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .menu-stat {
+            text-align: center;
+            background-color: rgba(30, 30, 46, 0.7);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            min-width: 120px;
+        }
+        
+        .menu-stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #4ecdc4;
+        }
+        
+        .menu-stat-label {
+            font-size: 0.9rem;
+            color: #a5b1c2;
+        }
+        
+        .menu-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-width: 300px;
+            margin: 0 auto;
+        }
+        
+        .menu-btn {
+            padding: 15px 25px;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            background-color: #3498db;
+            color: white;
+            box-shadow: 0 4px 0 #2980b9;
+        }
+        
+        .menu-btn:hover {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #1f6390;
+        }
+        
+        .menu-btn.continue {
+            background-color: #2ecc71;
+            box-shadow: 0 4px 0 #27ae60;
+        }
+        
+        .menu-btn.continue:hover {
+            box-shadow: 0 2px 0 #219653;
+        }
+        
+        .menu-btn.rules {
+            background-color: #9b59b6;
+            box-shadow: 0 4px 0 #8e44ad;
+        }
+        
+        .menu-btn.rules:hover {
+            box-shadow: 0 2px 0 #703688;
         }
         
         .help-circle {
@@ -57,22 +146,22 @@
             transform: scale(1.1);
         }
         
-        header {
+        .game-header {
             text-align: center;
-            padding: 20px 0;
+            padding: 15px 0;
             border-bottom: 2px solid #394867;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
         
         h1 {
-            font-size: 3rem;
+            font-size: 2.5rem;
             color: #ff6b6b;
             text-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
             margin-bottom: 10px;
         }
         
         .subtitle {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             color: #a5b1c2;
         }
         
@@ -80,15 +169,15 @@
             display: flex;
             justify-content: space-between;
             background-color: #1e1e2e;
-            padding: 15px;
+            padding: 12px;
             border-radius: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
         }
         
         .player-stats {
             display: flex;
-            gap: 30px;
+            gap: 20px;
         }
         
         .stat {
@@ -97,7 +186,7 @@
         }
         
         .stat-value {
-            font-size: 1.8rem;
+            font-size: 1.6rem;
             font-weight: bold;
             color: #4ecdc4;
             transition: all 0.3s ease;
@@ -128,13 +217,13 @@
         }
         
         .stat-label {
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             color: #a5b1c2;
         }
         
         .round-indicator {
             background-color: #394867;
-            padding: 10px 20px;
+            padding: 8px 16px;
             border-radius: 20px;
             font-weight: bold;
             color: #f7f7f7;
@@ -145,10 +234,10 @@
         
         .turn-indicator {
             text-align: center;
-            padding: 15px;
-            margin: 20px 0;
+            padding: 12px;
+            margin: 15px 0;
             border-radius: 10px;
-            font-size: 1.5rem;
+            font-size: 1.3rem;
             font-weight: bold;
             transition: all 0.3s ease;
         }
@@ -168,43 +257,43 @@
         .game-area {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 30px;
-            gap: 20px;
+            margin-bottom: 20px;
+            gap: 15px;
         }
         
         .player-area, .ai-area {
             flex: 1;
             background-color: rgba(30, 30, 46, 0.7);
             border-radius: 10px;
-            padding: 20px;
+            padding: 15px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
         }
         
         .area-title {
             text-align: center;
-            margin-bottom: 15px;
-            font-size: 1.5rem;
+            margin-bottom: 10px;
+            font-size: 1.3rem;
             color: #a5b1c2;
         }
         
         .dice-container {
             display: flex;
             justify-content: center;
-            gap: 15px;
-            margin: 20px 0;
+            gap: 10px;
+            margin: 15px 0;
             flex-wrap: wrap;
         }
         
         .dice {
-            width: 70px;
-            height: 70px;
-            border-radius: 10px;
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
             background-color: #6c757d;
             border: 3px solid #ffffff;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 28px;
+            font-size: 24px;
             font-weight: bold;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
             transition: transform 0.3s ease;
@@ -222,37 +311,37 @@
         
         .current-call {
             background-color: #1e1e2e;
-            padding: 15px;
+            padding: 12px;
             border-radius: 10px;
-            margin: 20px 0;
+            margin: 15px 0;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
         }
         
         .call-title {
             text-align: center;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             color: #a5b1c2;
         }
         
         .call-display {
             text-align: center;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: bold;
             color: #4ecdc4;
-            min-height: 30px;
+            min-height: 24px;
         }
         
         .controls {
             display: flex;
             justify-content: center;
-            gap: 20px;
-            margin-top: 20px;
+            gap: 15px;
+            margin-top: 15px;
             flex-wrap: wrap;
         }
         
         button {
-            padding: 12px 25px;
-            font-size: 1.1rem;
+            padding: 10px 20px;
+            font-size: 1rem;
             border: none;
             border-radius: 8px;
             cursor: pointer;
@@ -291,13 +380,13 @@
             box-shadow: 0 4px 0 #636e72;
         }
         
-        #end-game-btn {
+        #surrender-btn {
             background-color: #e67e22;
             color: white;
             box-shadow: 0 4px 0 #d35400;
         }
         
-        #end-game-btn:hover {
+        #surrender-btn:hover {
             background-color: #d35400;
             transform: translateY(2px);
             box-shadow: 0 2px 0 #a35200;
@@ -307,16 +396,16 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 15px;
-            margin-top: 20px;
+            gap: 12px;
+            margin-top: 15px;
             flex-wrap: wrap;
         }
         
         .call-inputs {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             background-color: #1e1e2e;
-            padding: 15px;
+            padding: 12px;
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
         }
@@ -328,40 +417,40 @@
         }
         
         .dice-icon {
-            font-size: 24px;
+            font-size: 20px;
             margin-bottom: 5px;
             color: #4ecdc4;
         }
         
         .dice-label {
-            font-size: 14px;
+            font-size: 12px;
             color: #a5b1c2;
             margin-top: 5px;
         }
         
         .call-inputs input {
-            width: 60px;
-            padding: 10px;
+            width: 50px;
+            padding: 8px;
             text-align: center;
             border: 2px solid #394867;
             border-radius: 5px;
             background-color: #2c3e50;
             color: #ecf0f1;
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: bold;
         }
         
         .call-info {
             display: flex;
-            gap: 20px;
+            gap: 15px;
             justify-content: center;
-            margin-top: 15px;
-            font-size: 1.1rem;
+            margin-top: 12px;
+            font-size: 1rem;
         }
         
         .call-count, .point-count {
             background-color: #1e1e2e;
-            padding: 10px 20px;
+            padding: 8px 16px;
             border-radius: 8px;
             font-weight: bold;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
@@ -380,12 +469,12 @@
         }
         
         .result {
-            margin-top: 30px;
-            padding: 20px;
+            margin-top: 20px;
+            padding: 15px;
             border-radius: 10px;
             text-align: center;
             font-weight: bold;
-            font-size: 1.3rem;
+            font-size: 1.1rem;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
         }
         
@@ -405,7 +494,7 @@
             display: none !important;
         }
         
-        .rules-modal {
+        .rules-modal, .surrender-modal {
             position: fixed;
             top: 0;
             left: 0;
@@ -418,45 +507,45 @@
             z-index: 1000;
         }
         
-        .rules-content {
+        .rules-content, .surrender-content {
             background-color: #1e1e2e;
-            padding: 30px;
+            padding: 25px;
             border-radius: 15px;
-            max-width: 600px;
+            max-width: 500px;
             max-height: 80vh;
             overflow-y: auto;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             position: relative;
         }
         
-        .rules-content h2 {
+        .rules-content h2, .surrender-content h2 {
             color: #ff6b6b;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             text-align: center;
         }
         
         .rules-content p {
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
         
         .rules-content ul {
             margin-left: 20px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
         
         .rules-content li {
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
         
         .close-btn {
             background-color: #e74c3c;
             color: white;
-            padding: 10px 20px;
+            padding: 8px 16px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
             display: block;
-            margin: 20px auto 0;
+            margin: 15px auto 0;
             font-weight: bold;
             transition: all 0.3s ease;
         }
@@ -469,6 +558,32 @@
         .dice-face {
             display: inline-block;
             margin: 0 5px;
+        }
+        
+        .confirm-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .confirm-btn {
+            padding: 10px 20px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .confirm-yes {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        .confirm-no {
+            background-color: #7f8c8d;
+            color: white;
         }
         
         @media (max-width: 768px) {
@@ -494,103 +609,146 @@
                 top: 10px;
                 right: 10px;
             }
+            
+            .menu-buttons {
+                max-width: 100%;
+            }
+            
+            .game-title {
+                font-size: 2.5rem;
+            }
+            
+            .dice {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="help-circle" id="help-btn">?</div>
-    
-    <div class="container">
-        <header>
-            <h1>恶魔骰</h1>
-            <div class="subtitle">心理与运气的终极对决</div>
-        </header>
-        
-        <div class="game-info">
-            <div class="player-stats">
-                <div class="stat">
-                    <div class="stat-value" id="health-value">20</div>
-                    <div class="stat-label">生命值</div>
+    <!-- 主菜单 -->
+    <div id="main-menu" class="main-menu">
+        <div class="container">
+            <h1 class="game-title">恶魔骰</h1>
+            <div class="game-subtitle">心理与运气的终极对决</div>
+            
+            <div class="menu-stats">
+                <div class="menu-stat">
+                    <div class="menu-stat-value" id="menu-high-score">0</div>
+                    <div class="menu-stat-label">最高得分</div>
                 </div>
-                <div class="stat">
-                    <div class="stat-value" id="score-value">0</div>
-                    <div class="stat-label">得分</div>
+                <div class="menu-stat">
+                    <div class="menu-stat-value" id="menu-max-round">0</div>
+                    <div class="menu-stat-label">最长轮次</div>
                 </div>
-                <div class="stat">
-                    <div class="stat-value" id="round-value">1</div>
-                    <div class="stat-label">轮次</div>
-                </div>
-            </div>
-            <div class="round-indicator">
-                <span>最高得分: <span id="high-score">0</span></span>
-                <span>最长轮次: <span id="max-round">0</span></span>
-            </div>
-        </div>
-        
-        <div id="turn-indicator" class="turn-indicator player-turn">
-            玩家回合
-        </div>
-        
-        <div class="game-area">
-            <div class="player-area">
-                <h2 class="area-title">你的骰子</h2>
-                <div id="player-dice" class="dice-container"></div>
             </div>
             
-            <div class="ai-area">
-                <h2 class="area-title">恶魔的骰子</h2>
-                <div id="ai-dice" class="dice-container"></div>
+            <div class="menu-buttons">
+                <button id="start-btn" class="menu-btn">开始游戏</button>
+                <button id="continue-btn" class="menu-btn continue hidden">继续游戏</button>
+                <button id="rules-btn" class="menu-btn rules">游戏规则</button>
             </div>
         </div>
-        
-        <div class="current-call">
-            <h3 class="call-title">当前叫骰</h3>
-            <div id="current-call-display" class="call-display">暂无叫骰</div>
-        </div>
-        
-        <div class="controls">
-            <button id="open-btn">开！</button>
-            <div class="call-section">
-                <button id="call-btn">叫！</button>
-                <div class="call-inputs">
-                    <div class="input-group">
-                        <div class="dice-icon">2</div>
-                        <input type="number" min="0" id="dice-2" value="0">
-                        <div class="dice-label">2点</div>
-                    </div>
-                    <div class="input-group">
-                        <div class="dice-icon">3</div>
-                        <input type="number" min="0" id="dice-3" value="0">
-                        <div class="dice-label">3点</div>
-                    </div>
-                    <div class="input-group">
-                        <div class="dice-icon">4</div>
-                        <input type="number" min="0" id="dice-4" value="0">
-                        <div class="dice-label">4点</div>
-                    </div>
-                    <div class="input-group">
-                        <div class="dice-icon">5</div>
-                        <input type="number" min="0" id="dice-5" value="0">
-                        <div class="dice-label">5点</div>
-                    </div>
-                    <div class="input-group">
-                        <div class="dice-icon">6</div>
-                        <input type="number" min="0" id="dice-6" value="0">
-                        <div class="dice-label">6点</div>
-                    </div>
-                </div>
-            </div>
-            <button id="end-game-btn">结束游戏</button>
-        </div>
-        
-        <div class="call-info">
-            <div class="call-count">叫骰数量: <span id="call-count-value">0</span></div>
-            <div class="point-count">点数数量: <span id="point-count-value">0</span></div>
-        </div>
-        
-        <div id="result" class="result hidden"></div>
     </div>
     
+    <!-- 游戏界面 -->
+    <div id="game-screen" class="hidden">
+        <div class="help-circle" id="help-btn">?</div>
+        
+        <div class="container">
+            <div class="game-header">
+                <h1>恶魔骰</h1>
+                <div class="subtitle">心理与运气的终极对决</div>
+            </div>
+            
+            <div class="game-info">
+                <div class="player-stats">
+                    <div class="stat">
+                        <div class="stat-value" id="health-value">20</div>
+                        <div class="stat-label">生命值</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="score-value">0</div>
+                        <div class="stat-label">得分</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="round-value">1</div>
+                        <div class="stat-label">轮次</div>
+                    </div>
+                </div>
+                <div class="round-indicator">
+                    <span>最高得分: <span id="high-score">0</span></span>
+                    <span>最长轮次: <span id="max-round">0</span></span>
+                </div>
+            </div>
+            
+            <div id="turn-indicator" class="turn-indicator player-turn">
+                玩家回合
+            </div>
+            
+            <div class="game-area">
+                <div class="player-area">
+                    <h2 class="area-title">你的骰子</h2>
+                    <div id="player-dice" class="dice-container"></div>
+                </div>
+                
+                <div class="ai-area">
+                    <h2 class="area-title">恶魔的骰子</h2>
+                    <div id="ai-dice" class="dice-container"></div>
+                </div>
+            </div>
+            
+            <div class="current-call">
+                <h3 class="call-title">当前叫骰</h3>
+                <div id="current-call-display" class="call-display">暂无叫骰</div>
+            </div>
+            
+            <div class="controls">
+                <button id="open-btn">开！</button>
+                <div class="call-section">
+                    <button id="call-btn">叫！</button>
+                    <div class="call-inputs">
+                        <div class="input-group">
+                            <div class="dice-icon">贰</div>
+                            <input type="number" min="0" id="dice-2" value="0">
+                            <div class="dice-label">2点</div>
+                        </div>
+                        <div class="input-group">
+                            <div class="dice-icon">叁</div>
+                            <input type="number" min="0" id="dice-3" value="0">
+                            <div class="dice-label">3点</div>
+                        </div>
+                        <div class="input-group">
+                            <div class="dice-icon">肆</div>
+                            <input type="number" min="0" id="dice-4" value="0">
+                            <div class="dice-label">4点</div>
+                        </div>
+                        <div class="input-group">
+                            <div class="dice-icon">伍</div>
+                            <input type="number" min="0" id="dice-5" value="0">
+                            <div class="dice-label">5点</div>
+                        </div>
+                        <div class="input-group">
+                            <div class="dice-icon">陆</div>
+                            <input type="number" min="0" id="dice-6" value="0">
+                            <div class="dice-label">6点</div>
+                        </div>
+                    </div>
+                </div>
+                <button id="surrender-btn">放弃</button>
+            </div>
+            
+            <div class="call-info">
+                <div class="call-count">叫骰数量: <span id="call-count-value">0</span></div>
+                <div class="point-count">点数数量: <span id="point-count-value">0</span></div>
+            </div>
+            
+            <div id="result" class="result hidden"></div>
+        </div>
+    </div>
+    
+    <!-- 规则弹窗 -->
     <div id="rules-modal" class="rules-modal hidden">
         <div class="rules-content">
             <h2>恶魔骰游戏规则</h2>
@@ -622,6 +780,18 @@
             <button id="close-rules-btn" class="close-btn">关闭</button>
         </div>
     </div>
+    
+    <!-- 放弃确认弹窗 -->
+    <div id="surrender-modal" class="surrender-modal hidden">
+        <div class="surrender-content">
+            <h2>确认放弃</h2>
+            <p>确定要放弃当前游戏吗？这将记录当前进度并返回主菜单。</p>
+            <div class="confirm-buttons">
+                <button id="surrender-yes" class="confirm-btn confirm-yes">确定</button>
+                <button id="surrender-no" class="confirm-btn confirm-no">取消</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         // 游戏状态
@@ -635,15 +805,21 @@
             playerScore: 0,
             isPlayerTurn: true,
             highScore: 0,
-            maxRound: 0
+            maxRound: 0,
+            gameInProgress: false
         };
 
         // DOM元素
+        const mainMenu = document.getElementById('main-menu');
+        const gameScreen = document.getElementById('game-screen');
+        const startBtn = document.getElementById('start-btn');
+        const continueBtn = document.getElementById('continue-btn');
+        const rulesBtn = document.getElementById('rules-btn');
         const playerDiceContainer = document.getElementById('player-dice');
         const aiDiceContainer = document.getElementById('ai-dice');
         const openBtn = document.getElementById('open-btn');
         const callBtn = document.getElementById('call-btn');
-        const endGameBtn = document.getElementById('end-game-btn');
+        const surrenderBtn = document.getElementById('surrender-btn');
         const helpBtn = document.getElementById('help-btn');
         const diceInputs = [
             document.getElementById('dice-2'),
@@ -662,29 +838,42 @@
         const roundValue = document.getElementById('round-value');
         const highScoreElement = document.getElementById('high-score');
         const maxRoundElement = document.getElementById('max-round');
+        const menuHighScore = document.getElementById('menu-high-score');
+        const menuMaxRound = document.getElementById('menu-max-round');
         const rulesModal = document.getElementById('rules-modal');
         const closeRulesBtn = document.getElementById('close-rules-btn');
+        const surrenderModal = document.getElementById('surrender-modal');
+        const surrenderYes = document.getElementById('surrender-yes');
+        const surrenderNo = document.getElementById('surrender-no');
 
-        // 骰子面表示 - 修改为数字和骷髅头
+        // 骰子面表示 - 修改为中文数字
         const diceFaces = {
             1: '☠', // 骷髅头
-            2: '2',
-            3: '3',
-            4: '4',
-            5: '5',
-            6: '6'
+            2: '贰',
+            3: '叁',
+            4: '肆',
+            5: '伍',
+            6: '陆'
         };
 
         // 显示游戏规则
         function showRules() {
-            console.log('显示规则弹窗');
             rulesModal.classList.remove('hidden');
         }
 
         // 隐藏游戏规则
         function hideRules() {
-            console.log('隐藏规则弹窗');
             rulesModal.classList.add('hidden');
+        }
+
+        // 显示放弃确认
+        function showSurrenderModal() {
+            surrenderModal.classList.remove('hidden');
+        }
+
+        // 隐藏放弃确认
+        function hideSurrenderModal() {
+            surrenderModal.classList.add('hidden');
         }
 
         // 更新满血状态显示
@@ -722,6 +911,7 @@
             gameState.currentCall = null;
             gameState.gameOver = false;
             gameState.isPlayerTurn = true;
+            gameState.gameInProgress = true;
             
             // 更新UI
             updateDiceDisplay();
@@ -741,6 +931,31 @@
             
             // 更新满血显示
             updateFullHealthDisplay();
+            
+            // 保存游戏状态
+            saveGameState();
+        }
+
+        // 继续游戏
+        function continueGame() {
+            loadGameState();
+            gameScreen.classList.remove('hidden');
+            mainMenu.classList.add('hidden');
+        }
+
+        // 返回主菜单
+        function returnToMenu() {
+            gameScreen.classList.add('hidden');
+            mainMenu.classList.remove('hidden');
+            updateMenuStats();
+            
+            // 检查是否有进行中的游戏
+            const savedState = localStorage.getItem('demonDiceGameState');
+            if (savedState && JSON.parse(savedState).gameInProgress) {
+                continueBtn.classList.remove('hidden');
+            } else {
+                continueBtn.classList.add('hidden');
+            }
         }
 
         // 从本地存储加载游戏数据
@@ -753,6 +968,8 @@
                 
                 highScoreElement.textContent = gameState.highScore;
                 maxRoundElement.textContent = gameState.maxRound;
+                menuHighScore.textContent = gameState.highScore;
+                menuMaxRound.textContent = gameState.maxRound;
             }
         }
 
@@ -763,6 +980,56 @@
                 maxRound: gameState.maxRound
             };
             localStorage.setItem('demonDiceGame', JSON.stringify(data));
+        }
+
+        // 保存游戏状态到本地存储
+        function saveGameState() {
+            const state = {
+                playerDice: gameState.playerDice,
+                aiDice: gameState.aiDice,
+                currentCall: gameState.currentCall,
+                gameOver: gameState.gameOver,
+                round: gameState.round,
+                playerHealth: gameState.playerHealth,
+                playerScore: gameState.playerScore,
+                isPlayerTurn: gameState.isPlayerTurn,
+                gameInProgress: gameState.gameInProgress
+            };
+            localStorage.setItem('demonDiceGameState', JSON.stringify(state));
+        }
+
+        // 从本地存储加载游戏状态
+        function loadGameState() {
+            const savedState = localStorage.getItem('demonDiceGameState');
+            if (savedState) {
+                const state = JSON.parse(savedState);
+                gameState.playerDice = state.playerDice;
+                gameState.aiDice = state.aiDice;
+                gameState.currentCall = state.currentCall;
+                gameState.gameOver = state.gameOver;
+                gameState.round = state.round;
+                gameState.playerHealth = state.playerHealth;
+                gameState.playerScore = state.playerScore;
+                gameState.isPlayerTurn = state.isPlayerTurn;
+                gameState.gameInProgress = state.gameInProgress;
+                
+                // 更新UI
+                updateDiceDisplay();
+                updateCallInfo();
+                updatePlayerStats();
+                updateTurnIndicator();
+                updateCallDisplay();
+                resultDiv.classList.add('hidden');
+                
+                // 更新满血显示
+                updateFullHealthDisplay();
+            }
+        }
+
+        // 更新菜单统计
+        function updateMenuStats() {
+            menuHighScore.textContent = gameState.highScore;
+            menuMaxRound.textContent = gameState.maxRound;
         }
 
         // 掷骰子
@@ -894,6 +1161,9 @@
             updateCallInfo();
             updateCallDisplay();
             
+            // 保存游戏状态
+            saveGameState();
+            
             // AI回合
             aiCall();
         }
@@ -915,7 +1185,7 @@
             currentCallDisplay.textContent = displayText;
         }
 
-        // AI叫骰算法
+        // AI叫骰算法 - 修复bug
         function aiCall() {
             // 更新回合指示器
             gameState.isPlayerTurn = false;
@@ -956,6 +1226,9 @@
                     // 更新UI
                     updateCallDisplay();
                     
+                    // 保存游戏状态
+                    saveGameState();
+                    
                     // 切换回玩家回合
                     setTimeout(() => {
                         gameState.isPlayerTurn = true;
@@ -965,42 +1238,168 @@
                     return;
                 }
                 
-                // 简化版AI逻辑 - 总是增加叫骰数量
-                const currentCall = gameState.currentCall;
-                const newCount = currentCall.count + 1;
-                const newCallArray = [...currentCall.callArray];
+                // 评估当前叫骰的可信度
+                const currentScore = calculateCallScore(
+                    gameState.currentCall.count,
+                    gameState.currentCall.points,
+                    gameState.currentCall.callArray,
+                    gameState.aiDice
+                );
                 
-                // 找到第一个非零点数并增加其数量
-                for (let i = 0; i < newCallArray.length; i++) {
-                    if (newCallArray[i] > 0) {
-                        newCallArray[i] = newCount;
-                        break;
+                // 如果可信度太低，AI选择开骰
+                if (currentScore < 20) {
+                    openDice(true);
+                    return;
+                }
+                
+                // 生成可能的叫骰并选择最佳的一个
+                const bestCall = generateBestCall();
+                
+                if (bestCall) {
+                    // 更新当前叫骰
+                    gameState.currentCall = bestCall;
+                    
+                    // 更新UI
+                    updateCallDisplay();
+                    
+                    // 保存游戏状态
+                    saveGameState();
+                    
+                    // 切换回玩家回合
+                    setTimeout(() => {
+                        gameState.isPlayerTurn = true;
+                        updateTurnIndicator();
+                    }, 1500);
+                } else {
+                    // 没有找到合适的叫骰，AI选择开骰
+                    openDice(true);
+                }
+            }, 2000); // 2秒思考时间
+        }
+
+        // 计算叫骰的可信度分数
+        function calculateCallScore(callCount, pointCount, callArray, aiDice) {
+            // 统计AI自己的骰子
+            const aiDiceCounts = [0, 0, 0, 0, 0, 0, 0]; // 索引1-6对应点数1-6
+            aiDice.forEach(value => {
+                aiDiceCounts[value]++;
+            });
+            
+            // 计算叫骰中每个点数的数量
+            let totalRequired = 0;
+            let score = 0;
+            
+            // 计算需要多少个骰子才能满足叫骰
+            for (let i = 0; i < callArray.length; i++) {
+                const point = i + 2; // 点数从2到6
+                const required = callArray[i];
+                
+                if (required > 0) {
+                    // AI自己有多少个这个点数的骰子
+                    const aiHas = aiDiceCounts[point];
+                    // 加上万能骰子（点数1）
+                    const aiHasWithWild = aiHas + aiDiceCounts[1];
+                    
+                    // 如果AI自己的骰子加上万能骰子还不够，需要玩家提供
+                    const neededFromPlayer = Math.max(0, required - aiHasWithWild);
+                    totalRequired += neededFromPlayer;
+                    
+                    // 计算这个点数的可信度
+                    if (neededFromPlayer === 0) {
+                        score += 100; // AI自己就能满足
+                    } else if (neededFromPlayer <= 2) {
+                        score += 70 - (neededFromPlayer * 10); // 需要少量玩家骰子
+                    } else if (neededFromPlayer <= 4) {
+                        score += 40 - (neededFromPlayer * 5); // 需要较多玩家骰子
+                    } else {
+                        score += 10 - neededFromPlayer; // 需要大量玩家骰子
                     }
                 }
+            }
+            
+            // 如果需要玩家提供超过5个骰子（不可能），分数极低
+            if (totalRequired > 5) {
+                score = -100;
+            }
+            
+            // 考虑叫骰的激进程度
+            const aggressionPenalty = Math.max(0, callCount - 5) * 5;
+            score -= aggressionPenalty;
+            
+            return score;
+        }
+
+        // 生成最佳叫骰 - 修复bug
+        function generateBestCall() {
+            const currentCall = gameState.currentCall;
+            const aiDice = gameState.aiDice;
+            
+            let bestCall = null;
+            let bestScore = -1000;
+            
+            // 生成可能的叫骰
+            // 策略1: 增加数量，保持点数不变
+            for (let count = currentCall.count + 1; count <= 10; count++) {
+                const callArray = [...currentCall.callArray];
+                const points = currentCall.points + (count - currentCall.count) * getLowestPoint(callArray);
                 
-                // 如果没有找到非零点数，默认增加第一个点数
-                if (newCallArray.every(val => val === 0)) {
-                    newCallArray[0] = newCount;
+                const score = calculateCallScore(count, points, callArray, aiDice);
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestCall = { count, points, callArray: [...callArray] };
                 }
-                
-                const newPoints = calculatePoints(newCallArray);
-                
-                // 更新当前叫骰
-                gameState.currentCall = {
-                    count: newCount,
-                    points: newPoints,
-                    callArray: newCallArray
-                };
-                
-                // 更新UI
-                updateCallDisplay();
-                
-                // 切换回玩家回合
-                setTimeout(() => {
-                    gameState.isPlayerTurn = true;
-                    updateTurnIndicator();
-                }, 1500);
-            }, 2000); // 2秒思考时间
+            }
+            
+            // 策略2: 保持数量不变，增加点数
+            for (let i = 0; i < currentCall.callArray.length; i++) {
+                if (currentCall.callArray[i] > 0) {
+                    for (let j = i + 1; j < currentCall.callArray.length; j++) {
+                        const newCallArray = [...currentCall.callArray];
+                        newCallArray[i]--;
+                        newCallArray[j]++;
+                        
+                        const points = calculatePoints(newCallArray);
+                        const score = calculateCallScore(currentCall.count, points, newCallArray, aiDice);
+                        
+                        if (score > bestScore) {
+                            bestScore = score;
+                            bestCall = { 
+                                count: currentCall.count, 
+                                points, 
+                                callArray: newCallArray 
+                            };
+                        }
+                    }
+                }
+            }
+            
+            // 策略3: 混合策略 - 增加数量并优化点数分布
+            for (let count = currentCall.count + 1; count <= Math.min(8, currentCall.count + 2); count++) {
+                for (let i = 0; i < 5; i++) {
+                    const newCallArray = [...currentCall.callArray];
+                    newCallArray[i] += count - currentCall.count;
+                    
+                    const points = calculatePoints(newCallArray);
+                    const score = calculateCallScore(count, points, newCallArray, aiDice);
+                    
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestCall = { count, points, callArray: newCallArray };
+                    }
+                }
+            }
+            
+            return bestCall;
+        }
+
+        // 获取叫骰数组中的最低点数
+        function getLowestPoint(callArray) {
+            for (let i = 0; i < callArray.length; i++) {
+                if (callArray[i] > 0) {
+                    return i + 2;
+                }
+            }
+            return 2;
         }
 
         // 计算叫骰数组的总点数
@@ -1117,11 +1516,13 @@
             if (gameState.playerScore > gameState.highScore) {
                 gameState.highScore = gameState.playerScore;
                 highScoreElement.textContent = gameState.highScore;
+                menuHighScore.textContent = gameState.highScore;
             }
             
             if (gameState.round > gameState.maxRound) {
                 gameState.maxRound = gameState.round;
                 maxRoundElement.textContent = gameState.maxRound;
+                menuMaxRound.textContent = gameState.maxRound;
             }
             
             // 保存游戏数据
@@ -1135,60 +1536,114 @@
             restartBtn.style.marginTop = '10px';
             restartBtn.onclick = () => {
                 gameState.round++;
+                gameState.gameInProgress = true;
                 initGame();
             };
             resultDiv.appendChild(restartBtn);
             
+            // 添加返回主菜单按钮
+            const menuBtn = document.createElement('button');
+            menuBtn.textContent = '返回主菜单';
+            menuBtn.style.marginTop = '10px';
+            menuBtn.style.marginLeft = '10px';
+            menuBtn.onclick = () => {
+                gameState.gameInProgress = false;
+                saveGameState();
+                returnToMenu();
+            };
+            resultDiv.appendChild(menuBtn);
+            
             // 更新玩家状态
             updatePlayerStats();
+            
+            // 检查玩家是否死亡
+            if (gameState.playerHealth <= 0) {
+                setTimeout(() => {
+                    gameState.gameInProgress = false;
+                    saveGameState();
+                    returnToMenu();
+                }, 3000);
+            } else {
+                // 保存游戏状态
+                saveGameState();
+            }
         }
 
-        // 强制结束游戏
-        function endGame() {
-            if (confirm("确定要结束当前游戏吗？这将记录当前进度并重新开始游戏。")) {
-                // 更新最高得分和最长轮次
-                if (gameState.playerScore > gameState.highScore) {
-                    gameState.highScore = gameState.playerScore;
-                    highScoreElement.textContent = gameState.highScore;
-                }
-                
-                if (gameState.round > gameState.maxRound) {
-                    gameState.maxRound = gameState.round;
-                    maxRoundElement.textContent = gameState.maxRound;
-                }
-                
-                // 保存游戏数据
-                saveGameData();
-                
-                // 显示所有骰子
-                revealAiDice();
-                
-                // 显示结果
-                resultDiv.classList.remove('hidden');
-                resultDiv.textContent = "游戏已结束！";
-                resultDiv.className = "result";
-                resultDiv.innerHTML += `<br>本轮得分: ${gameState.playerScore}，轮次: ${gameState.round}`;
-                
-                // 添加重新开始按钮
-                const restartBtn = document.createElement('button');
-                restartBtn.textContent = '重新开始';
-                restartBtn.style.marginTop = '10px';
-                restartBtn.onclick = () => {
-                    gameState.playerHealth = 20;
-                    gameState.playerScore = 0;
-                    gameState.round = 1;
-                    initGame();
-                };
-                resultDiv.appendChild(restartBtn);
-                
-                gameState.gameOver = true;
+        // 放弃游戏
+        function surrenderGame() {
+            // 更新最高得分和最长轮次
+            if (gameState.playerScore > gameState.highScore) {
+                gameState.highScore = gameState.playerScore;
+                highScoreElement.textContent = gameState.highScore;
+                menuHighScore.textContent = gameState.highScore;
             }
+            
+            if (gameState.round > gameState.maxRound) {
+                gameState.maxRound = gameState.round;
+                maxRoundElement.textContent = gameState.maxRound;
+                menuMaxRound.textContent = gameState.maxRound;
+            }
+            
+            // 保存游戏数据
+            saveGameData();
+            
+            // 显示所有骰子
+            revealAiDice();
+            
+            // 显示结果
+            resultDiv.classList.remove('hidden');
+            resultDiv.textContent = "你放弃了游戏！";
+            resultDiv.className = "result";
+            resultDiv.innerHTML += `<br>本轮得分: ${gameState.playerScore}，轮次: ${gameState.round}`;
+            
+            // 添加重新开始按钮
+            const restartBtn = document.createElement('button');
+            restartBtn.textContent = '重新开始';
+            restartBtn.style.marginTop = '10px';
+            restartBtn.onclick = () => {
+                gameState.playerHealth = 20;
+                gameState.playerScore = 0;
+                gameState.round = 1;
+                gameState.gameInProgress = true;
+                initGame();
+            };
+            resultDiv.appendChild(restartBtn);
+            
+            // 添加返回主菜单按钮
+            const menuBtn = document.createElement('button');
+            menuBtn.textContent = '返回主菜单';
+            menuBtn.style.marginTop = '10px';
+            menuBtn.style.marginLeft = '10px';
+            menuBtn.onclick = () => {
+                gameState.gameInProgress = false;
+                saveGameState();
+                returnToMenu();
+            };
+            resultDiv.appendChild(menuBtn);
+            
+            gameState.gameOver = true;
+            gameState.gameInProgress = false;
+            saveGameState();
         }
 
         // 初始化事件监听器
         function initEventListeners() {
             console.log('初始化事件监听器');
             
+            startBtn.addEventListener('click', () => {
+                gameState.playerHealth = 20;
+                gameState.playerScore = 0;
+                gameState.round = 1;
+                gameState.gameInProgress = true;
+                initGame();
+                gameScreen.classList.remove('hidden');
+                mainMenu.classList.add('hidden');
+            });
+
+            continueBtn.addEventListener('click', continueGame);
+
+            rulesBtn.addEventListener('click', showRules);
+
             openBtn.addEventListener('click', () => {
                 if (!gameState.gameOver && gameState.currentCall) {
                     openDice(false);
@@ -1201,17 +1656,31 @@
                 }
             });
 
-            endGameBtn.addEventListener('click', endGame);
+            surrenderBtn.addEventListener('click', showSurrenderModal);
 
             helpBtn.addEventListener('click', showRules);
 
             // 修复：确保关闭按钮正确绑定事件
             closeRulesBtn.addEventListener('click', hideRules);
 
+            // 放弃确认按钮
+            surrenderYes.addEventListener('click', () => {
+                hideSurrenderModal();
+                surrenderGame();
+            });
+
+            surrenderNo.addEventListener('click', hideSurrenderModal);
+
             // 添加点击模态框背景关闭功能
             rulesModal.addEventListener('click', function(e) {
                 if (e.target === this) {
                     hideRules();
+                }
+            });
+
+            surrenderModal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    hideSurrenderModal();
                 }
             });
 
@@ -1224,7 +1693,17 @@
         function startGame() {
             console.log('开始游戏初始化');
             initEventListeners();
-            initGame();
+            
+            // 检查是否有进行中的游戏
+            const savedState = localStorage.getItem('demonDiceGameState');
+            if (savedState && JSON.parse(savedState).gameInProgress) {
+                continueBtn.classList.remove('hidden');
+            } else {
+                continueBtn.classList.add('hidden');
+            }
+            
+            // 更新菜单统计
+            updateMenuStats();
         }
 
         // 页面加载完成后启动游戏
