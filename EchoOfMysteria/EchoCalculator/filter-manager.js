@@ -172,7 +172,10 @@ class UnifiedFilterManager {
                     return false;
                 }
             } else {
-                if (mainTypeFilter && item.type !== mainTypeFilter) {
+                if (mainTypeFilter && item.maintype !== mainTypeFilter) {
+                    return false;
+                }
+                if (subTypeFilter && item.subtype !== subTypeFilter) {
                     return false;
                 }
             }
@@ -282,13 +285,16 @@ class UnifiedFilterManager {
             this.applyFilterDebounced();
         });
         
-        document.getElementById('cost-unit').addEventListener('change', () => {
-            this.applyFilterDebounced();
-        });
-        
-        document.getElementById('max-cost-unit').addEventListener('change', () => {
-            this.applyFilterDebounced();
-        });
+        // 仅在物品模式下添加货币单位变化监听
+        if (this.manager.currentMode === 'items') {
+            document.getElementById('cost-unit').addEventListener('change', () => {
+                this.applyFilterDebounced();
+            });
+            
+            document.getElementById('max-cost-unit').addEventListener('change', () => {
+                this.applyFilterDebounced();
+            });
+        }
         
         // 重量筛选
         document.getElementById('min-weight').addEventListener('input', () => {
@@ -316,9 +322,7 @@ class UnifiedFilterManager {
         
         // 主类型选择变化
         document.getElementById('main-type-filter').addEventListener('change', (e) => {
-            if (this.manager.currentMode === 'items') {
-                this.manager.updateSubTypeFilter(e.target.value);
-            }
+            this.manager.updateSubTypeFilter(e.target.value);
             this.applyFilterDebounced();
         });
         
@@ -344,14 +348,21 @@ class UnifiedFilterManager {
         // 获取名称和价格筛选条件
         const nameFilter = document.getElementById('name-filter').value.toLowerCase();
         
-        // 获取价格筛选（考虑单位转换）
+        // 获取价格筛选
         const minCostValue = document.getElementById('min-cost').value ? parseFloat(document.getElementById('min-cost').value) : null;
         const maxCostValue = document.getElementById('max-cost').value ? parseFloat(document.getElementById('max-cost').value) : null;
-        const costUnit = document.getElementById('cost-unit').value;
-        const maxCostUnit = document.getElementById('max-cost-unit').value;
         
-        const minCost = minCostValue !== null ? this.manager.convertCurrency(minCostValue, costUnit) : null;
-        const maxCost = maxCostValue !== null ? this.manager.convertCurrency(maxCostValue, maxCostUnit) : null;
+        let minCost = minCostValue;
+        let maxCost = maxCostValue;
+        
+        // 仅物品模式进行货币单位转换
+        if (this.manager.currentMode === 'items') {
+            const costUnit = document.getElementById('cost-unit').value;
+            const maxCostUnit = document.getElementById('max-cost-unit').value;
+            
+            minCost = minCostValue !== null ? this.manager.convertCurrency(minCostValue, costUnit) : null;
+            maxCost = maxCostValue !== null ? this.manager.convertCurrency(maxCostValue, maxCostUnit) : null;
+        }
         
         // 获取重量筛选
         const minWeight = document.getElementById('min-weight').value ? parseFloat(document.getElementById('min-weight').value) : null;
@@ -400,12 +411,12 @@ class UnifiedFilterManager {
         if (mainTypeFilter) {
             const tag = document.createElement('span');
             tag.className = 'active-filter-tag';
-            tag.innerHTML = `类型: ${mainTypeFilter} <span class="remove" data-type="main-type">×</span>`;
+            tag.innerHTML = `主类型: ${mainTypeFilter} <span class="remove" data-type="main-type">×</span>`;
             activeFilterTags.appendChild(tag);
             hasActiveFilters = true;
         }
         
-        if (subTypeFilter && this.manager.currentMode === 'items') {
+        if (subTypeFilter) {
             const tag = document.createElement('span');
             tag.className = 'active-filter-tag';
             tag.innerHTML = `子类型: ${subTypeFilter} <span class="remove" data-type="sub-type">×</span>`;
@@ -442,7 +453,7 @@ class UnifiedFilterManager {
         
         // 价格筛选
         if (minCost !== null || maxCost !== null) {
-            let priceText = '价格: ';
+            let priceText = this.manager.currentMode === 'items' ? '价格: ' : '成本: ';
             if (minCost !== null && maxCost !== null) {
                 priceText += `${this.manager.currentMode === 'items' ? this.manager.formatCurrency(minCost) : minCost} - ${this.manager.currentMode === 'items' ? this.manager.formatCurrency(maxCost) : maxCost}`;
             } else if (minCost !== null) {
@@ -516,9 +527,7 @@ class UnifiedFilterManager {
         switch(filterType) {
             case 'main-type':
                 document.getElementById('main-type-filter').value = '';
-                if (this.manager.currentMode === 'items') {
-                    this.manager.updateSubTypeFilter('');
-                }
+                this.manager.updateSubTypeFilter('');
                 break;
             case 'sub-type':
                 document.getElementById('sub-type-filter').value = '';

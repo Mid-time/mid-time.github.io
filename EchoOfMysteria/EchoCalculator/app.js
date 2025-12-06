@@ -31,6 +31,9 @@ class UnifiedCalculatorApp {
             // 显示数据来源信息
             this.showDataSourceInfo();
             
+            // 初始化类型筛选器
+            this.manager.initializeMainTypeFilter();
+            
             // 初始化时自动应用筛选，显示所有数据
             this.filterManager.applyFilter();
             
@@ -66,8 +69,14 @@ class UnifiedCalculatorApp {
             // 重新初始化筛选器
             this.filterManager.initializeFilterUI();
             
+            // 初始化类型筛选器
+            this.manager.initializeMainTypeFilter();
+            
             // 应用筛选
             this.filterManager.applyFilter();
+            
+            // 更新数据来源信息
+            this.showDataSourceInfo();
             
         } catch (error) {
             console.error(`切换模式失败:`, error);
@@ -109,13 +118,19 @@ class UnifiedCalculatorApp {
         // 重量筛选
         document.getElementById('weight-filter').style.display = isItemsMode ? 'block' : 'none';
         
-        // 初始化类型筛选器
-        if (isItemsMode) {
-            this.manager.initializeMainTypeFilter();
-        } else {
-            this.manager.initializeSpecialtyTypeFilter();
-            document.getElementById('sub-type-filter').style.display = 'none';
-        }
+        // 货币单位选择（特质模式隐藏）
+        const costUnitElements = document.querySelectorAll('#cost-unit, #max-cost-unit');
+        costUnitElements.forEach(element => {
+            element.style.display = isItemsMode ? 'inline-block' : 'none';
+        });
+        
+        // 更新价格筛选标签
+        const priceLabels = document.querySelectorAll('.filter-group label');
+        priceLabels.forEach(label => {
+            if (label.textContent.includes('价格')) {
+                label.textContent = isItemsMode ? '价格范围' : '成本范围';
+            }
+        });
         
         // 更新排序选项
         this.updateSortOptions();
@@ -133,15 +148,18 @@ class UnifiedCalculatorApp {
         const commonOptions = [
             { value: 'name-asc', text: '名称 A-Z' },
             { value: 'name-desc', text: '名称 Z-A' },
-            { value: 'cost-asc', text: '价格 低到高' },
-            { value: 'cost-desc', text: '价格 高到低' }
+            { value: 'cost-asc', text: (this.currentMode === 'items' ? '价格' : '成本') + ' 低到高' },
+            { value: 'cost-desc', text: (this.currentMode === 'items' ? '价格' : '成本') + ' 高到低' }
         ];
         
         // 模式特定的排序选项
         const modeSpecificOptions = this.currentMode === 'items' ? [
             { value: 'weight-asc', text: '重量 轻到重' },
             { value: 'weight-desc', text: '重量 重到轻' }
-        ] : [];
+        ] : [
+            { value: 'level-asc', text: '等级 低到高' },
+            { value: 'level-desc', text: '等级 高到低' }
+        ];
         
         // 添加所有选项
         [...commonOptions, ...modeSpecificOptions].forEach(option => {
@@ -170,6 +188,11 @@ class UnifiedCalculatorApp {
         infoHtml += ` | 特质: ${sourceInfo.specialties.source} (${sourceInfo.specialties.count}个)`;
         infoHtml += `</div>`;
         
+        // 清除旧的信息并添加新的
+        const oldInfo = statusElement.nextElementSibling;
+        if (oldInfo && oldInfo.classList.contains('data-source-info')) {
+            oldInfo.remove();
+        }
         statusElement.insertAdjacentHTML('afterend', infoHtml);
     }
     

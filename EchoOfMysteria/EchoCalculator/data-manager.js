@@ -33,14 +33,14 @@ class UnifiedDataManager {
             
             const data = this.parseItemsCSV(csvText);
             this.sourceInfo.items = { 
-                source: '文件', 
+                source: this.dataSources.items.url, 
                 count: data.length
             };
             
             return data;
         } catch (error) {
             console.error(`加载物品数据失败:`, error);
-            this.sourceInfo.items = { source: '错误', count: 0 };
+            this.sourceInfo.items = { source: '错误: ' + error.message, count: 0 };
             throw new Error(`物品数据加载失败: ${error.message}`);
         }
     }
@@ -59,14 +59,14 @@ class UnifiedDataManager {
             
             const data = this.parseSpecialtiesCSV(csvText);
             this.sourceInfo.specialties = { 
-                source: '文件', 
+                source: this.dataSources.specialties.url, 
                 count: data.length
             };
             
             return data;
         } catch (error) {
             console.error(`加载特质数据失败:`, error);
-            this.sourceInfo.specialties = { source: '错误', count: 0 };
+            this.sourceInfo.specialties = { source: '错误: ' + error.message, count: 0 };
             throw new Error(`特质数据加载失败: ${error.message}`);
         }
     }
@@ -78,48 +78,45 @@ class UnifiedDataManager {
         }
         
         const lines = csvText.trim().split('\n');
-        const headers = lines[0].split(',').map(header => header.trim());
-        const items = [];
+        console.log(`CSV总行数: ${lines.length}`);
         
-        for (let i = 1; i < lines.length; i++) {
-            if (lines[i].trim() === '') continue;
+        // 检查第一行是否是表头
+        const firstLine = lines[0].toLowerCase();
+        if (firstLine.includes('id') && firstLine.includes('name') && firstLine.includes('description')) {
+            // 第一行是表头，正常处理
+            const headers = lines[0].split(',').map(header => header.trim());
+            console.log('表头:', headers);
             
-            const values = this.parseCSVLine(lines[i]);
-            const item = {};
-            
-            headers.forEach((header, index) => {
-                let value = values[index] || '';
+            const items = [];
+            for (let i = 1; i < lines.length; i++) {
+                if (lines[i].trim() === '') continue;
                 
-                // 处理不同的数据类型
-                if (header === 'tags' || header === 'need') {
-                    value = value.split(';').map(tag => tag.trim()).filter(tag => tag !== '');
-                } else if (header === 'cost' || header === 'weight') {
-                    value = parseFloat(value) || 0;
-                } else if (header === 'rarity' || header === 'material' || header === 'skill' || 
-                           header === 'maintype' || header === 'subtype') {
-                    value = value.trim();
-                } else if (header === 'id') {
-                    value = value.toString().trim();
-                } else {
-                    value = value.trim();
+                const item = this.parseCSVLineToObject(lines[i], headers, i);
+                if (item) {
+                    items.push(item);
                 }
-                
-                item[header] = value;
-            });
-            
-            // 确保有id字段
-            if (!item.id) {
-                item.id = `item_${i}`;
             }
             
-            // 添加数据类型标识
-            item.dataType = 'item';
+            console.log(`成功解析 ${items.length} 个物品`);
+            return items;
+        } else {
+            // 第一行可能是数据，没有表头
+            console.warn('CSV文件可能没有表头，使用默认表头');
+            const defaultHeaders = ['id', 'name', 'description', 'tags', 'rarity', 'skill', 'need', 'cost', 'weight', 'maintype', 'subtype', 'material'];
+            const items = [];
             
-            items.push(item);
+            for (let i = 0; i < lines.length; i++) {
+                if (lines[i].trim() === '') continue;
+                
+                const item = this.parseCSVLineToObject(lines[i], defaultHeaders, i);
+                if (item) {
+                    items.push(item);
+                }
+            }
+            
+            console.log(`成功解析 ${items.length} 个物品`);
+            return items;
         }
-        
-        console.log(`成功解析 ${items.length} 个物品`);
-        return items;
     }
     
     // 解析特质CSV
@@ -129,51 +126,112 @@ class UnifiedDataManager {
         }
         
         const lines = csvText.trim().split('\n');
-        const headers = lines[0].split(',').map(header => header.trim());
-        const specialties = [];
+        console.log(`特质CSV总行数: ${lines.length}`);
         
-        for (let i = 1; i < lines.length; i++) {
-            if (lines[i].trim() === '') continue;
+        // 检查第一行是否是表头
+        const firstLine = lines[0].toLowerCase();
+        if (firstLine.includes('id') && firstLine.includes('name') && firstLine.includes('description')) {
+            // 第一行是表头，正常处理
+            const headers = lines[0].split(',').map(header => header.trim());
+            console.log('特质表头:', headers);
             
-            const values = this.parseCSVLine(lines[i]);
-            const specialty = {};
-            
-            headers.forEach((header, index) => {
-                let value = values[index] || '';
+            const specialties = [];
+            for (let i = 1; i < lines.length; i++) {
+                if (lines[i].trim() === '') continue;
                 
-                // 处理不同的数据类型
-                if (header === 'tag' || header === 'need') {
-                    value = value.split(';').map(tag => tag.trim()).filter(tag => tag !== '');
-                } else if (header === 'level' || header === 'cost') {
-                    // 等级和成本都是数字
-                    value = parseFloat(value) || 0;
-                } else if (header === 'rarity' || header === 'type') {
-                    value = value.trim();
-                } else if (header === 'description') {
-                    // 描述保持原样
-                    value = value.trim();
-                } else if (header === 'id') {
-                    value = value.toString().trim();
-                } else {
-                    value = value.trim();
+                const specialty = this.parseCSVLineToObject(lines[i], headers, i, 'specialty');
+                if (specialty) {
+                    specialties.push(specialty);
                 }
-                
-                specialty[header] = value;
-            });
-            
-            // 确保有id字段
-            if (!specialty.id) {
-                specialty.id = `specialty_${i}`;
             }
             
-            // 添加数据类型标识
-            specialty.dataType = 'specialty';
+            console.log(`成功解析 ${specialties.length} 个特质`);
+            return specialties;
+        } else {
+            // 第一行可能是数据，没有表头
+            console.warn('特质CSV文件可能没有表头，使用默认表头');
+            const defaultHeaders = ['id', 'maintype', 'subtype', 'name', 'level', 'cost', 'rarity', 'tag', 'need', 'description'];
+            const specialties = [];
             
-            specialties.push(specialty);
+            for (let i = 0; i < lines.length; i++) {
+                if (lines[i].trim() === '') continue;
+                
+                const specialty = this.parseCSVLineToObject(lines[i], defaultHeaders, i, 'specialty');
+                if (specialty) {
+                    specialties.push(specialty);
+                }
+            }
+            
+            console.log(`成功解析 ${specialties.length} 个特质`);
+            return specialties;
+        }
+    }
+    
+    // 解析CSV行到对象
+    parseCSVLineToObject(line, headers, lineNumber, dataType = 'item') {
+        const values = this.parseCSVLine(line);
+        const item = { dataType };
+        
+        headers.forEach((header, index) => {
+            if (index >= values.length) return;
+            
+            let value = values[index] || '';
+            value = value.trim();
+            
+            // 处理不同的数据类型
+            if ((header === 'tags' || header === 'tag' || header === 'need') && value) {
+                item[header] = value.split(';').map(tag => tag.trim()).filter(tag => tag !== '');
+            } else if (header === 'weight') {
+                // 重量字段特殊处理
+                const numValue = parseFloat(value);
+                item[header] = isNaN(numValue) ? 0 : numValue;
+            } else if (header === 'cost') {
+                // 成本字段特殊处理 - 可能是数字或数组
+                if (value.startsWith('{') && value.endsWith('}')) {
+                    // 处理数组格式 {4/9/15}
+                    const costStr = value.slice(1, -1);
+                    item[header] = costStr.split('/').map(num => parseFloat(num.trim()) || 0);
+                } else {
+                    // 处理单个数字
+                    const numValue = parseFloat(value);
+                    item[header] = isNaN(numValue) ? 0 : numValue;
+                }
+            } else if (header === 'level') {
+                // 等级字段特殊处理
+                const numValue = parseInt(value);
+                item[header] = isNaN(numValue) ? 1 : numValue;
+            } else if (header === 'id') {
+                item[header] = value.toString().trim() || `${dataType}_${lineNumber}`;
+            } else {
+                item[header] = value;
+            }
+        });
+        
+        // 处理特质的description数组格式
+        if (dataType === 'specialty' && item.description) {
+            if (typeof item.description === 'string' && item.description.includes('{')) {
+                // 处理格式：考验豁免+{6%/12%/20%}
+                const descMatch = item.description.match(/\{([^}]+)\}/);
+                if (descMatch) {
+                    const levelValues = descMatch[1].split('/');
+                    const baseDesc = item.description.replace(/\{([^}]+)\}/, '');
+                    item.description = levelValues.map(value => baseDesc + value.trim());
+                } else {
+                    // 如果不是数组格式，转换为单元素数组
+                    item.description = [item.description];
+                }
+            } else if (!Array.isArray(item.description)) {
+                // 确保description是数组
+                item.description = [item.description];
+            }
         }
         
-        console.log(`成功解析 ${specialties.length} 个特质`);
-        return specialties;
+        // 确保有id字段
+        if (!item.id) {
+            item.id = `${dataType}_${lineNumber}`;
+        }
+        
+        return item;
     }
     
     // 解析CSV行，处理引号内的逗号
@@ -186,12 +244,12 @@ class UnifiedDataManager {
         for (let i = 0; i < line.length; i++) {
             const char = line[i];
             
-            if ((char === '"' || char === "'" || char === '""') && !inQuotes) {
+            if ((char === '"' || char === "'") && !inQuotes) {
                 inQuotes = true;
                 quoteChar = char;
             } else if (char === quoteChar && inQuotes) {
                 inQuotes = false;
-            } else if ((char === ',' || char === '，') && !inQuotes) {
+            } else if (char === ',' && !inQuotes) {
                 result.push(current);
                 current = '';
             } else {

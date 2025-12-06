@@ -41,23 +41,29 @@ class UnifiedCalculator {
     }
     
     // 添加物品到计算器
-    addItem(item, mode) {
-        // 检查是否已存在
+    addItem(item, mode, selectedLevel = 1) {
+        // 检查是否已存在（特质不可重复购买）
         const existingItem = this.calculatorItems.find(i => i.id == item.id && i.mode === mode);
         
         if (existingItem) {
             if (mode === 'items') {
                 existingItem.quantity += 1;
             } else {
-                // 特质模式：增加等级
-                existingItem.currentLevel = Math.min(existingItem.currentLevel + 1, item.level);
+                // 特质模式：如果已存在且等级不同，则更新等级
+                if (existingItem.currentLevel !== selectedLevel) {
+                    existingItem.currentLevel = selectedLevel;
+                } else {
+                    // 相同等级的特质不可重复购买
+                    this.showStatus(`${item.name} 已存在于计算器中`, 'warning');
+                    return;
+                }
             }
         } else {
             const calculatorItem = {
                 ...item,
                 mode: mode,
-                quantity: mode === 'items' ? 1 : 0,
-                currentLevel: mode === 'specialties' ? 1 : 0
+                quantity: mode === 'items' ? 1 : 1, // 特质默认为1，不可重复购买
+                currentLevel: mode === 'specialties' ? selectedLevel : 0
             };
             
             this.calculatorItems.push(calculatorItem);
@@ -110,13 +116,9 @@ class UnifiedCalculator {
             newLevel = item.level;
         }
         
-        if (newLevel === 0) {
-            this.removeFromCalculator(itemId);
-        } else {
-            item.currentLevel = newLevel;
-            this.saveCalculatorItems();
-            this.renderCalculator();
-        }
+        item.currentLevel = newLevel;
+        this.saveCalculatorItems();
+        this.renderCalculator();
     }
     
     // 渲染计算器
@@ -157,7 +159,12 @@ class UnifiedCalculator {
                 itemWeight = item.weight * item.quantity;
             } else {
                 // 特质模式：使用当前等级的成本
-                itemCost = item.cost[item.currentLevel - 1] || 0;
+                const levelIndex = item.currentLevel - 1;
+                if (Array.isArray(item.cost) && levelIndex < item.cost.length) {
+                    itemCost = item.cost[levelIndex];
+                } else {
+                    itemCost = item.cost || 0;
+                }
                 itemWeight = 0; // 特质没有重量
             }
             
@@ -177,7 +184,11 @@ class UnifiedCalculator {
         });
         
         // 更新总消耗和总重量
-        totalCostElement.innerHTML = `<span class="currency-display">总价格: ${this.formatCurrency(totalCost)}</span>`;
+        if (this.currentMode === 'items') {
+            totalCostElement.innerHTML = `<span class="currency-display">总价格: ${this.formatCurrency(totalCost)}</span>`;
+        } else {
+            totalCostElement.innerHTML = `<span class="currency-display">总成本: ${totalCost}</span>`;
+        }
         totalWeightElement.textContent = totalWeight;
         
         // 计算负重状态（仅物品模式）
@@ -222,7 +233,10 @@ class UnifiedCalculator {
             <div class="calculator-item-details">
                 <div class="calculator-item-description">${this.escapeHtml(item.description)}</div>
                 <div class="calculator-item-controls">
-                    <input type="number" class="quantity-input" value="${item.quantity}" min="0" data-id="${item.id}">
+                    <div class="quantity-control">
+                        <label>数量:</label>
+                        <input type="number" class="quantity-input" value="${item.quantity}" min="0" data-id="${item.id}">
+                    </div>
                     <span class="calculator-item-cost">${this.formatCurrency(itemCost)}</span>
                     <span class="calculator-item-weight">重量: ${itemWeight}</span>
                     <button class="btn-danger remove-btn" data-id="${item.id}">删除</button>
@@ -253,11 +267,15 @@ class UnifiedCalculator {
     
     // 渲染特质计算器项目
     renderSpecialtyCalculator(container, item, itemCost) {
-        // 构建等级选择器
-        const levelButtons = [];
+        // 获取当前等级的描述
+        const currentDescription = Array.isArray(item.description) ? 
+            (item.description[item.currentLevel - 1] || item.description[0] || '') : 
+            item.description || '';
+        
+        // 构建等级选择器选项
+        const levelOptions = [];
         for (let i = 1; i <= item.level; i++) {
-            const isActive = i === item.currentLevel;
-            levelButtons.push(`<button class="level-btn ${isActive ? 'active' : ''}" data-level="${i}" data-id="${item.id}">${i}</button>`);
+            levelOptions.push(`<option value="${i}" ${i === item.currentLevel ? 'selected' : ''}>${i}</option>`);
         }
         
         container.innerHTML = `
@@ -268,26 +286,27 @@ class UnifiedCalculator {
                 </div>
             </div>
             <div class="calculator-item-details">
-                <div class="calculator-item-description">${this.escapeHtml(item.description[item.currentLevel - 1] || '')}</div>
+                <div class="calculator-item-description">${this.escapeHtml(currentDescription)}</div>
                 <div class="calculator-item-controls">
-                    <div class="level-controls">
-                        <span>等级:</span>
-                        ${levelButtons.join('')}
-                        <span class="level-display">${item.currentLevel}/${item.level}</span>
+                    <div class="level-control">
+                        <label>等级:</label>
+                        <select class="level-select" data-id="${item.id}">
+                            ${levelOptions.join('')}
+                        </select>
+                        <span class="level-display">/${item.level}</span>
                     </div>
-                    <span class="calculator-item-cost">${this.formatCurrency(itemCost)}</span>
+                    <span class="calculator-item-cost">成本: ${itemCost}</span>
                     <button class="btn-danger remove-btn" data-id="${item.id}">删除</button>
                 </div>
             </div>
         `;
         
-        // 添加等级按钮事件监听器
-        container.querySelectorAll('.level-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const itemId = e.target.dataset.id;
-                const newLevel = parseInt(e.target.dataset.level);
-                this.updateLevel(itemId, newLevel);
-            });
+        // 添加等级选择事件监听器
+        const levelSelect = container.querySelector('.level-select');
+        levelSelect.addEventListener('change', (e) => {
+            const itemId = e.target.dataset.id;
+            const newLevel = parseInt(e.target.value);
+            this.updateLevel(itemId, newLevel);
         });
         
         // 添加删除按钮事件监听器
