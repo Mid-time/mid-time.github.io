@@ -624,7 +624,7 @@
             color: white;
         }
         
-        .next-round-btn {
+        .next-round-btn, .game-over-btn {
             background-color: #3498db;
             color: white;
             padding: 8px 20px;
@@ -635,7 +635,7 @@
             transition: all 0.3s ease;
         }
         
-        .next-round-btn:hover {
+        .next-round-btn:hover, .game-over-btn:hover {
             background-color: #2980b9;
         }
         
@@ -824,6 +824,7 @@
         <div class="result-title" id="result-title">游戏结果</div>
         <div class="result-message" id="result-message"></div>
         <button id="next-round-btn" class="next-round-btn">下一轮</button>
+        <button id="game-over-btn" class="game-over-btn hidden">游戏结束</button>
     </div>
     
     <!-- 规则弹窗 -->
@@ -887,7 +888,8 @@
             gameInProgress: false,
             usedDice: [], // 记录开骰中用到的骰子
             lastWinner: null, // 记录上一轮获胜者
-            diceRevealed: false // 新增：标记骰子是否已揭露
+            diceRevealed: false, // 标记骰子是否已揭露
+            aiOpenThreshold: 20 // AI开骰的可信度阈值
         };
 
         // DOM元素
@@ -929,6 +931,7 @@
         const resultTitle = document.getElementById('result-title');
         const resultMessage = document.getElementById('result-message');
         const nextRoundBtn = document.getElementById('next-round-btn');
+        const gameOverBtn = document.getElementById('game-over-btn');
 
         // 骰子面表示 - 修改为中文数字
         const diceFaces = {
@@ -965,6 +968,15 @@
             resultTitle.textContent = title;
             resultMessage.textContent = message;
             resultBanner.classList.remove('hidden');
+            
+            // 根据玩家生命值决定显示哪个按钮
+            if (gameState.playerHealth <= 0) {
+                nextRoundBtn.classList.add('hidden');
+                gameOverBtn.classList.remove('hidden');
+            } else {
+                nextRoundBtn.classList.remove('hidden');
+                gameOverBtn.classList.add('hidden');
+            }
         }
 
         // 隐藏结果底栏
@@ -1011,6 +1023,12 @@
             gameState.usedDice = [];
             gameState.lastWinner = null;
             gameState.diceRevealed = false; // 重置骰子揭露状态
+            gameState.aiOpenThreshold = Math.floor(Math.random() * 11) + 15; // 随机阈值15-25
+            
+            // 清空叫骰控制盘
+            diceInputs.forEach(input => {
+                input.value = '0';
+            });
             
             // 更新UI
             updateDiceDisplay();
@@ -1095,7 +1113,8 @@
                 isPlayerTurn: gameState.isPlayerTurn,
                 gameInProgress: gameState.gameInProgress,
                 lastWinner: gameState.lastWinner,
-                diceRevealed: gameState.diceRevealed
+                diceRevealed: gameState.diceRevealed,
+                aiOpenThreshold: gameState.aiOpenThreshold
             };
             localStorage.setItem('demonDiceGameState', JSON.stringify(state));
         }
@@ -1116,6 +1135,7 @@
                 gameState.gameInProgress = state.gameInProgress;
                 gameState.lastWinner = state.lastWinner || null;
                 gameState.diceRevealed = state.diceRevealed || false;
+                gameState.aiOpenThreshold = state.aiOpenThreshold || 20;
                 
                 // 更新UI
                 updateDiceDisplay();
@@ -1144,7 +1164,7 @@
             return dice;
         }
 
-        // 更新骰子显示 - 修复：根据diceRevealed状态显示AI骰子
+        // 更新骰子显示 - 根据diceRevealed状态显示AI骰子
         function updateDiceDisplay() {
             // 玩家骰子
             playerDiceContainer.innerHTML = '';
@@ -1195,7 +1215,7 @@
             });
         }
 
-        // 显示AI骰子 - 修复：直接设置diceRevealed状态并更新显示
+        // 显示AI骰子
         function revealAiDice() {
             gameState.diceRevealed = true;
             updateDiceDisplay();
@@ -1281,11 +1301,7 @@
                 callArray: callArray
             };
             
-            // 重置输入框
-            diceInputs.forEach(input => {
-                input.value = '0';
-            });
-            
+            // 更新UI
             updateCallInfo();
             updateCallDisplay();
             
@@ -1375,7 +1391,7 @@
                 );
                 
                 // 如果可信度太低，AI选择开骰
-                if (currentScore < 20) {
+                if (currentScore < gameState.aiOpenThreshold) {
                     openDice(true);
                     return;
                 }
@@ -1539,7 +1555,7 @@
             return points;
         }
 
-        // 开骰 - 修复：确保AI骰子被揭露
+        // 开骰 - 修复开骰判定逻辑
         function openDice(isAiOpening = false) {
             // 显示所有骰子
             revealAiDice();
@@ -1562,50 +1578,54 @@
             const usedPlayerDice = [];
             const usedAiDice = [];
             
-            // 修复开骰判定逻辑 - 精确计算每个点数的实际数量
+            // 计算每个点数实际存在的骰子数量（不包括万能骰子）
+            const actualDiceCounts = [0, 0, 0, 0, 0, 0, 0]; // 索引1-6对应点数1-6
+            for (let i = 1; i <= 6; i++) {
+                actualDiceCounts[i] = diceCounts[i];
+            }
+            
+            // 对于每个叫骰的点数，计算实际可用的骰子数量
             for (let i = 0; i < callArray.length; i++) {
                 const point = i + 2;
                 const required = callArray[i];
                 
                 if (required > 0) {
-                    // 实际有这个点数的骰子数量
-                    const actualForPoint = diceCounts[point];
+                    // 首先使用实际有这个点数的骰子
+                    const availableForPoint = actualDiceCounts[point];
+                    const useFromPoint = Math.min(required, availableForPoint);
                     
-                    // 计算需要多少万能骰子来补足
-                    const neededWild = Math.max(0, required - actualForPoint);
-                    const wildUsed = Math.min(neededWild, wildDiceRemaining);
-                    
-                    // 这个点数的骰子实际存在数量
-                    actualCount += actualForPoint + wildUsed;
-                    
-                    // 更新万能骰子数量
-                    wildDiceRemaining -= wildUsed;
-                    
-                    // 记录用到的骰子 - 只记录实际需要的数量
-                    // 记录玩家骰子中该点数的骰子
+                    // 记录用到的实际点数的骰子
+                    // 记录玩家骰子
                     let playerCount = 0;
                     gameState.playerDice.forEach((value, index) => {
-                        if (value === point && playerCount < Math.min(actualForPoint, required)) {
+                        if (value === point && playerCount < useFromPoint) {
                             usedPlayerDice.push(index);
                             playerCount++;
                         }
                     });
                     
-                    // 记录AI骰子中该点数的骰子
+                    // 记录AI骰子
                     let aiCount = 0;
                     gameState.aiDice.forEach((value, index) => {
-                        if (value === point && aiCount < Math.min(actualForPoint - playerCount, required - playerCount)) {
-                            usedAiDice.push(index + 5); // AI骰子索引从5开始
+                        if (value === point && aiCount < useFromPoint - playerCount) {
+                            usedAiDice.push(index + 5);
                             aiCount++;
                         }
                     });
                     
-                    // 记录万能骰子
-                    if (wildUsed > 0) {
+                    // 更新实际计数
+                    actualCount += useFromPoint;
+                    
+                    // 如果实际点数骰子不够，使用万能骰子补足
+                    const remainingRequired = required - useFromPoint;
+                    if (remainingRequired > 0 && wildDiceRemaining > 0) {
+                        const useWild = Math.min(remainingRequired, wildDiceRemaining);
+                        
+                        // 记录万能骰子
                         // 记录玩家万能骰子
                         let playerWildCount = 0;
                         gameState.playerDice.forEach((value, index) => {
-                            if (value === 1 && !usedPlayerDice.includes(index) && playerWildCount < wildUsed) {
+                            if (value === 1 && !usedPlayerDice.includes(index) && playerWildCount < useWild) {
                                 usedPlayerDice.push(index);
                                 playerWildCount++;
                             }
@@ -1614,11 +1634,15 @@
                         // 记录AI万能骰子
                         let aiWildCount = 0;
                         gameState.aiDice.forEach((value, index) => {
-                            if (value === 1 && !usedAiDice.includes(index + 5) && aiWildCount < wildUsed - playerWildCount) {
-                                usedAiDice.push(index + 5); // AI骰子索引从5开始
+                            if (value === 1 && !usedAiDice.includes(index + 5) && aiWildCount < useWild - playerWildCount) {
+                                usedAiDice.push(index + 5);
                                 aiWildCount++;
                             }
                         });
+                        
+                        // 更新实际计数和剩余万能骰子
+                        actualCount += useWild;
+                        wildDiceRemaining -= useWild;
                     }
                 }
             }
@@ -1626,78 +1650,65 @@
             // 合并用到的骰子
             gameState.usedDice = [...usedPlayerDice, ...usedAiDice];
             
-            // 比较结果
-            const isCallValid = actualCount >= gameState.currentCall.count;
+            // 判断叫骰是否贴合（实际骰子数量是否满足叫骰要求）
+            const isCallFit = actualCount >= gameState.currentCall.count;
+            
+            // 根据开骰方决定胜负 - 修复开骰判定错误
+            let playerWins;
+            if (isAiOpening) {
+                // AI开骰：叫骰贴合=>玩家获胜，叫骰不贴合=>AI获胜
+                playerWins = isCallFit;
+            } else {
+                // 玩家开骰：叫骰贴合=>AI获胜，叫骰不贴合=>玩家获胜
+                playerWins = !isCallFit;
+            }
             
             // 计算奖励/惩罚
             const diceCount = gameState.currentCall.count;
             const dicePoints = gameState.currentCall.points;
             
             let title, message;
-            let winner = null;
             
-            if (isAiOpening) {
-                // AI开骰
-                if (isCallValid) {
-                    title = "恶魔开骰成功";
-                    message = "你输了！恶魔的开骰是正确的。";
-                    winner = 'ai';
-                    
-                    // 玩家失败，扣除生命值
-                    gameState.playerHealth -= diceCount;
-                    if (gameState.playerHealth < 0) gameState.playerHealth = 0;
-                } else {
+            if (playerWins) {
+                if (isAiOpening) {
                     title = "恶魔开骰失败";
                     message = "你赢了！恶魔的开骰是错误的。";
-                    winner = 'player';
-                    
-                    // 玩家获胜，获得分数和恢复生命值
-                    const scoreGain = Math.floor(diceCount * dicePoints / 2);
-                    const healthGain = Math.floor(diceCount / 3);
-                    
-                    gameState.playerScore += scoreGain;
-                    gameState.playerHealth += healthGain;
-                    
-                    // 血量上限为20
-                    if (gameState.playerHealth > 20) {
-                        gameState.playerHealth = 20;
-                    }
-                    
-                    message += `\n获得 ${scoreGain} 分，恢复 ${healthGain} 点生命值`;
-                }
-            } else {
-                // 玩家开骰
-                if (isCallValid) {
-                    title = "你开骰失败";
-                    message = "你输了！你的开骰是错误的。";
-                    winner = 'ai';
-                    
-                    // 玩家失败，扣除生命值
-                    gameState.playerHealth -= diceCount;
-                    if (gameState.playerHealth < 0) gameState.playerHealth = 0;
                 } else {
                     title = "你开骰成功";
                     message = "你赢了！你的开骰是正确的。";
-                    winner = 'player';
-                    
-                    // 玩家获胜，获得分数和恢复生命值
-                    const scoreGain = Math.floor(diceCount * dicePoints / 2);
-                    const healthGain = Math.floor(diceCount / 3);
-                    
-                    gameState.playerScore += scoreGain;
-                    gameState.playerHealth += healthGain;
-                    
-                    // 血量上限为20
-                    if (gameState.playerHealth > 20) {
-                        gameState.playerHealth = 20;
-                    }
-                    
-                    message += `\n获得 ${scoreGain} 分，恢复 ${healthGain} 点生命值`;
                 }
+                
+                // 玩家获胜，获得分数和恢复生命值
+                const scoreGain = Math.floor(diceCount * dicePoints / 2);
+                const healthGain = Math.floor(diceCount / 3);
+                
+                gameState.playerScore += scoreGain;
+                gameState.playerHealth += healthGain;
+                
+                // 血量上限为20
+                if (gameState.playerHealth > 20) {
+                    gameState.playerHealth = 20;
+                }
+                
+                message += `\n获得 ${scoreGain} 分，恢复 ${healthGain} 点生命值`;
+                gameState.lastWinner = 'player';
+            } else {
+                if (isAiOpening) {
+                    title = "恶魔开骰成功";
+                    message = "你输了！恶魔的开骰是正确的。";
+                } else {
+                    title = "你开骰失败";
+                    message = "你输了！你的开骰是错误的。";
+                }
+                
+                // 玩家失败，扣除生命值
+                const healthLoss = diceCount;
+                gameState.playerHealth -= healthLoss;
+                if (gameState.playerHealth < 0) gameState.playerHealth = 0;
+                
+                message += `\n扣除 ${healthLoss} 点生命值`;
+                gameState.lastWinner = 'ai';
             }
-            
-            // 记录获胜方
-            gameState.lastWinner = winner;
             
             // 更新最高得分和最长轮次
             if (gameState.playerScore > gameState.highScore) {
@@ -1746,6 +1757,14 @@
                 gameState.gameInProgress = true;
                 initGame();
             }
+        }
+
+        // 游戏结束
+        function gameOver() {
+            hideResultBanner();
+            gameState.gameInProgress = false;
+            saveGameState();
+            returnToMenu();
         }
 
         // 放弃游戏
@@ -1822,7 +1841,11 @@
                 // 回车键 - 下一轮（当结果底栏显示时）
                 if (e.code === 'Enter' && !resultBanner.classList.contains('hidden')) {
                     e.preventDefault();
-                    nextRound();
+                    if (gameState.playerHealth <= 0) {
+                        gameOver();
+                    } else {
+                        nextRound();
+                    }
                 }
             });
         }
@@ -1862,6 +1885,7 @@
             helpBtn.addEventListener('click', showRules);
 
             nextRoundBtn.addEventListener('click', nextRound);
+            gameOverBtn.addEventListener('click', gameOver);
 
             // 修复：确保关闭按钮正确绑定事件
             closeRulesBtn.addEventListener('click', hideRules);
