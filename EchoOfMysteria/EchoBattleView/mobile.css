@@ -1,0 +1,492 @@
+/* 移动端特有样式 */
+body {
+    padding: 10px 10px 70px; /* 底部留出导航栏空间 */
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+.container {
+    max-width: 100%;
+}
+
+.round-input {
+    width: 50px;
+}
+
+/* 视图容器 */
+.view-container {
+    display: none;
+}
+
+.view-container.active {
+    display: block;
+}
+
+/* 战斗视图样式 */
+.battle-view {
+    margin-bottom: 20px;
+}
+
+.battle-character {
+    background-color: white;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.battle-character.selected {
+    background-color: var(--selected-color);
+    border: 2px solid var(--primary-color);
+}
+
+.battle-character-info {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 8px;
+}
+
+.battle-speed {
+    font-weight: bold;
+    color: var(--speed-color);
+    font-size: 1.1rem;
+    text-align: center;
+    padding: 4px;
+    border-radius: 4px;
+    background-color: rgba(255, 152, 0, 0.1);
+}
+
+.battle-team {
+    font-size: 0.8rem;
+    padding: 2px 6px;
+    border-radius: 10px;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.team1 {
+    background-color: rgba(74, 111, 165, 0.1);
+    color: var(--team1-color);
+}
+
+.team2 {
+    background-color: rgba(217, 83, 79, 0.1);
+    color: var(--team2-color);
+}
+
+.battle-hp {
+    text-align: right;
+    font-weight: bold;
+    color: var(--hp-color);
+}
+
+.battle-hp .stamina-part {
+    color: var(--stamina-color);
+}
+
+.battle-reason {
+    color: var(--reason-color);
+    font-weight: bold;
+    text-align: center;
+    padding: 4px;
+    border-radius: 4px;
+    background-color: rgba(33, 150, 243, 0.1);
+}
+
+.battle-name {
+    text-align: center;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.battle-effect {
+    grid-column: 1 / -1;
+    font-size: 0.75rem;
+    color: #666;
+    text-align: center;
+    padding: 4px 0;
+    border-top: 1px solid #f0f0f0;
+    margin-top: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.battle-bars {
+    width: 45%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-left: 10px;
+}
+
+/* 队伍视图样式 */
+.team-view {
+    margin-bottom: 20px;
+}
+
+.team-group {
+    margin-bottom: 15px;
+}
+
+.team-header {
+    background-color: white;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    font-weight: 600;
+    color: var(--primary-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.team-toggle {
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+
+.team-content {
+    padding-left: 20px;
+}
+
+.team-character {
+    background-color: white;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 5px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.team-character.selected {
+    background-color: var(--selected-color);
+    border: 2px solid var(--primary-color);
+}
+
+.team-character-info {
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr 1fr 1fr 1fr;
+    gap: 8px;
+    align-items: center;
+}
+
+.team-stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.team-stat-label {
+    font-size: 0.7rem;
+    color: #777;
+    margin-bottom: 2px;
+}
+
+.team-stat-value {
+    font-weight: bold;
+}
+
+.team-speed {
+    color: var(--speed-color);
+}
+
+.team-hp-value {
+    color: var(--hp-color);
+}
+
+.team-hp-value .stamina-part {
+    color: var(--stamina-color);
+}
+
+.team-sanity-value {
+    color: var(--sanity-color);
+}
+
+.team-mp-value {
+    color: var(--mp-color);
+}
+
+.team-reason-value {
+    color: var(--reason-color);
+}
+
+.team-name {
+    text-align: center;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.team-character-effect {
+    font-size: 0.75rem;
+    color: #666;
+    text-align: center;
+    padding: 4px 0;
+    border-top: 1px solid #f0f0f0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 底部导航栏 */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: white;
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 0;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+}
+
+.nav-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #777;
+    transition: color 0.2s;
+}
+
+.nav-btn.active {
+    color: var(--primary-color);
+}
+
+.nav-label {
+    font-size: 0.7rem;
+    margin-top: 3px;
+}
+
+/* 操作栏 */
+.action-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: white;
+    display: none;
+    justify-content: space-around;
+    padding: 10px 0;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 1001;
+}
+
+.action-bar.active {
+    display: flex;
+}
+
+/* 移动端优化 */
+@media (max-width: 480px) {
+    .form-row {
+        flex-direction: column;
+    }
+    
+    .short-input {
+        width: 100%;
+    }
+    
+    .dice-pool-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .dice-pool-controls {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .dice-control-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+        width: 100%;
+    }
+    
+    .dice-input, .expression-input {
+        width: 100%;
+    }
+    
+    .dice-input input, .expression-input input {
+        width: 100%;
+        max-width: 120px;
+    }
+    
+    .dice-input.small input {
+        max-width: 80px;
+    }
+    
+    .dice-input.medium input {
+        max-width: 100px;
+    }
+    
+    .action-btn {
+        padding: 8px 12px;
+        font-size: 0.8rem;
+    }
+    
+    .battle-bars, .team-bars {
+        width: 40%;
+    }
+    
+    .team-character-info {
+        grid-template-columns: 1fr 2fr 1fr;
+        grid-template-rows: auto auto;
+    }
+    
+    /* 骰池视图优化 */
+    .dice-type-selector, .dice-note {
+        min-width: 100%;
+    }
+    
+    .dice-type-selector select, .dice-note input {
+        font-size: 0.85rem;
+        padding: 6px 8px;
+    }
+    
+    .sanity-effect-selector {
+        min-width: 100%;
+    }
+    
+    .sanity-effect-selector select {
+        font-size: 0.85rem;
+        padding: 6px 8px;
+    }
+    
+    .generate-dice {
+        font-size: 0.85rem;
+        padding: 6px 12px;
+    }
+    
+    /* 角色编辑模态框优化 */
+    .modal-content {
+        padding: 15px;
+    }
+    
+    .modal-title {
+        font-size: 1.1rem;
+    }
+    
+    .form-group {
+        margin-bottom: 12px;
+    }
+    
+    label {
+        font-size: 0.85rem;
+    }
+    
+    input, textarea, select {
+        font-size: 0.85rem;
+        padding: 6px 8px;
+    }
+    
+    .form-row {
+        gap: 8px;
+    }
+    
+    .modal-footer {
+        margin-top: 15px;
+    }
+    
+    /* 战斗视图优化 */
+    .battle-character {
+        padding: 10px;
+    }
+    
+    .battle-character-info {
+        gap: 6px;
+    }
+    
+    .battle-speed, .battle-reason {
+        font-size: 1rem;
+        padding: 3px;
+    }
+    
+    .battle-name {
+        font-size: 0.9rem;
+    }
+    
+    .battle-hp {
+        font-size: 0.9rem;
+    }
+    
+    .battle-effect {
+        font-size: 0.7rem;
+        padding: 3px 0;
+    }
+    
+    /* 队伍视图优化 */
+    .team-character {
+        padding: 10px;
+    }
+    
+    .team-stat-label {
+        font-size: 0.65rem;
+    }
+    
+    .team-stat-value {
+        font-size: 0.85rem;
+    }
+    
+    .team-name {
+        font-size: 0.9rem;
+    }
+    
+    .team-character-effect {
+        font-size: 0.7rem;
+        padding: 3px 0;
+    }
+}
+
+/* 超小屏幕优化 */
+@media (max-width: 360px) {
+    .battle-character-info {
+        grid-template-columns: 1fr 2fr 1fr;
+        grid-template-rows: auto auto auto;
+    }
+    
+    .team-character-info {
+        grid-template-columns: 1fr 2fr 1fr;
+        grid-template-rows: auto auto;
+    }
+    
+    .dice-pool-item {
+        padding: 10px;
+    }
+    
+    .dice-pool-header {
+        gap: 6px;
+    }
+    
+    .modal-content {
+        padding: 12px;
+    }
+    
+    .battle-effect {
+        font-size: 0.65rem;
+    }
+    
+    .team-character-effect {
+        font-size: 0.65rem;
+    }
+}
