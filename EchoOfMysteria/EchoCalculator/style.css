@@ -1,4 +1,100 @@
-/* 新增计算器布局样式 */
+/* 样式保持不变，与之前相同 */
+:root {
+    --primary-color: #2c3e50;
+    --secondary-color: #8e44ad;
+    --accent-color: #e74c3c;
+    --light-color: #ecf0f1;
+    --dark-color: #34495e;
+    --success-color: #2ecc71;
+    --warning-color: #f39c12;
+    --background-color: #f5f7fa;
+    --card-color: #ffffff;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: var(--background-color);
+    padding: 20px;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    background: var(--card-color);
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+header {
+    background: var(--primary-color);
+    color: white;
+    padding: 20px;
+    text-align: center;
+    position: relative;
+}
+
+h1 {
+    margin-bottom: 10px;
+}
+
+.description {
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
+.main-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    padding: 20px;
+    min-height: 600px; /* 确保有足够的最小高度 */
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        grid-template-columns: 1fr;
+    }
+}
+
+.section {
+    background: var(--card-color);
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.section-title {
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--secondary-color);
+    color: var(--primary-color);
+}
+
+.calculator {
+    grid-column: 1 / -1;
+    background: var(--light-color);
+    border-radius: 8px;
+    padding: 15px;
+}
+
+.calculator-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 15px;
+}
+
 .calculator-item {
     background: var(--card-color);
     border-radius: 6px;
@@ -8,7 +104,13 @@
     flex-direction: column;
     gap: 10px;
     margin-bottom: 10px;
-    min-height: 120px;
+    min-height: 150px;
+    transition: all 0.3s ease;
+}
+
+.calculator-item:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
 }
 
 .calculator-item-content {
@@ -18,14 +120,33 @@
     gap: 8px;
 }
 
-.calculator-item-controls {
+.calculator-item-header {
     display: flex;
-    align-items: center;
-    gap: 10px;
-    padding-top: 10px;
-    border-top: 1px solid #eee;
     justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 5px;
+}
+
+.calculator-item-name {
+    font-weight: bold;
+    font-size: 1rem;
+    color: var(--primary-color);
+    flex: 1;
+}
+
+.calculator-item-tags {
+    display: flex;
     flex-wrap: wrap;
+    gap: 3px;
+    margin-top: 3px;
+}
+
+.calculator-tag {
+    background: var(--secondary-color);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-size: 0.75rem;
 }
 
 .calculator-item-level {
@@ -47,12 +168,14 @@
     cursor: pointer;
     transition: all 0.3s ease;
     max-height: 40px;
+    margin: 8px 0;
 }
 
 .calculator-item-description.expanded {
     -webkit-line-clamp: unset;
-    max-height: none;
+    max-height: 200px;
     overflow-y: auto;
+    cursor: auto;
 }
 
 .calculator-item-description strong {
@@ -60,92 +183,6 @@
     font-weight: bold;
 }
 
-.toggle-description-btn {
-    background: none;
-    color: var(--secondary-color);
-    border: 1px solid var(--secondary-color);
-    padding: 2px 8px;
-    border-radius: 3px;
-    font-size: 0.8rem;
-    cursor: pointer;
-    align-self: flex-start;
-    margin-top: 5px;
-}
-
-.toggle-description-btn:hover {
-    background: var(--secondary-color);
-    color: white;
-}
-
-/* 特质等级输入框样式 */
-.specialty-level-input {
-    width: 60px;
-    padding: 3px;
-    text-align: center;
-    border: 1px solid #ddd;
-    border-radius: 3px;
-}
-
-.level-display {
-    font-size: 0.9rem;
-    color: #666;
-}
-
-/* 计算器网格布局 */
-.calculator-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-    gap: 15px;
-}
-
-/* 改善计算器项目的响应式设计 */
-@media (max-width: 768px) {
-    .calculator-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .calculator-item-controls {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 8px;
-    }
-    
-    .quantity-control {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    
-    .calculator-item-cost,
-    .calculator-item-weight {
-        text-align: center;
-    }
-    
-    .remove-btn {
-        align-self: flex-end;
-    }
-}
-
-/* 改善描述显示 */
-.item-description {
-    line-height: 1.5;
-    margin: 10px 0;
-    color: #555;
-}
-
-.item-description strong {
-    color: var(--secondary-color);
-    font-weight: bold;
-}
-
-/* 计算器项目悬停效果 */
-.calculator-item:hover {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    transform: translateY(-2px);
-    transition: all 0.3s ease;
-}
-
-/* 计算器描述滚动条 */
 .calculator-item-description::-webkit-scrollbar {
     width: 4px;
 }
@@ -162,4 +199,865 @@
 
 .calculator-item-description::-webkit-scrollbar-thumb:hover {
     background: #a8a8a8;
+}
+
+.calculator-item-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+
+.quantity-control {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.quantity-control label {
+    margin-bottom: 0;
+    font-weight: normal;
+    font-size: 0.9rem;
+}
+
+.quantity-input {
+    width: 60px;
+    padding: 4px;
+    text-align: center;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.calculator-item-cost {
+    font-weight: bold;
+    color: var(--primary-color);
+    min-width: 100px;
+    text-align: center;
+}
+
+.calculator-item-weight {
+    color: var(--dark-color);
+    min-width: 80px;
+    text-align: center;
+}
+
+.toggle-description-btn {
+    background: none;
+    color: var(--secondary-color);
+    border: 1px solid var(--secondary-color);
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    align-self: flex-start;
+    margin-top: 5px;
+    transition: all 0.3s ease;
+}
+
+.toggle-description-btn:hover {
+    background: var(--secondary-color);
+    color: white;
+}
+
+.filter-group {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: var(--dark-color);
+}
+
+input, textarea, select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 1rem;
+}
+
+.tag-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 5px;
+}
+
+.tag-option {
+    background: #eee;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+}
+
+.tag-option.selected {
+    background: var(--secondary-color);
+    color: white;
+}
+
+.tag-option.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.tag-option:hover:not(.disabled) {
+    transform: scale(1.05);
+}
+
+.cost-range {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.cost-range input {
+    width: 80px;
+}
+
+.cost-range select {
+    width: 80px;
+}
+
+.sort-group {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.sort-group select {
+    flex: 1;
+}
+
+button {
+    background: var(--secondary-color);
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background 0.3s, transform 0.2s;
+}
+
+button:hover {
+    background: #7d3c98;
+    transform: translateY(-1px);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+.btn-danger {
+    background: var(--accent-color);
+}
+
+.btn-danger:hover {
+    background: #c0392b;
+}
+
+.btn-success {
+    background: var(--success-color);
+}
+
+.btn-success:hover {
+    background: #27ae60;
+}
+
+.btn-warning {
+    background: var(--warning-color);
+}
+
+.btn-warning:hover {
+    background: #e67e22;
+}
+
+.button-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.item-list {
+    flex: 1;
+    overflow-y: auto;
+    margin-bottom: 15px;
+    max-height: 500px; /* 限制最大高度并启用滚动 */
+}
+
+.item-card {
+    background: var(--light-color);
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-left: 4px solid var(--secondary-color);
+    transition: all 0.3s ease;
+}
+
+.item-card:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+
+.item-name {
+    font-weight: bold;
+    font-size: 1.1rem;
+    color: var(--primary-color);
+}
+
+.item-id {
+    font-family: monospace;
+    background: #f0f0f0;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.item-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin: 5px 0;
+}
+
+.tag {
+    background: var(--secondary-color);
+    color: white;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+}
+
+.item-description {
+    margin: 10px 0;
+    line-height: 1.5;
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.item-description strong {
+    color: var(--secondary-color);
+    font-weight: bold;
+}
+
+.item-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    font-size: 0.9rem;
+    color: var(--dark-color);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 30px;
+    color: #7f8c8d;
+    font-style: italic;
+}
+
+.status-message {
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    text-align: center;
+    font-weight: 500;
+}
+
+.status-success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.status-error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.status-warning {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+.help-text {
+    font-size: 0.8rem;
+    color: #7f8c8d;
+    margin-top: 5px;
+}
+
+.pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #ddd;
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.pagination button {
+    padding: 5px 10px;
+    font-size: 0.8rem;
+}
+
+.pagination-info {
+    font-size: 0.9rem;
+    color: var(--dark-color);
+}
+
+.items-per-page {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.items-per-page input {
+    width: 60px;
+}
+
+.total-cost {
+    text-align: right;
+    font-weight: bold;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #ddd;
+    font-size: 1.1rem;
+}
+
+.currency-display {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.weight-status {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 4px;
+    background: #f8f9fa;
+    font-weight: bold;
+}
+
+.weight-status.light {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.weight-status.normal {
+    background: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+.weight-status.heavy {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+.weight-status.overloaded {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* 新增样式 */
+.status-loading {
+    background: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+.status-healthy {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.recovery-panel {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 15px 0;
+}
+
+.recovery-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+.health-indicator {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+.health-healthy {
+    background-color: #28a745;
+}
+
+.health-warning {
+    background-color: #ffc107;
+}
+
+.health-error {
+    background-color: #dc3545;
+}
+
+.data-source-info {
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-top: 5px;
+    padding: 5px 0;
+}
+
+.data-health-panel {
+    background: #f8f9fa;
+    border-radius: 6px;
+    padding: 10px;
+    margin: 10px 0;
+    font-size: 0.9rem;
+}
+
+.data-health-item {
+    display: flex;
+    justify-content: space-between;
+    margin: 5px 0;
+}
+
+.health-status {
+    display: flex;
+    align-items: center;
+}
+
+.hierarchical-tags {
+    margin-bottom: 15px;
+}
+
+.type-selector {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.type-selector select {
+    flex: 1;
+}
+
+.filter-rule-selector {
+    display: flex;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.filter-rule-selector label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 0;
+    cursor: pointer;
+}
+
+.filter-rule-selector input {
+    width: auto;
+}
+
+.active-filters {
+    background: #f8f9fa;
+    border-radius: 6px;
+    padding: 10px;
+    margin: 10px 0;
+}
+
+.active-filter-tag {
+    display: inline-flex;
+    align-items: center;
+    background: var(--secondary-color);
+    color: white;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    margin: 2px 5px 2px 0;
+    transition: all 0.2s;
+}
+
+.active-filter-tag .remove {
+    margin-left: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    padding: 0 2px;
+    border-radius: 50%;
+}
+
+.active-filter-tag .remove:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.filter-summary {
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin-bottom: 5px;
+}
+
+.filter-category {
+    margin-bottom: 15px;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 10px;
+}
+
+.filter-category-title {
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: var(--primary-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.filter-category-content {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+/* 特质等级选择器样式 */
+.item-level-selector {
+    margin: 10px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+
+.item-level-selector label {
+    margin-bottom: 0;
+    font-weight: normal;
+    font-size: 0.9rem;
+}
+
+.specialty-level-input {
+    width: 70px;
+    padding: 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: white;
+    text-align: center;
+}
+
+.level-display {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+/* 计算器中的等级控制 */
+.level-control {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.level-control label {
+    margin-bottom: 0;
+    font-weight: normal;
+    font-size: 0.9rem;
+}
+
+.level-select {
+    width: 60px;
+    padding: 3px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: white;
+}
+
+/* 改善筛选结果中的特质卡片布局 */
+.item-card .item-level-selector {
+    margin: 8px 0;
+    padding: 6px 8px;
+    background: #f0f2f5;
+    border-radius: 4px;
+}
+
+.item-card .item-level-selector label {
+    font-size: 0.85rem;
+}
+
+.item-card .specialty-level-input {
+    font-size: 0.85rem;
+}
+
+/* 模式切换按钮样式 */
+.mode-switcher {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.mode-btn {
+    background: #6c757d;
+    padding: 8px 16px;
+    border-radius: 20px;
+    transition: all 0.3s;
+    min-width: 120px;
+}
+
+.mode-btn.active {
+    background: var(--secondary-color);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.mode-btn:hover:not(.active) {
+    background: #5a6268;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .calculator-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .calculator-item-controls {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+    
+    .quantity-control {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+    }
+    
+    .calculator-item-cost,
+    .calculator-item-weight {
+        text-align: left;
+        width: 100%;
+    }
+    
+    .item-header {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .item-footer {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+    
+    .type-selector {
+        flex-direction: column;
+    }
+    
+    .cost-range {
+        flex-wrap: wrap;
+    }
+    
+    .cost-range input {
+        width: 70px;
+    }
+    
+    .cost-range select {
+        width: 70px;
+    }
+    
+    .pagination {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .items-per-page {
+        justify-content: center;
+    }
+    
+    .mode-switcher {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .mode-btn {
+        width: 100%;
+        max-width: 200px;
+    }
+}
+
+/* 滚动条样式 */
+.item-list::-webkit-scrollbar,
+.filter-category-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.item-list::-webkit-scrollbar-track,
+.filter-category-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.item-list::-webkit-scrollbar-thumb,
+.filter-category-content::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.item-list::-webkit-scrollbar-thumb:hover,
+.filter-category-content::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* 焦点状态改善 */
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 2px rgba(142, 68, 173, 0.2);
+}
+
+button:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(142, 68, 173, 0.5);
+}
+
+/* 动画效果 */
+.item-card,
+.calculator-item {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.tag-option {
+    transition: all 0.2s;
+}
+
+/* 加载状态 */
+.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid var(--secondary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* 移除按钮样式调整 */
+.remove-btn {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    min-width: 60px;
+}
+
+/* 计算器项目的最小高度和自适应 */
+.calculator-item {
+    min-height: 180px;
+}
+
+@media (max-width: 480px) {
+    .calculator-item {
+        min-height: 200px;
+    }
+    
+    .calculator-item-description {
+        font-size: 0.85rem;
+    }
+    
+    .calculator-item-name {
+        font-size: 0.95rem;
+    }
+    
+    .container {
+        padding: 10px;
+    }
+    
+    header {
+        padding: 15px;
+    }
+    
+    .section {
+        padding: 15px;
+    }
+}
+
+/* 计算器网格响应式优化 */
+@media (min-width: 1200px) {
+    .calculator-grid {
+        grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+    }
+}
+
+@media (max-width: 400px) {
+    .calculator-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .calculator-item {
+        padding: 12px;
+    }
+}
+
+/* 筛选结果项目卡片高度优化 */
+.item-card {
+    min-height: 180px;
+}
+
+.item-description {
+    min-height: 40px;
+}
+
+/* 计算器控制按钮组优化 */
+.calculator-item-controls > * {
+    margin: 2px 0;
+}
+
+/* 特质等级输入的样式优化 */
+.specialty-level-input:focus {
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 2px rgba(142, 68, 173, 0.2);
 }
