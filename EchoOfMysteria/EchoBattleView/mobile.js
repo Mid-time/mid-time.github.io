@@ -40,6 +40,9 @@ class MobileApp {
         this.targetTeamSelect = document.getElementById('target-team-select');
         this.newTeamBox = document.getElementById('new-team-box');
         this.newDicePoolBox = document.getElementById('new-dice-pool-box');
+        
+        // 初始化时立即渲染默认队伍
+        this.renderTeamView();
     }
 
     attachEventListeners() {
@@ -281,6 +284,7 @@ class MobileApp {
     renderAllViews() {
         this.renderBattleView();
         this.renderTeamView();
+        this.renderDicePools();
     }
 
     renderBattleView() {
@@ -362,6 +366,7 @@ class MobileApp {
     renderTeamView() {
         this.teamGroupsContainer.innerHTML = '';
         
+        // 确保默认队伍始终显示
         this.dataManager.data.teams.forEach(team => {
             const teamGroup = this.createTeamGroupElement(team);
             this.teamGroupsContainer.appendChild(teamGroup);
@@ -496,6 +501,13 @@ class MobileApp {
         const dicePool = this.dataManager.createDicePool();
         this.renderDicePool(dicePool);
         this.saveToLocalStorage();
+    }
+
+    renderDicePools() {
+        this.dicePoolsContainer.innerHTML = '';
+        this.dataManager.data.dicePools.forEach(pool => {
+            this.renderDicePool(pool);
+        });
     }
 
     renderDicePool(dicePool, noteValue = '') {
@@ -679,8 +691,66 @@ class MobileApp {
             this.saveToLocalStorage();
         });
 
-        // 其他输入事件...
-        this.setupDicePoolInputEvents(poolElement, dicePool);
+        // 常规骰池事件
+        if (dicePool.type === 'normal' || dicePool.type === 'sanity' || dicePool.type === 'judgment') {
+            const countInput = poolElement.querySelector('.dice-count');
+            countInput.addEventListener('change', () => {
+                this.dataManager.updateDicePool(dicePool.id, { count: parseInt(countInput.value) || 1 });
+                this.saveToLocalStorage();
+            });
+            
+            const minInput = poolElement.querySelector('.dice-min');
+            minInput.addEventListener('change', () => {
+                this.dataManager.updateDicePool(dicePool.id, { min: parseInt(minInput.value) || 1 });
+                this.saveToLocalStorage();
+            });
+            
+            const maxInput = poolElement.querySelector('.dice-max');
+            maxInput.addEventListener('change', () => {
+                this.dataManager.updateDicePool(dicePool.id, { max: parseInt(maxInput.value) || 20 });
+                this.saveToLocalStorage();
+            });
+        }
+        
+        // 理智骰池专用事件
+        if (dicePool.type === 'sanity') {
+            const sanityInput = poolElement.querySelector('.dice-sanity');
+            sanityInput.addEventListener('change', () => {
+                this.dataManager.updateDicePool(dicePool.id, { sanity: parseInt(sanityInput.value) || 0 });
+                this.saveToLocalStorage();
+            });
+            
+            const effectSelector = poolElement.querySelector('.sanity-effect');
+            effectSelector.value = dicePool.effect || 'positive';
+            effectSelector.addEventListener('change', () => {
+                this.dataManager.updateDicePool(dicePool.id, { effect: effectSelector.value });
+                this.saveToLocalStorage();
+            });
+        }
+        
+        // 解析骰池专用事件
+        if (dicePool.type === 'expression') {
+            const countInput = poolElement.querySelector('.expression-count');
+            countInput.addEventListener('change', () => {
+                this.dataManager.updateDicePool(dicePool.id, { expressionCount: parseInt(countInput.value) || 1 });
+                this.saveToLocalStorage();
+            });
+            
+            const expressionInput = poolElement.querySelector('.dice-expression');
+            expressionInput.addEventListener('change', () => {
+                this.dataManager.updateDicePool(dicePool.id, { expression: expressionInput.value || '1d6' });
+                this.saveToLocalStorage();
+            });
+        }
+        
+        // 判断骰池专用事件
+        if (dicePool.type === 'judgment') {
+            const compareInput = poolElement.querySelector('.compare-value');
+            compareInput.addEventListener('change', () => {
+                this.dataManager.updateDicePool(dicePool.id, { compareValue: parseInt(compareInput.value) || 10 });
+                this.saveToLocalStorage();
+            });
+        }
 
         const removeBtn = poolElement.querySelector('.delete-dice-pool');
         removeBtn.addEventListener('click', () => {
@@ -688,11 +758,6 @@ class MobileApp {
             poolElement.remove();
             this.saveToLocalStorage();
         });
-    }
-
-    setupDicePoolInputEvents(poolElement, dicePool) {
-        // 设置各种输入框的事件监听
-        // 这里简化处理，实际实现需要根据骰池类型设置不同的输入框
     }
 
     generateDicePoolResults(poolId) {
@@ -761,10 +826,12 @@ class MobileApp {
             this.selectedCharacter = null;
             
             this.renderAllViews();
-            this.dicePoolsContainer.innerHTML = '';
             this.hideActionBar();
             
             localStorage.removeItem('battleRoundViewData');
+        } else {
+            // 如果用户取消，重新渲染当前视图以确保数据一致
+            this.renderAllViews();
         }
     }
 
@@ -782,6 +849,9 @@ class MobileApp {
             this.dataManager.data.dicePools.forEach(pool => {
                 this.renderDicePool(pool);
             });
+        } else {
+            // 如果没有本地存储数据，确保默认队伍显示
+            this.renderTeamView();
         }
     }
 }
