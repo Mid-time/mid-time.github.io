@@ -146,6 +146,8 @@ class UnifiedCalculatorApp {
         
         // 通用排序选项
         const commonOptions = [
+            { value: 'id-asc', text: 'ID 从小到大' },
+            { value: 'id-desc', text: 'ID 从大到小' },
             { value: 'name-asc', text: '名称 A-Z' },
             { value: 'name-desc', text: '名称 Z-A' },
             { value: 'cost-asc', text: (this.currentMode === 'items' ? '价格' : '成本') + ' 低到高' },
@@ -174,7 +176,7 @@ class UnifiedCalculatorApp {
         
         // 如果没有匹配的当前值，使用默认值
         if (!sortSelect.value) {
-            sortSelect.value = 'name-asc';
+            sortSelect.value = 'id-asc';
         }
     }
     
@@ -227,7 +229,7 @@ class UnifiedCalculatorApp {
                 <h3>数据同步问题</h3>
                 <p>检测到以下问题：</p>
                 <ul>
-                    ${issues.map(issue => `<li>${this.escapeHtml(issue)}</li>`).join('')}
+                    ${issues.map(issue => `<li>${issue}</li>`).join('')}
                 </ul>
                 <div class="recovery-actions">
                     <button class="btn-success" onclick="unifiedApp.dataManager.forceRefresh()">强制刷新数据</button>
@@ -292,13 +294,6 @@ class UnifiedCalculatorApp {
             this.manager.currentPage = 1;
             this.manager.renderFilterResults();
         });
-    }
-    
-    // HTML转义函数
-    escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
     }
 }
 

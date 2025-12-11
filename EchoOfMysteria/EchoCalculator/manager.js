@@ -12,7 +12,7 @@ class UnifiedManager {
         this.itemsPerPage = 20;
         
         // 排序相关
-        this.sortBy = 'name-asc';
+        this.sortBy = 'id-asc'; // 默认按ID排序
         
         // 当前模式
         this.currentMode = 'items';
@@ -30,6 +30,25 @@ class UnifiedManager {
         this.currentData = [];
         this.filteredData = [];
         this.specialtyLevels.clear();
+        
+        // 重置类型筛选器
+        this.resetTypeFilter();
+    }
+    
+    // 重置类型筛选器
+    resetTypeFilter() {
+        // 重置主类型筛选
+        const mainTypeFilter = document.getElementById('main-type-filter');
+        if (mainTypeFilter) {
+            mainTypeFilter.value = '';
+        }
+        
+        // 重置子类型筛选
+        const subTypeFilter = document.getElementById('sub-type-filter');
+        if (subTypeFilter) {
+            subTypeFilter.value = '';
+            subTypeFilter.style.display = 'none';
+        }
     }
     
     // 加载当前模式的数据
@@ -130,9 +149,11 @@ class UnifiedManager {
                 subTypeSelector.style.display = 'block';
             } else {
                 subTypeSelector.style.display = 'none';
+                subTypeSelector.value = '';
             }
         } else {
             subTypeSelector.style.display = 'none';
+            subTypeSelector.value = '';
         }
         
         // 添加事件监听器
@@ -228,13 +249,13 @@ class UnifiedManager {
                 let descMatch = false;
                 
                 if (item.description) {
+                    let descriptionText = '';
                     if (Array.isArray(item.description)) {
-                        descMatch = item.description.some(desc => 
-                            desc && desc.toLowerCase().includes(nameFilter)
-                        );
+                        descriptionText = item.description.join(' ');
                     } else {
-                        descMatch = item.description.toLowerCase().includes(nameFilter);
+                        descriptionText = item.description;
                     }
+                    descMatch = descriptionText.toLowerCase().includes(nameFilter);
                 }
                 
                 if (!nameMatch && !descMatch) {
@@ -354,6 +375,7 @@ class UnifiedManager {
         // 确保所有数据都有必要的属性
         this.filteredData = this.filteredData.map(item => {
             if (!item.name) item.name = '未知';
+            if (!item.id) item.id = '未知';
             if (this.currentMode === 'items') {
                 if (!item.cost) item.cost = 0;
                 if (!item.weight) item.weight = 0;
@@ -365,6 +387,22 @@ class UnifiedManager {
         });
         
         switch(this.sortBy) {
+            case 'id-asc':
+                this.filteredData.sort((a, b) => {
+                    // 提取ID中的数字部分进行排序
+                    const numA = parseInt(a.id.replace(/\D/g, '')) || 0;
+                    const numB = parseInt(b.id.replace(/\D/g, '')) || 0;
+                    return numA - numB;
+                });
+                break;
+            case 'id-desc':
+                this.filteredData.sort((a, b) => {
+                    // 提取ID中的数字部分进行排序
+                    const numA = parseInt(a.id.replace(/\D/g, '')) || 0;
+                    const numB = parseInt(b.id.replace(/\D/g, '')) || 0;
+                    return numB - numA;
+                });
+                break;
             case 'name-asc':
                 this.filteredData.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
                 break;
@@ -461,10 +499,10 @@ class UnifiedManager {
             });
         });
         
-        // 为特质等级选择器添加事件监听器
+        // 为特质等级输入框添加事件监听器
         if (this.currentMode === 'specialties') {
-            document.querySelectorAll('.specialty-level-select').forEach(select => {
-                select.addEventListener('change', (e) => {
+            document.querySelectorAll('.specialty-level-input').forEach(input => {
+                input.addEventListener('change', (e) => {
                     const itemId = e.target.dataset.id;
                     const newLevel = parseInt(e.target.value);
                     this.updateSpecialtyLevel(itemId, newLevel);
@@ -476,6 +514,19 @@ class UnifiedManager {
                         if (item) {
                             this.updateSpecialtyCardDisplay(card, item, newLevel);
                         }
+                    }
+                });
+                
+                input.addEventListener('input', (e) => {
+                    const itemId = e.target.dataset.id;
+                    const item = this.currentData.find(i => i.id == itemId);
+                    if (item) {
+                        const newLevel = parseInt(e.target.value);
+                        const maxLevel = item.level;
+                        
+                        // 限制输入范围
+                        if (newLevel < 1) e.target.value = 1;
+                        if (newLevel > maxLevel) e.target.value = maxLevel;
                     }
                 });
             });
@@ -506,7 +557,7 @@ class UnifiedManager {
             costElement.textContent = `成本: ${currentCost}`;
         }
         if (descElement) {
-            descElement.textContent = currentDescription;
+            descElement.innerHTML = currentDescription;
         }
     }
     
@@ -515,7 +566,7 @@ class UnifiedManager {
         container.innerHTML = `
             <div class="item-header">
                 <div>
-                    <div class="item-name">${this.escapeHtml(item.name)}</div>
+                    <div class="item-name">${item.name}</div>
                     <div>
                         <span class="item-id">ID: ${item.id}</span>
                         ${item.rarity ? `<span class="tag">${item.rarity}</span>` : ''}
@@ -525,10 +576,10 @@ class UnifiedManager {
                 <button class="btn-success add-to-calculator" data-id="${item.id}">添加到计算器</button>
             </div>
             <div class="item-tags">
-                ${item.tags ? item.tags.map(tag => `<span class="tag">${this.escapeHtml(tag)}</span>`).join('') : ''}
-                ${item.need ? item.need.map(need => `<span class="tag">${this.escapeHtml(need)}</span>`).join('') : ''}
+                ${item.tags ? item.tags.map(tag => `<span class="tag">${tag}</span>`).join('') : ''}
+                ${item.need ? item.need.map(need => `<span class="tag">${need}</span>`).join('') : ''}
             </div>
-            <div class="item-description">${this.escapeHtml(item.description)}</div>
+            <div class="item-description">${item.description}</div>
             <div class="item-footer">
                 <div>价格: ${this.formatCurrency(item.cost)}</div>
                 <div>重量: ${item.weight}</div>
@@ -554,37 +605,31 @@ class UnifiedManager {
             currentDescription = specialty.description[levelIndex];
         }
         
-        // 构建等级选择器选项
-        const levelOptions = [];
-        for (let i = 1; i <= specialty.level; i++) {
-            levelOptions.push(`<option value="${i}" ${i === currentLevel ? 'selected' : ''}>${i}</option>`);
-        }
-        
         container.innerHTML = `
             <div class="item-header">
                 <div>
-                    <div class="item-name">${this.escapeHtml(specialty.name)}</div>
+                    <div class="item-name">${specialty.name}</div>
                     <div>
                         <span class="item-id">ID: ${specialty.id}</span>
                         <span class="tag">${specialty.rarity}</span>
                         <span class="tag">最大等级 ${specialty.level}</span>
-                        ${specialty.need ? specialty.need.map(need => `<span class="tag">${this.escapeHtml(need)}</span>`).join('') : ''}
+                        ${specialty.need ? specialty.need.map(need => `<span class="tag">${need}</span>`).join('') : ''}
                     </div>
                 </div>
                 <button class="btn-success add-to-calculator" data-id="${specialty.id}">添加到计算器</button>
             </div>
             <div class="item-tags">
-                ${specialty.tag ? specialty.tag.map(tag => `<span class="tag">${this.escapeHtml(tag)}</span>`).join('') : ''}
-                ${specialty.maintype ? `<span class="tag">${this.escapeHtml(specialty.maintype)}</span>` : ''}
-                ${specialty.subtype ? `<span class="tag">${this.escapeHtml(specialty.subtype)}</span>` : ''}
+                ${specialty.tag ? specialty.tag.map(tag => `<span class="tag">${tag}</span>`).join('') : ''}
+                ${specialty.maintype ? `<span class="tag">${specialty.maintype}</span>` : ''}
+                ${specialty.subtype ? `<span class="tag">${specialty.subtype}</span>` : ''}
             </div>
             <div class="item-level-selector">
                 <label>选择等级:</label>
-                <select class="specialty-level-select" data-id="${specialty.id}">
-                    ${levelOptions.join('')}
-                </select>
+                <input type="number" class="specialty-level-input" data-id="${specialty.id}" 
+                       value="${currentLevel}" min="1" max="${specialty.level}">
+                <span class="level-display">/${specialty.level}</span>
             </div>
-            <div class="item-description">${this.escapeHtml(currentDescription)}</div>
+            <div class="item-description">${currentDescription}</div>
             <div class="item-footer">
                 <div>成本: ${currentCost}</div>
                 <div>类型: ${specialty.maintype}${specialty.subtype ? ' - ' + specialty.subtype : ''}</div>
@@ -594,6 +639,17 @@ class UnifiedManager {
     
     // 更新特质等级
     updateSpecialtyLevel(itemId, newLevel) {
+        const item = this.currentData.find(i => i.id == itemId);
+        if (!item) return;
+        
+        // 确保等级在有效范围内
+        newLevel = parseInt(newLevel);
+        if (isNaN(newLevel) || newLevel < 1) {
+            newLevel = 1;
+        } else if (newLevel > item.level) {
+            newLevel = item.level;
+        }
+        
         this.specialtyLevels.set(itemId, newLevel);
     }
     
@@ -654,36 +710,6 @@ class UnifiedManager {
             case 'silver': return value * 100;
             case 'copper': 
             default: return value;
-        }
-    }
-    
-    // HTML转义函数
-    escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-    
-    // 显示状态消息
-    showStatus(message, type) {
-        const statusElement = document.getElementById('status-message');
-        statusElement.textContent = message;
-        statusElement.className = 'status-message';
-        
-        if (type === 'success') {
-            statusElement.classList.add('status-success');
-        } else if (type === 'error') {
-            statusElement.classList.add('status-error');
-        } else if (type === 'warning') {
-            statusElement.classList.add('status-warning');
-        }
-        
-        // 3秒后自动清除成功消息
-        if (type === 'success') {
-            setTimeout(() => {
-                statusElement.textContent = '';
-                statusElement.className = 'status-message';
-            }, 3000);
         }
     }
 }

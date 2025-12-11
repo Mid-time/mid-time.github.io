@@ -63,6 +63,8 @@ class UnifiedDataManager {
                 count: data.length
             };
             
+            console.log(`特质数据源信息: ${this.sourceInfo.specialties.source}, 数量: ${this.sourceInfo.specialties.count}`);
+            
             return data;
         } catch (error) {
             console.error(`加载特质数据失败:`, error);
@@ -202,6 +204,10 @@ class UnifiedDataManager {
                 item[header] = isNaN(numValue) ? 1 : numValue;
             } else if (header === 'id') {
                 item[header] = value.toString().trim() || `${dataType}_${lineNumber}`;
+            } else if (header === 'description') {
+                // 处理描述字段
+                // 替换分号为换行符
+                item[header] = value.replace(/;/g, '<br>');
             } else {
                 item[header] = value;
             }
@@ -210,14 +216,45 @@ class UnifiedDataManager {
         // 处理特质的description数组格式
         if (dataType === 'specialty' && item.description) {
             if (typeof item.description === 'string' && item.description.includes('{')) {
-                // 处理格式：考验豁免+{6%/12%/20%}
-                const descMatch = item.description.match(/\{([^}]+)\}/);
-                if (descMatch) {
-                    const levelValues = descMatch[1].split('/');
-                    const baseDesc = item.description.replace(/\{([^}]+)\}/, '');
-                    item.description = levelValues.map(value => baseDesc + value.trim());
+                // 处理多个{}格式
+                const regex = /\{([^}]+)\}/g;
+                let match;
+                const matches = [];
+                
+                // 找到所有{}及其位置
+                while ((match = regex.exec(item.description)) !== null) {
+                    matches.push({
+                        start: match.index,
+                        end: match.index + match[0].length,
+                        content: match[1],
+                        fullMatch: match[0]
+                    });
+                }
+                
+                if (matches.length > 0) {
+                    // 按等级分割每个{}中的内容
+                    const levelArrays = matches.map(match => match.content.split('/'));
+                    const levelCount = levelArrays[0].length;
+                    
+                    // 为每个等级创建描述
+                    const levelDescriptions = [];
+                    for (let i = 0; i < levelCount; i++) {
+                        let levelDesc = item.description;
+                        
+                        // 为每个{}替换对应等级的值
+                        for (let j = 0; j < matches.length; j++) {
+                            const match = matches[j];
+                            const levelValue = levelArrays[j][i] || levelArrays[j][0] || '';
+                            const replacement = `<strong>${levelValue}</strong>`;
+                            levelDesc = levelDesc.replace(match.fullMatch, replacement);
+                        }
+                        
+                        levelDescriptions.push(levelDesc);
+                    }
+                    
+                    item.description = levelDescriptions;
                 } else {
-                    // 如果不是数组格式，转换为单元素数组
+                    // 如果没有{}，转换为单元素数组
                     item.description = [item.description];
                 }
             } else if (!Array.isArray(item.description)) {

@@ -12,6 +12,9 @@ class UnifiedCalculator {
         
         // 当前模式
         this.currentMode = 'items';
+        
+        // 存储展开状态
+        this.expandedItems = new Set();
     }
     
     // 设置当前模式
@@ -42,21 +45,16 @@ class UnifiedCalculator {
     
     // 添加物品到计算器
     addItem(item, mode, selectedLevel = 1) {
-        // 检查是否已存在（特质不可重复购买）
-        const existingItem = this.calculatorItems.find(i => i.id == item.id && i.mode === mode);
+        // 检查是否已存在
+        const existingIndex = this.calculatorItems.findIndex(i => i.id == item.id && i.mode === mode);
         
-        if (existingItem) {
+        if (existingIndex !== -1) {
+            // 如果已存在，覆盖上一个
             if (mode === 'items') {
-                existingItem.quantity += 1;
+                this.calculatorItems[existingIndex].quantity += 1;
             } else {
-                // 特质模式：如果已存在且等级不同，则更新等级
-                if (existingItem.currentLevel !== selectedLevel) {
-                    existingItem.currentLevel = selectedLevel;
-                } else {
-                    // 相同等级的特质不可重复购买
-                    this.showStatus(`${item.name} 已存在于计算器中`, 'warning');
-                    return;
-                }
+                // 特质模式：更新等级
+                this.calculatorItems[existingIndex].currentLevel = selectedLevel;
             }
         } else {
             const calculatorItem = {
@@ -118,6 +116,16 @@ class UnifiedCalculator {
         
         item.currentLevel = newLevel;
         this.saveCalculatorItems();
+        this.renderCalculator();
+    }
+    
+    // 切换描述展开状态
+    toggleDescription(itemId) {
+        if (this.expandedItems.has(itemId)) {
+            this.expandedItems.delete(itemId);
+        } else {
+            this.expandedItems.add(itemId);
+        }
         this.renderCalculator();
     }
     
@@ -223,24 +231,31 @@ class UnifiedCalculator {
     
     // 渲染物品计算器项目
     renderItemCalculator(container, item, itemCost, itemWeight) {
+        const isExpanded = this.expandedItems.has(item.id);
+        const descriptionClass = isExpanded ? 'expanded' : '';
+        
         container.innerHTML = `
-            <div class="calculator-item-header">
-                <div class="calculator-item-name">${this.escapeHtml(item.name)}</div>
-                <div class="calculator-item-tags">
-                    ${item.tags ? item.tags.map(tag => `<span class="calculator-tag">${this.escapeHtml(tag)}</span>`).join('') : ''}
-                </div>
-            </div>
-            <div class="calculator-item-details">
-                <div class="calculator-item-description">${this.escapeHtml(item.description)}</div>
-                <div class="calculator-item-controls">
-                    <div class="quantity-control">
-                        <label>数量:</label>
-                        <input type="number" class="quantity-input" value="${item.quantity}" min="0" data-id="${item.id}">
+            <div class="calculator-item-content">
+                <div class="calculator-item-header">
+                    <div class="calculator-item-name">${item.name}</div>
+                    <div class="calculator-item-tags">
+                        ${item.tags ? item.tags.map(tag => `<span class="calculator-tag">${tag}</span>`).join('') : ''}
                     </div>
-                    <span class="calculator-item-cost">${this.formatCurrency(itemCost)}</span>
-                    <span class="calculator-item-weight">重量: ${itemWeight}</span>
-                    <button class="btn-danger remove-btn" data-id="${item.id}">删除</button>
                 </div>
+                <div class="calculator-item-description ${descriptionClass}" data-id="${item.id}">
+                    ${item.description}
+                </div>
+                ${item.description && item.description.length > 100 ? 
+                    `<button class="toggle-description-btn" data-id="${item.id}">${isExpanded ? '收起' : '展开'}</button>` : ''}
+            </div>
+            <div class="calculator-item-controls">
+                <div class="quantity-control">
+                    <label>数量:</label>
+                    <input type="number" class="quantity-input" value="${item.quantity}" min="0" data-id="${item.id}">
+                </div>
+                <span class="calculator-item-cost">${this.formatCurrency(itemCost)}</span>
+                <span class="calculator-item-weight">重量: ${itemWeight}</span>
+                <button class="btn-danger remove-btn" data-id="${item.id}">删除</button>
             </div>
         `;
         
@@ -263,6 +278,26 @@ class UnifiedCalculator {
             const itemId = e.target.dataset.id;
             this.removeFromCalculator(itemId);
         });
+        
+        // 添加展开/收起按钮事件监听器
+        const toggleBtn = container.querySelector('.toggle-description-btn');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', (e) => {
+                const itemId = e.target.dataset.id;
+                this.toggleDescription(itemId);
+            });
+        }
+        
+        // 添加描述点击展开事件监听器
+        const descriptionElement = container.querySelector('.calculator-item-description');
+        if (descriptionElement && !isExpanded) {
+            descriptionElement.addEventListener('click', (e) => {
+                if (e.target === descriptionElement) {
+                    const itemId = descriptionElement.dataset.id;
+                    this.toggleDescription(itemId);
+                }
+            });
+        }
     }
     
     // 渲染特质计算器项目
@@ -272,42 +307,29 @@ class UnifiedCalculator {
             (item.description[item.currentLevel - 1] || item.description[0] || '') : 
             item.description || '';
         
-        // 构建等级选择器选项
-        const levelOptions = [];
-        for (let i = 1; i <= item.level; i++) {
-            levelOptions.push(`<option value="${i}" ${i === item.currentLevel ? 'selected' : ''}>${i}</option>`);
-        }
+        const isExpanded = this.expandedItems.has(item.id);
+        const descriptionClass = isExpanded ? 'expanded' : '';
         
         container.innerHTML = `
-            <div class="calculator-item-header">
-                <div class="calculator-item-name">${this.escapeHtml(item.name)}</div>
-                <div class="calculator-item-tags">
-                    ${item.tag ? item.tag.map(tag => `<span class="calculator-tag">${this.escapeHtml(tag)}</span>`).join('') : ''}
-                </div>
-            </div>
-            <div class="calculator-item-details">
-                <div class="calculator-item-description">${this.escapeHtml(currentDescription)}</div>
-                <div class="calculator-item-controls">
-                    <div class="level-control">
-                        <label>等级:</label>
-                        <select class="level-select" data-id="${item.id}">
-                            ${levelOptions.join('')}
-                        </select>
-                        <span class="level-display">/${item.level}</span>
+            <div class="calculator-item-content">
+                <div class="calculator-item-header">
+                    <div class="calculator-item-name">${item.name}</div>
+                    <div class="calculator-item-tags">
+                        ${item.tag ? item.tag.map(tag => `<span class="calculator-tag">${tag}</span>`).join('') : ''}
                     </div>
-                    <span class="calculator-item-cost">成本: ${itemCost}</span>
-                    <button class="btn-danger remove-btn" data-id="${item.id}">删除</button>
                 </div>
+                <div class="calculator-item-level">等级: ${item.currentLevel}/${item.level}</div>
+                <div class="calculator-item-description ${descriptionClass}" data-id="${item.id}">
+                    ${currentDescription}
+                </div>
+                ${currentDescription && currentDescription.length > 100 ? 
+                    `<button class="toggle-description-btn" data-id="${item.id}">${isExpanded ? '收起' : '展开'}</button>` : ''}
+            </div>
+            <div class="calculator-item-controls">
+                <span class="calculator-item-cost">成本: ${itemCost}</span>
+                <button class="btn-danger remove-btn" data-id="${item.id}">删除</button>
             </div>
         `;
-        
-        // 添加等级选择事件监听器
-        const levelSelect = container.querySelector('.level-select');
-        levelSelect.addEventListener('change', (e) => {
-            const itemId = e.target.dataset.id;
-            const newLevel = parseInt(e.target.value);
-            this.updateLevel(itemId, newLevel);
-        });
         
         // 添加删除按钮事件监听器
         const removeBtn = container.querySelector('.remove-btn');
@@ -315,12 +337,33 @@ class UnifiedCalculator {
             const itemId = e.target.dataset.id;
             this.removeFromCalculator(itemId);
         });
+        
+        // 添加展开/收起按钮事件监听器
+        const toggleBtn = container.querySelector('.toggle-description-btn');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', (e) => {
+                const itemId = e.target.dataset.id;
+                this.toggleDescription(itemId);
+            });
+        }
+        
+        // 添加描述点击展开事件监听器
+        const descriptionElement = container.querySelector('.calculator-item-description');
+        if (descriptionElement && !isExpanded) {
+            descriptionElement.addEventListener('click', (e) => {
+                if (e.target === descriptionElement) {
+                    const itemId = descriptionElement.dataset.id;
+                    this.toggleDescription(itemId);
+                }
+            });
+        }
     }
     
     // 清空计算器
     clearCalculator() {
         // 只清除当前模式的物品
         this.calculatorItems = this.calculatorItems.filter(item => item.mode !== this.currentMode);
+        this.expandedItems.clear();
         this.saveCalculatorItems();
         this.renderCalculator();
         this.showStatus('计算器已清空', 'success');
@@ -338,13 +381,6 @@ class UnifiedCalculator {
         if (copperRemainder > 0 || result.length === 0) result.push(`${copperRemainder}铜币`);
         
         return result.join(' ');
-    }
-    
-    // HTML转义函数
-    escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
     }
     
     // 显示状态消息
