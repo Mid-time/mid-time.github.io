@@ -129,6 +129,88 @@ body {
     margin-left: 10px;
 }
 
+/* 血量条和耐力条容器 */
+.hp-stamina-container {
+    height: 12px;
+    background-color: #e0e0e0;
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+}
+
+.hp-bar-fill {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 0.3s;
+    background-color: var(--hp-color);
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2;
+}
+
+.stamina-bar-fill {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 0.3s;
+    background-color: var(--stamina-color);
+    position: absolute;
+    top: 0;
+    z-index: 1;
+}
+
+/* 双条（魔力条和混乱条）容器 */
+.dual-bars {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.dual-bar-container {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex: 1;
+}
+
+.dual-bar-value {
+    font-size: 0.8rem;
+    font-weight: bold;
+    width: 25px;
+    text-align: center;
+}
+
+.sanity-value {
+    color: var(--sanity-color);
+}
+
+.mp-value {
+    color: var(--mp-color);
+}
+
+.dual-bar-fill {
+    flex: 1;
+    height: 8px;
+    background-color: #e0e0e0;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+}
+
+.stat-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s;
+}
+
+.sanity-bar {
+    background-color: var(--sanity-color);
+}
+
+.mp-bar {
+    background-color: var(--mp-color);
+}
+
 /* 队伍视图样式 */
 .team-view {
     margin-bottom: 20px;
@@ -366,6 +448,24 @@ body {
         grid-template-rows: auto auto;
     }
     
+    /* 条形图移动端优化 */
+    .hp-stamina-container {
+        height: 10px;
+    }
+    
+    .dual-bar-fill {
+        height: 6px;
+    }
+    
+    .dual-bar-value {
+        font-size: 0.7rem;
+        width: 20px;
+    }
+    
+    .dual-bar-container {
+        gap: 3px;
+    }
+    
     /* 骰池视图优化 */
     .dice-type-selector, .dice-note {
         min-width: 100%;
@@ -500,5 +600,27 @@ body {
     
     .team-character-effect {
         font-size: 0.65rem;
+    }
+    
+    /* 条形图超小屏幕优化 */
+    .battle-bars {
+        width: 50%;
+    }
+    
+    .hp-stamina-container {
+        height: 8px;
+    }
+    
+    .dual-bar-fill {
+        height: 5px;
+    }
+    
+    .dual-bar-value {
+        font-size: 0.65rem;
+        width: 18px;
+    }
+    
+    .dual-bar-container {
+        gap: 2px;
     }
 }
