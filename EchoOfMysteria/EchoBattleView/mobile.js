@@ -8,6 +8,8 @@ class MobileApp {
         
         this.initializeElements();
         this.attachEventListeners();
+        // 初始化时立即渲染默认队伍
+        this.renderTeamView();
     }
 
     initializeElements() {
@@ -40,9 +42,6 @@ class MobileApp {
         this.targetTeamSelect = document.getElementById('target-team-select');
         this.newTeamBox = document.getElementById('new-team-box');
         this.newDicePoolBox = document.getElementById('new-dice-pool-box');
-        
-        // 初始化时立即渲染默认队伍
-        this.renderTeamView();
     }
 
     attachEventListeners() {

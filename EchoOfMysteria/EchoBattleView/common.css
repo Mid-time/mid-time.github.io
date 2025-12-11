@@ -1,4 +1,198 @@
-/* 在common.css中添加或确保以下样式存在 */
+:root {
+    --primary-color: #4a6fa5;
+    --secondary-color: #6b8cbc;
+    --light-color: #f5f7fa;
+    --dark-color: #2c3e50;
+    --success-color: #5cb85c;
+    --danger-color: #d9534f;
+    --warning-color: #f0ad4e;
+    --hp-color: #e74c3c;
+    --mp-color: #3498db;
+    --sanity-color: #f39c12;
+    --speed-color: #ff9800;
+    --reason-color: #2196F3;
+    --stamina-color: #8a2be2;
+    --team1-color: #4a6fa5;
+    --team2-color: #d9534f;
+    --positive-color: #2196F3;
+    --negative-color: #9C27B0;
+    --greater-color: #4CAF50;
+    --less-color: #F44336;
+    --equal-color: #FFC107;
+    --selected-color: #e3f2fd;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: var(--light-color);
+    color: var(--dark-color);
+    line-height: 1.6;
+}
+
+.container {
+    margin: 0 auto;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.round-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+h1 {
+    color: var(--primary-color);
+    margin-bottom: 0;
+}
+
+.round-input {
+    padding: 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.description {
+    color: var(--dark-color);
+    opacity: 0.8;
+    margin-bottom: 20px;
+    font-style: italic;
+}
+
+/* 角色通用样式 */
+.character {
+    background-color: var(--light-color);
+    border-radius: 8px;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    user-select: none;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.character:hover {
+    background-color: #e8ecf1;
+}
+
+.character-top-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.character-speed, .character-reason {
+    font-weight: bold;
+    font-size: 0.9rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.character-speed {
+    background-color: rgba(255, 152, 0, 0.1);
+    color: var(--speed-color);
+}
+
+.character-reason {
+    background-color: rgba(33, 150, 243, 0.1);
+    color: var(--reason-color);
+}
+
+.character-name {
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 10px;
+    font-size: 0.95rem;
+    line-height: 1.2;
+    padding: 4px 0;
+}
+
+.character-middle-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 0.8rem;
+}
+
+.character-sanity {
+    color: var(--sanity-color);
+    font-weight: bold;
+}
+
+.character-hp {
+    color: var(--hp-color);
+    font-weight: bold;
+}
+
+.character-mp {
+    color: var(--mp-color);
+    font-weight: bold;
+}
+
+.hp-stamina-value {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.stamina-plus {
+    color: var(--stamina-color);
+    font-weight: bold;
+}
+
+.character-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.hp-stamina-container {
+    height: 12px;
+    background-color: #e0e0e0;
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+}
+
+.hp-bar-fill {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 0.3s;
+    background-color: var(--hp-color);
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2;
+}
+
+.stamina-bar-fill {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 0.3s;
+    background-color: var(--stamina-color);
+    position: absolute;
+    top: 0;
+    z-index: 1;
+}
+
+.dual-bars {
+    display: flex;
+    gap: 5px;
+}
 
 .dual-bar-container {
     display: flex;
@@ -41,4 +235,416 @@
 
 .mp-bar {
     background-color: var(--mp-color);
+}
+
+.character-effect {
+    font-size: 0.8rem;
+    color: #666;
+    text-align: center;
+    margin-top: 8px;
+    min-height: 16px;
+}
+
+/* 队伍通用样式 */
+.team {
+    background-color: white;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s;
+    position: relative;
+}
+
+.team:hover {
+    transform: translateY(-5px);
+}
+
+.team-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.team-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    cursor: pointer;
+}
+
+.team-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.team-actions button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--secondary-color);
+    font-size: 1.1rem;
+}
+
+.character-list {
+    min-height: 200px;
+    position: relative;
+}
+
+/* 骰池通用样式 */
+.dice-pool-section {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.dice-pool-title {
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: var(--primary-color);
+}
+
+.dice-pool-item {
+    margin-bottom: 15px;
+    padding: 12px;
+    background-color: #f9f9f9;
+    border-radius: 6px;
+    position: relative;
+}
+
+.dice-pool-header {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.dice-type-selector {
+    flex: 1;
+    min-width: 120px;
+}
+
+.dice-type-selector select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+}
+
+.dice-note {
+    flex: 2;
+    min-width: 150px;
+}
+
+.dice-note input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.delete-dice-pool {
+    background: none;
+    border: none;
+    color: var(--danger-color);
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 5px;
+}
+
+.dice-pool-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.dice-control-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.sanity-effect-selector {
+    min-width: 100px;
+}
+
+.sanity-effect-selector select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+}
+
+.dice-input {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.dice-input input {
+    width: 60px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.dice-input.small input {
+    width: 50px;
+}
+
+.dice-input.medium input {
+    width: 70px;
+}
+
+.expression-input {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.expression-input input {
+    width: 100px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.generate-dice {
+    padding: 8px 15px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.generate-dice:hover {
+    background-color: var(--secondary-color);
+}
+
+.dice-results {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+.dice-result {
+    background-color: var(--light-color);
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* 骰子结果样式 */
+.positive-result {
+    border: 2px solid var(--positive-color);
+}
+
+.negative-result {
+    border: 2px solid var(--negative-color);
+}
+
+.greater-result {
+    border: 2px solid var(--greater-color);
+}
+
+.less-result {
+    border: 2px solid var(--less-color);
+}
+
+.equal-result {
+    border: 2px solid var(--equal-color);
+}
+
+/* 模态框通用样式 */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.modal-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #777;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+input, textarea, select {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.form-row {
+    display: flex;
+    gap: 10px;
+}
+
+.form-row .form-group {
+    flex: 1;
+}
+
+.short-input {
+    width: 80px;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+/* 批量移动模态框中的下拉框样式 */
+.batch-move-select {
+    width: 100%;
+    padding: 10px;
+    font-size: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+/* 空状态样式 */
+.empty-state {
+    text-align: center;
+    color: #999;
+    padding: 20px;
+    font-style: italic;
+}
+
+/* 虚线框样式 */
+.dashed-box {
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    padding: 15px;
+    text-align: center;
+    color: #999;
+    margin: 10px 0;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.dashed-box:hover {
+    background-color: #f5f5f5;
+    border-color: #aaa;
+    color: #666;
+}
+
+/* 按钮通用样式 */
+button {
+    padding: 10px 20px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+button:hover {
+    background-color: var(--secondary-color);
+}
+
+button:active {
+    transform: scale(0.98);
+}
+
+.danger-btn {
+    background-color: var(--danger-color);
+}
+
+.danger-btn:hover {
+    background-color: #c9302c;
+}
+
+.action-btn {
+    padding: 10px 15px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.9rem;
+}
+
+.action-btn:hover {
+    background-color: var(--secondary-color);
+}
+
+.action-btn.danger {
+    background-color: var(--danger-color);
+}
+
+.action-btn.danger:hover {
+    background-color: #c9302c;
+}
+
+.action-btn.secondary {
+    background-color: #e0e0e0;
+    color: #333;
+}
+
+.action-btn.secondary:hover {
+    background-color: #d0d0d0;
 }
