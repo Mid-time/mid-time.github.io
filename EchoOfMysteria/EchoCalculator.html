@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -9,151 +9,164 @@
 </head>
 <body>
     <div class="container">
+        <!-- 头部 -->
         <header>
-            <h1>统一计算器</h1>
-            <div class="mode-switcher">
-                <button class="mode-btn active" data-mode="items">物品计算器</button>
-                <button class="mode-btn" data-mode="specialties">特质计算器</button>
+            <div class="header-content">
+                <h1>统一计算器</h1>
+                <div class="mode-switcher">
+                    <button class="mode-btn active" data-mode="items">物品计算器</button>
+                    <button class="mode-btn" data-mode="specialties">特质计算器</button>
+                    <!-- 预留更多计算器类型 -->
+                    <!-- <button class="mode-btn" data-mode="recipes">配方计算器</button> -->
+                    <!-- <button class="mode-btn" data-mode="quests">任务计算器</button> -->
+                </div>
+                <div id="data-status" class="status-message"></div>
             </div>
-            <div id="data-status" class="status-message"></div>
         </header>
-        
+
         <!-- 数据恢复面板 -->
         <div id="recovery-container"></div>
-        
-        <!-- 第一部分：计算器 -->
-        <div class="calculator">
-            <h2 class="section-title" id="calculator-title">当前计算物品</h2>
+
+        <!-- 计算器面板 -->
+        <div class="calculator-panel">
+            <h2 class="panel-title" id="calculator-title">当前计算物品</h2>
             <div id="calculator-items" class="calculator-grid">
                 <div class="empty-state">计算器为空，请从筛选结果中添加物品</div>
             </div>
-            <div id="total-cost" class="total-cost"></div>
-            <div id="weight-status" class="weight-status" style="display: none;">
-                <div>总重量: <span id="total-weight">0</span></div>
-                <div>负重状态: <span id="carry-status">轻快</span></div>
-            </div>
             
-            <div class="button-group">
-                <button class="btn-danger" id="clear-calculator">清空计算器</button>
+            <div class="calculator-summary">
+                <div id="total-cost" class="total-cost"></div>
+                <div id="weight-status" class="weight-status" style="display: none;">
+                    <div>总重量: <span id="total-weight">0</span></div>
+                    <div>负重状态: <span id="carry-status">轻快</span></div>
+                    <div>负重容量: <span id="carry-capacity">20</span></div>
+                </div>
+                <div class="button-group">
+                    <button class="btn-danger btn-compact" id="clear-calculator">清空</button>
+                    <button class="btn-success btn-compact" id="download-calculator">下载</button>
+                </div>
             </div>
         </div>
-        
+
+        <!-- 主内容区域 -->
         <div class="main-content">
-            <!-- 第二部分：筛选器 -->
-            <div class="section">
-                <h2 class="section-title" id="filter-title">物品筛选</h2>
-                
-                <!-- 角色属性面板（仅物品模式显示） -->
-                <div id="character-attributes" class="filter-group">
-                    <label>角色属性</label>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                        <div>
-                            <label for="character-strength">力量</label>
-                            <input type="number" id="character-strength" min="0" max="12" value="5">
-                        </div>
-                        <div>
-                            <label for="character-endurance">耐性</label>
-                            <input type="number" id="character-endurance" min="0" max="12" value="5">
-                        </div>
-                    </div>
-                    <div class="help-text">根据规则书v0.8.1，属性区间为0-12</div>
+            <!-- 搜索和筛选栏 -->
+            <div class="search-filter-bar">
+                <div class="search-container">
+                    <input type="text" id="global-search" placeholder="搜索名称、描述或ID...">
+                    <button id="filter-toggle" class="filter-btn">筛选</button>
                 </div>
                 
-                <!-- 分层标签筛选 -->
-                <div class="filter-group">
-                    <label id="type-filter-label">类型筛选</label>
-                    <div class="hierarchical-tags">
-                        <div class="type-selector">
-                            <select id="main-type-filter">
-                                <option value="">所有主类型</option>
-                            </select>
-                            <select id="sub-type-filter" style="display: none;">
-                                <option value="">所有子类型</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- 等级筛选（仅特质模式显示） -->
-                <div id="level-filter" class="filter-group" style="display: none;">
-                    <label>等级范围</label>
-                    <div class="cost-range">
-                        <input type="number" id="min-level" placeholder="最低" min="1">
-                        <span>至</span>
-                        <input type="number" id="max-level" placeholder="最高" min="1">
-                    </div>
-                </div>
-                
-                <!-- 当前活动筛选 -->
-                <div id="active-filters" class="active-filters" style="display: none;">
-                    <div class="filter-summary">当前筛选条件:</div>
-                    <div id="active-filter-tags"></div>
-                </div>
-                
-                <div id="status-message"></div>
-                
-                <!-- 标签筛选 -->
-                <div id="tag-filter-container">
-                    <!-- 动态生成的标签筛选器 -->
-                </div>
-                
-                <div class="filter-group">
-                    <label id="name-filter-label">名称/描述搜索</label>
-                    <input type="text" id="name-filter" placeholder="输入名称或描述...">
-                </div>
-                
-                <div class="filter-group">
-                    <label>价格范围</label>
-                    <div class="cost-range">
-                        <input type="number" id="min-cost" placeholder="最低" min="0">
-                        <select id="cost-unit">
-                            <option value="copper">铜币</option>
-                            <option value="silver">银币</option>
-                            <option value="gold">金币</option>
-                        </select>
-                        <span>至</span>
-                        <input type="number" id="max-cost" placeholder="最高" min="0">
-                        <select id="max-cost-unit">
-                            <option value="copper">铜币</option>
-                            <option value="silver">银币</option>
-                            <option value="gold">金币</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <!-- 重量筛选（仅物品模式显示） -->
-                <div id="weight-filter" class="filter-group">
-                    <label>重量范围</label>
-                    <div class="cost-range">
-                        <input type="number" id="min-weight" placeholder="最低" min="0">
-                        <span>至</span>
-                        <input type="number" id="max-weight" placeholder="最高" min="0">
-                    </div>
-                </div>
-                
-                <div class="filter-group">
-                    <label>排序方式</label>
-                    <div class="sort-group">
-                        <select id="sort-by">
-                            <option value="name-asc">名称 A-Z</option>
-                            <option value="name-desc">名称 Z-A</option>
-                            <option value="cost-asc">价格 低到高</option>
-                            <option value="cost-desc">价格 高到低</option>
-                            <option value="weight-asc">重量 轻到重</option>
-                            <option value="weight-desc">重量 重到轻</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="button-group">
-                    <button type="button" id="clear-filter">清除筛选</button>
+                <!-- 活动筛选泡泡 -->
+                <div id="active-filter-bubbles" class="filter-bubbles">
+                    <!-- 动态生成的筛选泡泡和清空按钮 -->
                 </div>
             </div>
-            
-            <!-- 第三部分：筛选结果 -->
-            <div class="section">
-                <h2 class="section-title" id="results-title">筛选结果</h2>
-                <div id="item-list" class="item-list">
+
+            <!-- 筛选弹窗 -->
+            <div id="filter-modal" class="filter-modal">
+                <div class="filter-modal-content">
+                    <div class="filter-modal-header">
+                        <h3>筛选条件</h3>
+                        <button class="close-filter-btn">×</button>
+                    </div>
+                    
+                    <div class="filter-modal-body">
+                        <!-- 角色属性面板（仅物品模式显示） -->
+                        <div id="character-attributes" class="filter-section">
+                            <h4>角色属性</h4>
+                            <div class="attribute-grid">
+                                <div>
+                                    <label for="character-strength">力量</label>
+                                    <input type="number" id="character-strength" min="0" max="12" value="5">
+                                </div>
+                                <div>
+                                    <label for="character-endurance">耐性</label>
+                                    <input type="number" id="character-endurance" min="0" max="12" value="5">
+                                </div>
+                            </div>
+                            <div class="help-text">根据规则书v0.8.1，属性区间为0-12</div>
+                        </div>
+                        
+                        <!-- 类型筛选 -->
+                        <div class="filter-section">
+                            <h4 id="type-filter-label">类型筛选</h4>
+                            <div class="hierarchical-tags">
+                                <div class="type-selector">
+                                    <select id="main-type-filter">
+                                        <option value="">所有主类型</option>
+                                    </select>
+                                    <select id="sub-type-filter" style="display: none;">
+                                        <option value="">所有子类型</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 等级筛选（仅特质模式显示） -->
+                        <div id="level-filter" class="filter-section" style="display: none;">
+                            <h4>等级范围</h4>
+                            <div class="range-inputs">
+                                <input type="number" id="min-level" placeholder="最低" min="1">
+                                <span>至</span>
+                                <input type="number" id="max-level" placeholder="最高" min="1">
+                            </div>
+                        </div>
+                        
+                        <!-- 价格/成本筛选 -->
+                        <div class="filter-section">
+                            <h4 id="price-filter-label">价格范围</h4>
+                            <div class="range-inputs">
+                                <input type="number" id="min-cost" placeholder="最低" min="0">
+                                <span>至</span>
+                                <input type="number" id="max-cost" placeholder="最高" min="0">
+                            </div>
+                        </div>
+                        
+                        <!-- 重量筛选（仅物品模式显示） -->
+                        <div id="weight-filter" class="filter-section">
+                            <h4>重量范围</h4>
+                            <div class="range-inputs">
+                                <input type="number" id="min-weight" placeholder="最低" min="0">
+                                <span>至</span>
+                                <input type="number" id="max-weight" placeholder="最高" min="0">
+                            </div>
+                        </div>
+                        
+                        <!-- 标签筛选 -->
+                        <div id="tag-filter-container" class="filter-section">
+                            <!-- 动态生成的标签筛选器 -->
+                        </div>
+                        
+                        <!-- 排序方式 -->
+                        <div class="filter-section">
+                            <h4>排序方式</h4>
+                            <select id="sort-by">
+                                <option value="id-asc">ID 从小到大</option>
+                                <option value="id-desc">ID 从大到小</option>
+                                <option value="name-asc">名称 A-Z</option>
+                                <option value="name-desc">名称 Z-A</option>
+                                <option value="cost-asc">价格 低到高</option>
+                                <option value="cost-desc">价格 高到低</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-actions">
+                            <button type="button" id="clear-filter" class="btn-warning">清除筛选</button>
+                            <button type="button" id="apply-filter" class="btn-success">应用筛选</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 筛选结果 -->
+            <div class="results-container">
+                <div id="results-header" class="results-header">
+                    <h3 id="results-title">筛选结果</h3>
+                    <div id="results-count" class="results-count">0 个项目</div>
+                </div>
+                
+                <div id="item-list" class="compact-item-list">
                     <div class="empty-state">正在加载数据...</div>
                 </div>
                 
@@ -165,10 +178,22 @@
                         <button id="next-page">下一页</button>
                     </div>
                     <div class="items-per-page">
-                        <label for="items-per-page">每页显示:</label>
+                        <label for="items-per-page">每页:</label>
                         <input type="number" id="items-per-page" min="5" max="100" value="20">
-                        <span>个</span>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 详情弹窗 -->
+        <div id="detail-modal" class="detail-modal">
+            <div class="detail-modal-content">
+                <div class="detail-modal-header">
+                    <h3 id="detail-title"></h3>
+                    <button class="close-detail-btn">×</button>
+                </div>
+                <div class="detail-modal-body">
+                    <!-- 动态填充详情内容 -->
                 </div>
             </div>
         </div>
