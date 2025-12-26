@@ -5,7 +5,7 @@
 深洋藏匿着恐惧与迷途，也倒映着失路者的残影
 
 ### 观测：神秘回响（TRPG）
-- 物品购买计算器 [Go](https://mid-time.github.io/EchoOfMysteria/EchoCalculator)
+- 购买计算器 [Go](https://mid-time.github.io/EchoOfMysteria/EchoCalculator)
 - 战斗视图 [Go](https://mid-time.github.io/EchoOfMysteria/EchoBattleView)
 - 战斗视图（移动端优化） [Go](https://mid-time.github.io/EchoOfMysteria/EchoBattleViewMobile)
 - 角色生成网页 [Go](https://mid-time.github.io/EchoOfMysteria/EchoCharacterGenerator)
