@@ -1,5 +1,5 @@
 // ================================
-// 统一数据管理器
+// 统一数据管理器 - 修复getFilteredData方法
 // ================================
 class UnifiedManager {
     constructor(dataManager) {
@@ -12,13 +12,16 @@ class UnifiedManager {
         this.itemsPerPage = 20;
         
         // 排序相关
-        this.sortBy = 'id-asc'; // 默认按ID排序
+        this.sortBy = 'id-asc';
         
         // 当前模式
         this.currentMode = 'items';
         
         // 特质等级选择器状态
-        this.specialtyLevels = new Map(); // 存储特质ID对应的当前选择等级
+        this.specialtyLevels = new Map();
+        
+        // 详情弹窗管理
+        this.detailModal = null;
     }
     
     // 设置当前模式
@@ -26,29 +29,9 @@ class UnifiedManager {
         console.log(`设置模式: ${mode}, 之前模式: ${this.currentMode}`);
         this.currentMode = mode;
         this.currentPage = 1;
-        // 清空当前数据，强制重新加载
         this.currentData = [];
         this.filteredData = [];
         this.specialtyLevels.clear();
-        
-        // 重置类型筛选器
-        this.resetTypeFilter();
-    }
-    
-    // 重置类型筛选器
-    resetTypeFilter() {
-        // 重置主类型筛选
-        const mainTypeFilter = document.getElementById('main-type-filter');
-        if (mainTypeFilter) {
-            mainTypeFilter.value = '';
-        }
-        
-        // 重置子类型筛选
-        const subTypeFilter = document.getElementById('sub-type-filter');
-        if (subTypeFilter) {
-            subTypeFilter.value = '';
-            subTypeFilter.style.display = 'none';
-        }
     }
     
     // 加载当前模式的数据
@@ -64,7 +47,7 @@ class UnifiedManager {
                 
                 // 为所有特质初始化等级选择器状态
                 this.currentData.forEach(specialty => {
-                    this.specialtyLevels.set(specialty.id, 1); // 默认选择等级1
+                    this.specialtyLevels.set(specialty.id, 1);
                 });
             }
             return true;
@@ -80,8 +63,8 @@ class UnifiedManager {
         const subTypesByMainType = new Map();
         
         this.currentData.forEach(item => {
-            const mainType = this.currentMode === 'items' ? item.maintype : item.maintype;
-            const subType = this.currentMode === 'items' ? item.subtype : item.subtype;
+            const mainType = item.maintype || '';
+            const subType = item.subtype || '';
             
             if (mainType && mainType !== '') {
                 mainTypes.add(mainType);
@@ -105,33 +88,25 @@ class UnifiedManager {
     // 初始化主类型筛选器
     initializeMainTypeFilter() {
         const mainTypeSelector = document.getElementById('main-type-filter');
+        if (!mainTypeSelector) return;
+        
         mainTypeSelector.innerHTML = '<option value="">所有主类型</option>';
         
         const typeMapping = this.getTypeMapping();
         
-        // 添加所有主类型选项
         typeMapping.mainTypes.forEach(mainType => {
             const option = document.createElement('option');
             option.value = mainType;
             option.textContent = mainType;
             mainTypeSelector.appendChild(option);
         });
-        
-        // 添加事件监听器
-        mainTypeSelector.addEventListener('change', (e) => {
-            this.updateSubTypeFilter(e.target.value);
-            // 触发筛选更新
-            if (window.unifiedApp && window.unifiedApp.filterManager) {
-                window.unifiedApp.filterManager.applyFilterDebounced();
-            }
-        });
     }
     
     // 更新子类型筛选器
     updateSubTypeFilter(mainType) {
         const subTypeSelector = document.getElementById('sub-type-filter');
+        if (!subTypeSelector) return;
         
-        // 清空现有选项
         subTypeSelector.innerHTML = '<option value="">所有子类型</option>';
         
         if (mainType) {
@@ -139,7 +114,6 @@ class UnifiedManager {
             const subTypes = typeMapping.subTypesByMainType.get(mainType);
             
             if (subTypes && subTypes.size > 0) {
-                // 添加子类型选项
                 Array.from(subTypes).sort().forEach(subType => {
                     const option = document.createElement('option');
                     option.value = subType;
@@ -149,19 +123,10 @@ class UnifiedManager {
                 subTypeSelector.style.display = 'block';
             } else {
                 subTypeSelector.style.display = 'none';
-                subTypeSelector.value = '';
             }
         } else {
             subTypeSelector.style.display = 'none';
-            subTypeSelector.value = '';
         }
-        
-        // 添加事件监听器
-        subTypeSelector.addEventListener('change', () => {
-            if (window.unifiedApp && window.unifiedApp.filterManager) {
-                window.unifiedApp.filterManager.applyFilterDebounced();
-            }
-        });
     }
     
     // 获取所有标签
@@ -227,8 +192,8 @@ class UnifiedManager {
         // 筛选数据
         this.filteredData = this.currentData.filter(item => {
             // 类型筛选
-            const mainType = this.currentMode === 'items' ? item.maintype : item.maintype;
-            const subType = this.currentMode === 'items' ? item.subtype : item.subtype;
+            const mainType = item.maintype || '';
+            const subType = item.subtype || '';
             
             if (mainTypeFilter && mainType !== mainTypeFilter) {
                 return false;
@@ -245,20 +210,27 @@ class UnifiedManager {
             
             // 名称/描述筛选
             if (nameFilter) {
-                const nameMatch = item.name && item.name.toLowerCase().includes(nameFilter);
+                const searchTerm = nameFilter.toLowerCase();
+                const nameMatch = item.name && item.name.toLowerCase().includes(searchTerm);
                 let descMatch = false;
                 
                 if (item.description) {
-                    let descriptionText = '';
                     if (Array.isArray(item.description)) {
-                        descriptionText = item.description.join(' ');
+                        descMatch = item.description.some(desc => 
+                            desc && desc.toLowerCase().includes(searchTerm)
+                        );
                     } else {
-                        descriptionText = item.description;
+                        descMatch = item.description.toLowerCase().includes(searchTerm);
                     }
-                    descMatch = descriptionText.toLowerCase().includes(nameFilter);
                 }
                 
-                if (!nameMatch && !descMatch) {
+                // 检查flavortext
+                let flavorMatch = false;
+                if (item.flavortext && item.flavortext.toLowerCase().includes(searchTerm)) {
+                    flavorMatch = true;
+                }
+                
+                if (!nameMatch && !descMatch && !flavorMatch) {
                     return false;
                 }
             }
@@ -266,7 +238,6 @@ class UnifiedManager {
             // 价格筛选
             let itemCost = item.cost || 0;
             if (Array.isArray(itemCost)) {
-                // 特质模式：使用最大等级的成本进行筛选
                 itemCost = itemCost[itemCost.length - 1] || 0;
             }
             
@@ -319,12 +290,16 @@ class UnifiedManager {
         this.renderFilterResults();
     }
     
-    // 获取筛选后的数据（用于标签可用性检查）
-    getFilteredData(selectedTags, selectedRarity, selectedSkill, selectedNeed, mainTypeFilter, subTypeFilter, minLevel, maxLevel) {
+    // 获取筛选后的数据用于标签可用性检查
+    getFilteredDataForTags(selectedTags, selectedRarity, selectedSkill, selectedNeed, mainTypeFilter, subTypeFilter, minLevel, maxLevel) {
+        if (!this.currentData || this.currentData.length === 0) {
+            return [];
+        }
+        
         return this.currentData.filter(item => {
             // 类型筛选
-            const mainType = this.currentMode === 'items' ? item.maintype : item.maintype;
-            const subType = this.currentMode === 'items' ? item.subtype : item.subtype;
+            const mainType = item.maintype || '';
+            const subType = item.subtype || '';
             
             if (mainTypeFilter && mainType !== mainTypeFilter) {
                 return false;
@@ -375,7 +350,6 @@ class UnifiedManager {
         // 确保所有数据都有必要的属性
         this.filteredData = this.filteredData.map(item => {
             if (!item.name) item.name = '未知';
-            if (!item.id) item.id = '未知';
             if (this.currentMode === 'items') {
                 if (!item.cost) item.cost = 0;
                 if (!item.weight) item.weight = 0;
@@ -387,22 +361,6 @@ class UnifiedManager {
         });
         
         switch(this.sortBy) {
-            case 'id-asc':
-                this.filteredData.sort((a, b) => {
-                    // 提取ID中的数字部分进行排序
-                    const numA = parseInt(a.id.replace(/\D/g, '')) || 0;
-                    const numB = parseInt(b.id.replace(/\D/g, '')) || 0;
-                    return numA - numB;
-                });
-                break;
-            case 'id-desc':
-                this.filteredData.sort((a, b) => {
-                    // 提取ID中的数字部分进行排序
-                    const numA = parseInt(a.id.replace(/\D/g, '')) || 0;
-                    const numB = parseInt(b.id.replace(/\D/g, '')) || 0;
-                    return numB - numA;
-                });
-                break;
             case 'name-asc':
                 this.filteredData.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
                 break;
@@ -450,13 +408,17 @@ class UnifiedManager {
     renderFilterResults() {
         const itemList = document.getElementById('item-list');
         const pagination = document.getElementById('pagination');
+        const resultsCount = document.getElementById('results-count');
+        
+        if (!itemList) return;
         
         // 清空列表
         itemList.innerHTML = '';
         
         if (this.filteredData.length === 0) {
             itemList.innerHTML = '<div class="empty-state">没有找到匹配的' + (this.currentMode === 'items' ? '物品' : '特质') + '</div>';
-            pagination.style.display = 'none';
+            if (pagination) pagination.style.display = 'none';
+            if (resultsCount) resultsCount.textContent = '0 个项目';
             return;
         }
         
@@ -468,188 +430,363 @@ class UnifiedManager {
         
         // 渲染当前页的数据
         pageItems.forEach(item => {
-            const itemCard = document.createElement('div');
-            itemCard.className = 'item-card';
+            const compactItem = document.createElement('div');
+            compactItem.className = 'compact-item';
+            compactItem.dataset.id = item.id;
             
-            if (this.currentMode === 'items') {
-                this.renderItemCard(itemCard, item);
-            } else {
-                this.renderSpecialtyCard(itemCard, item);
-            }
+            this.renderCompactItem(compactItem, item);
             
-            itemList.appendChild(itemCard);
+            // 添加点击事件显示详情
+            compactItem.addEventListener('click', (e) => {
+                // 防止点击按钮时触发详情
+                if (!e.target.closest('.compact-add-btn')) {
+                    this.showItemDetail(item);
+                }
+            });
+            
+            itemList.appendChild(compactItem);
         });
+        
+        // 更新结果计数
+        if (resultsCount) {
+            resultsCount.textContent = `${this.filteredData.length} 个项目`;
+        }
         
         // 更新分页信息
-        document.getElementById('page-info').textContent = 
-            `第 ${this.currentPage} 页，共 ${totalPages} 页 (${this.filteredData.length} 个${this.currentMode === 'items' ? '物品' : '特质'})`;
+        const pageInfo = document.getElementById('page-info');
+        if (pageInfo) {
+            pageInfo.textContent = `第 ${this.currentPage} 页，共 ${totalPages} 页`;
+        }
         
         // 显示分页控件
-        pagination.style.display = 'flex';
-        
-        // 更新分页按钮状态
-        document.getElementById('prev-page').disabled = this.currentPage === 1;
-        document.getElementById('next-page').disabled = this.currentPage === totalPages;
-        
-        // 添加事件监听器
-        document.querySelectorAll('.add-to-calculator').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const itemId = e.target.dataset.id;
-                this.addToCalculator(itemId);
-            });
-        });
-        
-        // 为特质等级输入框添加事件监听器
-        if (this.currentMode === 'specialties') {
-            document.querySelectorAll('.specialty-level-input').forEach(input => {
-                input.addEventListener('change', (e) => {
-                    const itemId = e.target.dataset.id;
-                    const newLevel = parseInt(e.target.value);
-                    this.updateSpecialtyLevel(itemId, newLevel);
-                    
-                    // 更新当前卡片显示
-                    const card = e.target.closest('.item-card');
-                    if (card) {
-                        const item = this.currentData.find(i => i.id == itemId);
-                        if (item) {
-                            this.updateSpecialtyCardDisplay(card, item, newLevel);
-                        }
-                    }
-                });
-                
-                input.addEventListener('input', (e) => {
-                    const itemId = e.target.dataset.id;
-                    const item = this.currentData.find(i => i.id == itemId);
-                    if (item) {
-                        const newLevel = parseInt(e.target.value);
-                        const maxLevel = item.level;
-                        
-                        // 限制输入范围
-                        if (newLevel < 1) e.target.value = 1;
-                        if (newLevel > maxLevel) e.target.value = maxLevel;
-                    }
-                });
-            });
+        if (pagination) {
+            pagination.style.display = 'flex';
+            
+            // 更新分页按钮状态
+            const prevPage = document.getElementById('prev-page');
+            const nextPage = document.getElementById('next-page');
+            if (prevPage) prevPage.disabled = this.currentPage === 1;
+            if (nextPage) nextPage.disabled = this.currentPage === totalPages;
         }
     }
     
-    // 更新特质卡片显示
-    updateSpecialtyCardDisplay(card, specialty, level) {
-        const levelIndex = level - 1;
-        
-        // 获取当前等级的成本
-        let currentCost = specialty.cost || 0;
-        if (Array.isArray(specialty.cost) && levelIndex < specialty.cost.length) {
-            currentCost = specialty.cost[levelIndex];
+    // 渲染紧凑列表项
+    renderCompactItem(container, item) {
+        let costText = '';
+        if (this.currentMode === 'items') {
+            costText = this.formatCurrency(item.cost || 0);
+        } else {
+            // 特质成本显示为 "cost1/cost2/cost3"
+            if (Array.isArray(item.cost)) {
+                costText = `成本: ${item.cost.join('/')}`;
+            } else {
+                costText = `成本: ${item.cost || 0}`;
+            }
         }
         
-        // 获取当前等级的描述
-        let currentDescription = specialty.description || '';
-        if (Array.isArray(specialty.description) && levelIndex < specialty.description.length) {
-            currentDescription = specialty.description[levelIndex];
-        }
+        // 获取标签显示
+        const tags = item.tags || item.tag || [];
+        const displayTags = tags.slice(0, 3); // 只显示前3个标签
         
-        // 更新成本和描述
-        const costElement = card.querySelector('.item-footer div:first-child');
-        const descElement = card.querySelector('.item-description');
-        
-        if (costElement) {
-            costElement.textContent = `成本: ${currentCost}`;
-        }
-        if (descElement) {
-            descElement.innerHTML = currentDescription;
-        }
-    }
-    
-    // 渲染物品卡片
-    renderItemCard(container, item) {
         container.innerHTML = `
-            <div class="item-header">
-                <div>
-                    <div class="item-name">${item.name}</div>
-                    <div>
-                        <span class="item-id">ID: ${item.id}</span>
-                        ${item.rarity ? `<span class="tag">${item.rarity}</span>` : ''}
-                        ${item.skill && item.skill !== '无' ? `<span class="tag">${item.skill}</span>` : ''}
-                    </div>
+            <div class="compact-item-header">
+                <div class="compact-item-name">${this.escapeHtml(item.name)}</div>
+                <div class="compact-item-tags">
+                    ${displayTags.map(tag => `<span class="compact-tag">${this.escapeHtml(tag)}</span>`).join('')}
+                    ${tags.length > 3 ? `<span class="compact-tag">+${tags.length - 3}</span>` : ''}
                 </div>
-                <button class="btn-success add-to-calculator" data-id="${item.id}">添加到计算器</button>
             </div>
-            <div class="item-tags">
-                ${item.tags ? item.tags.map(tag => `<span class="tag">${tag}</span>`).join('') : ''}
-                ${item.need ? item.need.map(need => `<span class="tag">${need}</span>`).join('') : ''}
+            <div class="compact-item-details">
+                <div>${item.maintype || ''}${item.subtype ? ' - ' + item.subtype : ''}</div>
+                <div class="compact-item-cost">${costText}</div>
+                <button class="btn-success compact-add-btn" data-id="${item.id}">添加</button>
             </div>
-            <div class="item-description">${item.description}</div>
-            <div class="item-footer">
-                <div>价格: ${this.formatCurrency(item.cost)}</div>
-                <div>重量: ${item.weight}</div>
-                <div>类型: ${item.maintype}${item.subtype ? ' - ' + item.subtype : ''}</div>
+        `;
+        
+        // 添加按钮事件
+        const addBtn = container.querySelector('.compact-add-btn');
+        addBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.addToCalculator(item.id);
+        });
+    }
+    
+    // 显示物品详情
+    showItemDetail(item) {
+        const modal = document.getElementById('detail-modal');
+        const title = document.getElementById('detail-title');
+        const body = document.querySelector('.detail-modal-body');
+        
+        if (!modal || !title || !body) return;
+        
+        // 填充详情内容
+        title.textContent = item.name;
+        
+        let detailHtml = '';
+        
+        if (this.currentMode === 'items') {
+            detailHtml = this.renderItemDetail(item);
+        } else {
+            detailHtml = this.renderSpecialtyDetail(item);
+        }
+        
+        body.innerHTML = detailHtml;
+        
+        // 显示弹窗
+        modal.style.display = 'flex';
+        
+        // 添加关闭事件
+        const closeBtn = modal.querySelector('.close-detail-btn');
+        if (closeBtn) {
+            closeBtn.onclick = () => {
+                modal.style.display = 'none';
+            };
+        }
+        
+        // 点击弹窗外关闭
+        modal.onclick = (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        };
+        
+        // 添加添加到计算器的事件
+        const addBtn = body.querySelector('.detail-add-btn');
+        if (addBtn) {
+            addBtn.addEventListener('click', () => {
+                this.addToCalculator(item.id);
+                this.updateDetailActionButtons(item.id, body);
+            });
+        }
+        
+        // 更新数量输入事件
+        const quantityInput = body.querySelector('.detail-quantity-input');
+        if (quantityInput) {
+            quantityInput.addEventListener('change', (e) => {
+                const newQuantity = parseInt(e.target.value) || 0;
+                if (window.unifiedCalculatorModule) {
+                    window.unifiedCalculatorModule.updateQuantity(item.id, newQuantity);
+                    this.updateDetailActionButtons(item.id, body);
+                }
+            });
+        }
+        
+        // 更新等级选择事件（特质）
+        const levelSelect = body.querySelector('.detail-level-select');
+        if (levelSelect) {
+            levelSelect.addEventListener('change', (e) => {
+                const newLevel = parseInt(e.target.value) || 1;
+                this.updateSpecialtyLevel(item.id, newLevel);
+                
+                // 更新成本显示
+                const costDisplay = body.querySelector('.detail-cost');
+                if (costDisplay) {
+                    const levelIndex = newLevel - 1;
+                    let currentCost = item.cost || 0;
+                    if (Array.isArray(item.cost) && levelIndex < item.cost.length) {
+                        currentCost = item.cost[levelIndex];
+                    }
+                    costDisplay.textContent = `成本: ${currentCost}`;
+                }
+                
+                // 更新描述显示
+                const descDisplay = body.querySelector('.detail-description');
+                if (descDisplay && item.description && Array.isArray(item.description)) {
+                    const currentDesc = item.description[newLevel - 1] || item.description[0] || '';
+                    descDisplay.innerHTML = this.formatDescription(this.escapeHtml(currentDesc));
+                }
+            });
+        }
+    }
+    
+    // 渲染物品详情
+    renderItemDetail(item) {
+        const calculatorModule = window.unifiedCalculatorModule;
+        const inCalculator = calculatorModule ? calculatorModule.calculatorItems.find(i => i.id === item.id && i.mode === this.currentMode) : null;
+        const quantity = inCalculator ? inCalculator.quantity : 0;
+        
+        // 格式化需求
+        const needText = item.need && item.need.length > 0 ? item.need.join(', ') : '无';
+        
+        return `
+            <div class="detail-text-container">
+                <div class="detail-text-item"><strong>类型:</strong> ${item.maintype || ''}${item.subtype ? ' - ' + item.subtype : ''}</div>
+                <div class="detail-text-item"><strong>稀有度:</strong> ${item.rarity || '无'}</div>
+                <div class="detail-text-item"><strong>需求:</strong> ${needText}</div>
+            </div>
+            
+            <div class="detail-tags">
+                ${(item.tags || []).map(tag => `<span class="detail-tag">${this.escapeHtml(tag)}</span>`).join('')}
+            </div>
+            
+            <div class="detail-section">
+                <h4>描述</h4>
+                <div class="detail-content">
+                    <div class="detail-description">${this.formatDescription(this.escapeHtml(item.description || '无描述'))}</div>
+                    ${item.flavortext ? `<div class="flavortext">${this.escapeHtml(item.flavortext)}</div>` : ''}
+                </div>
+            </div>
+            
+            <div class="detail-attributes">
+                <div class="detail-attribute">
+                    <strong>价格:</strong> ${this.formatCurrency(item.cost || 0)}
+                </div>
+                <div class="detail-attribute">
+                    <strong>重量:</strong> ${item.weight || 0} 荷
+                </div>
+                ${item.skill && item.skill !== '无' ? `
+                <div class="detail-attribute">
+                    <strong>技能需求:</strong> ${item.skill}
+                </div>
+                ` : ''}
+            </div>
+            
+            <div class="detail-actions">
+                ${inCalculator ? `
+                    <div class="detail-quantity">
+                        <label>数量:</label>
+                        <input type="number" class="detail-quantity-input" value="${quantity}" min="0" data-id="${item.id}">
+                    </div>
+                    <button class="btn-danger detail-remove-btn" data-id="${item.id}">移出</button>
+                ` : `
+                    <button class="btn-success detail-add-btn" data-id="${item.id}">添加到计算器</button>
+                `}
             </div>
         `;
     }
     
-    // 渲染特质卡片
-    renderSpecialtyCard(container, specialty) {
-        const currentLevel = this.specialtyLevels.get(specialty.id) || 1;
+    // 渲染特质详情
+    renderSpecialtyDetail(item) {
+        const calculatorModule = window.unifiedCalculatorModule;
+        const inCalculator = calculatorModule ? calculatorModule.calculatorItems.find(i => i.id === item.id && i.mode === this.currentMode) : null;
+        const currentLevel = this.specialtyLevels.get(item.id) || 1;
         const levelIndex = currentLevel - 1;
         
         // 获取当前等级的成本
-        let currentCost = specialty.cost || 0;
-        if (Array.isArray(specialty.cost) && levelIndex < specialty.cost.length) {
-            currentCost = specialty.cost[levelIndex];
+        let currentCost = item.cost || 0;
+        if (Array.isArray(item.cost) && levelIndex < item.cost.length) {
+            currentCost = item.cost[levelIndex];
         }
         
         // 获取当前等级的描述
-        let currentDescription = specialty.description || '';
-        if (Array.isArray(specialty.description) && levelIndex < specialty.description.length) {
-            currentDescription = specialty.description[levelIndex];
+        let currentDescription = item.description || '';
+        if (Array.isArray(item.description) && levelIndex < item.description.length) {
+            currentDescription = item.description[levelIndex];
         }
         
-        container.innerHTML = `
-            <div class="item-header">
-                <div>
-                    <div class="item-name">${specialty.name}</div>
-                    <div>
-                        <span class="item-id">ID: ${specialty.id}</span>
-                        <span class="tag">${specialty.rarity}</span>
-                        <span class="tag">最大等级 ${specialty.level}</span>
-                        ${specialty.need ? specialty.need.map(need => `<span class="tag">${need}</span>`).join('') : ''}
+        // 格式化需求
+        const needText = item.need && item.need.length > 0 ? item.need.join(', ') : '无';
+        
+        // 构建等级选择器选项
+        const levelOptions = [];
+        for (let i = 1; i <= item.level; i++) {
+            levelOptions.push(`<option value="${i}" ${i === currentLevel ? 'selected' : ''}>${i}</option>`);
+        }
+        
+        return `
+            <div class="detail-text-container">
+                <div class="detail-text-item"><strong>类型:</strong> ${item.maintype || ''}${item.subtype ? ' - ' + item.subtype : ''}</div>
+                <div class="detail-text-item"><strong>稀有度:</strong> ${item.rarity || '无'}</div>
+                <div class="detail-text-item"><strong>需求:</strong> ${needText}</div>
+                <div class="detail-text-item"><strong>最大等级:</strong> ${item.level || 1}</div>
+            </div>
+            
+            <div class="detail-tags">
+                ${(item.tag || []).map(tag => `<span class="detail-tag">${this.escapeHtml(tag)}</span>`).join('')}
+            </div>
+            
+            <div class="detail-section">
+                <h4>等级选择</h4>
+                <div class="detail-content">
+                    <div class="detail-level-selector">
+                        <label>选择等级:</label>
+                        <select class="detail-level-select" data-id="${item.id}">
+                            ${levelOptions.join('')}
+                        </select>
+                        <span>/${item.level}</span>
+                    </div>
+                    <div class="detail-attribute" style="margin-top: 15px;">
+                        <strong>当前等级成本:</strong> ${currentCost}
+                    </div>
+                    <div class="detail-attribute">
+                        <strong>全部等级成本:</strong> ${Array.isArray(item.cost) ? item.cost.join('/') : item.cost}
                     </div>
                 </div>
-                <button class="btn-success add-to-calculator" data-id="${specialty.id}">添加到计算器</button>
             </div>
-            <div class="item-tags">
-                ${specialty.tag ? specialty.tag.map(tag => `<span class="tag">${tag}</span>`).join('') : ''}
-                ${specialty.maintype ? `<span class="tag">${specialty.maintype}</span>` : ''}
-                ${specialty.subtype ? `<span class="tag">${specialty.subtype}</span>` : ''}
+            
+            <div class="detail-section">
+                <h4>描述</h4>
+                <div class="detail-content">
+                    <div class="detail-description">${this.formatDescription(this.escapeHtml(currentDescription))}</div>
+                    ${item.flavortext ? `<div class="flavortext">${this.escapeHtml(item.flavortext)}</div>` : ''}
+                </div>
             </div>
-            <div class="item-level-selector">
-                <label>选择等级:</label>
-                <input type="number" class="specialty-level-input" data-id="${specialty.id}" 
-                       value="${currentLevel}" min="1" max="${specialty.level}">
-                <span class="level-display">/${specialty.level}</span>
-            </div>
-            <div class="item-description">${currentDescription}</div>
-            <div class="item-footer">
-                <div>成本: ${currentCost}</div>
-                <div>类型: ${specialty.maintype}${specialty.subtype ? ' - ' + specialty.subtype : ''}</div>
+            
+            <div class="detail-actions">
+                ${inCalculator ? `
+                    <button class="btn-danger detail-remove-btn" data-id="${item.id}">移出计算器</button>
+                ` : `
+                    <button class="btn-success detail-add-btn" data-id="${item.id}">添加到计算器</button>
+                `}
             </div>
         `;
+    }
+    
+    // 更新详情弹窗中的操作按钮
+    updateDetailActionButtons(itemId, body) {
+        const calculatorModule = window.unifiedCalculatorModule;
+        if (!calculatorModule) return;
+        
+        const inCalculator = calculatorModule.calculatorItems.find(i => i.id === itemId && i.mode === this.currentMode);
+        const actionsContainer = body.querySelector('.detail-actions');
+        
+        if (!actionsContainer) return;
+        
+        if (inCalculator) {
+            if (this.currentMode === 'items') {
+                actionsContainer.innerHTML = `
+                    <div class="detail-quantity">
+                        <label>数量:</label>
+                        <input type="number" class="detail-quantity-input" value="${inCalculator.quantity}" min="0" data-id="${itemId}">
+                    </div>
+                    <button class="btn-danger detail-remove-btn" data-id="${itemId}">移出</button>
+                `;
+                
+                // 重新绑定事件
+                const quantityInput = actionsContainer.querySelector('.detail-quantity-input');
+                quantityInput.addEventListener('change', (e) => {
+                    const newQuantity = parseInt(e.target.value) || 0;
+                    calculatorModule.updateQuantity(itemId, newQuantity);
+                    this.updateDetailActionButtons(itemId, body);
+                });
+                
+                const removeBtn = actionsContainer.querySelector('.detail-remove-btn');
+                removeBtn.addEventListener('click', () => {
+                    calculatorModule.removeFromCalculator(itemId);
+                    this.updateDetailActionButtons(itemId, body);
+                });
+            } else {
+                actionsContainer.innerHTML = `<button class="btn-danger detail-remove-btn" data-id="${itemId}">移出计算器</button>`;
+                
+                const removeBtn = actionsContainer.querySelector('.detail-remove-btn');
+                removeBtn.addEventListener('click', () => {
+                    calculatorModule.removeFromCalculator(itemId);
+                    this.updateDetailActionButtons(itemId, body);
+                });
+            }
+        } else {
+            actionsContainer.innerHTML = `<button class="btn-success detail-add-btn" data-id="${itemId}">添加到计算器</button>`;
+            
+            const addBtn = actionsContainer.querySelector('.detail-add-btn');
+            addBtn.addEventListener('click', () => {
+                this.addToCalculator(itemId);
+                this.updateDetailActionButtons(itemId, body);
+            });
+        }
     }
     
     // 更新特质等级
     updateSpecialtyLevel(itemId, newLevel) {
-        const item = this.currentData.find(i => i.id == itemId);
-        if (!item) return;
-        
-        // 确保等级在有效范围内
-        newLevel = parseInt(newLevel);
-        if (isNaN(newLevel) || newLevel < 1) {
-            newLevel = 1;
-        } else if (newLevel > item.level) {
-            newLevel = item.level;
-        }
-        
         this.specialtyLevels.set(itemId, newLevel);
     }
     
@@ -669,6 +806,7 @@ class UnifiedManager {
         
         if (window.unifiedCalculatorModule) {
             window.unifiedCalculatorModule.addItem(item, this.currentMode, selectedLevel);
+            this.showStatus(`已添加 ${item.name} 到计算器`, 'success');
         }
     }
     
@@ -689,7 +827,7 @@ class UnifiedManager {
         }
     }
     
-    // 货币格式化（仅物品模式使用）
+    // 货币格式化
     formatCurrency(copper) {
         const gold = Math.floor(copper / 10000);
         const silver = Math.floor((copper % 10000) / 100);
@@ -710,6 +848,52 @@ class UnifiedManager {
             case 'silver': return value * 100;
             case 'copper': 
             default: return value;
+        }
+    }
+    
+    // HTML转义函数
+    escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    // 格式化描述（分号换行，加粗{}内容）
+    formatDescription(text) {
+        if (!text) return '';
+        
+        // 用<br>替换分号
+        let formatted = text.replace(/;/g, '<br>');
+        
+        // 加粗{}中的内容
+        formatted = formatted.replace(/\{([^}]+)\}/g, '<strong>$1</strong>');
+        
+        return formatted;
+    }
+    
+    // 显示状态消息
+    showStatus(message, type) {
+        const statusElement = document.getElementById('data-status');
+        if (!statusElement) return;
+        
+        statusElement.textContent = message;
+        statusElement.className = 'status-message';
+        
+        if (type === 'success') {
+            statusElement.classList.add('status-success');
+        } else if (type === 'error') {
+            statusElement.classList.add('status-error');
+        } else if (type === 'warning') {
+            statusElement.classList.add('status-warning');
+        }
+        
+        // 3秒后自动清除成功消息
+        if (type === 'success') {
+            setTimeout(() => {
+                statusElement.textContent = '';
+                statusElement.className = 'status-message';
+            }, 3000);
         }
     }
 }
