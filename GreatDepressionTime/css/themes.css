@@ -1,0 +1,142 @@
+/* 白天主题 */
+body.day-theme {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #333;
+}
+
+body.day-theme .navbar {
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+body.day-theme .stocks-sidebar,
+body.day-theme .stock-details,
+body.day-theme .trade-panel,
+body.day-theme .rules-sidebar,
+body.day-theme .rules-content,
+body.day-theme .event-display {
+    background: rgba(255, 255, 255, 0.9);
+    color: #333;
+}
+
+body.day-theme .stock-item,
+body.day-theme .rules-menu li,
+body.day-theme .info-row,
+body.day-theme .modal-content {
+    background: rgba(255, 255, 255, 0.8);
+    color: #333;
+}
+
+body.day-theme .nav-btn {
+    color: #333;
+}
+
+body.day-theme .nav-btn:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+body.day-theme .nav-btn.active {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+body.day-theme .status-bar {
+    background: rgba(255, 255, 255, 0.9);
+    color: #333;
+}
+
+body.day-theme .bar-container {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+body.day-theme .qty-btn,
+body.day-theme #trade-quantity {
+    background: rgba(0, 0, 0, 0.05);
+    color: #333;
+}
+
+body.day-theme .qty-btn:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+/* 黑夜主题 */
+body.night-theme {
+    background: linear-gradient(135deg, #232526 0%, #414345 100%);
+    color: #fff;
+}
+
+body.night-theme .navbar {
+    background: rgba(0, 0, 0, 0.9);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+body.night-theme .stocks-sidebar,
+body.night-theme .stock-details,
+body.night-theme .trade-panel,
+body.night-theme .rules-sidebar,
+body.night-theme .rules-content,
+body.night-theme .event-display {
+    background: rgba(0, 0, 0, 0.7);
+    color: #fff;
+}
+
+body.night-theme .stock-item,
+body.night-theme .rules-menu li,
+body.night-theme .info-row,
+body.night-theme .modal-content {
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+}
+
+body.night-theme .nav-btn {
+    color: #fff;
+}
+
+body.night-theme .nav-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+body.night-theme .nav-btn.active {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+body.night-theme .status-bar {
+    background: rgba(0, 0, 0, 0.7);
+    color: #fff;
+}
+
+body.night-theme .bar-container {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+body.night-theme .qty-btn,
+body.night-theme #trade-quantity {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+body.night-theme .qty-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* 季节颜色 */
+.season-spring { color: #4cd964; }
+.season-summer { color: #ffcc00; }
+.season-autumn { color: #ff9500; }
+.season-winter { color: #5ac8fa; }
+
+/* 股票类型颜色 */
+.type-tech { color: #ff2d55; }
+.type-medical { color: #4cd964; }
+.type-energy { color: #ff9500; }
+.type-industrial { color: #5ac8fa; }
+.type-consumer { color: #af52de; }
+
+/* 事件类型颜色 */
+.event-good { color: #4cd964; }
+.event-bad { color: #ff3b30; }
+.event-neutral { color: #5ac8fa; }
+
+/* 主题切换动画 */
+.theme-transition * {
+    transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease !important;
+}

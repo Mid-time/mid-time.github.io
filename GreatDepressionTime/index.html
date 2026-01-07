@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="day-theme">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>大萧条时代 - Great Depression Time</title>
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/themes.css">
+    
+    <!-- 字体图标 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- 字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- 移动端横屏提示 -->
+    <div id="orientation-warning" class="orientation-warning">
+        <div class="orientation-content">
+            <i class="fas fa-rotate-right"></i>
+            <h2>请旋转设备至横屏模式</h2>
+            <p>为了更好的游戏体验，请将设备横向放置</p>
+        </div>
+    </div>
+
+    <!-- 加载遮罩 -->
+    <div id="loading-screen" class="loading-screen active">
+        <div class="loading-content">
+            <div class="loading-spinner">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <h1>大萧条时代</h1>
+            <p class="subtitle">Great Depression Time</p>
+            <div class="loading-progress">
+                <div class="progress-bar"></div>
+            </div>
+            <p class="loading-tip">加载游戏数据中...</p>
+        </div>
+    </div>
+
+    <!-- 难度选择界面 -->
+    <div id="difficulty-screen" class="difficulty-screen">
+        <div class="difficulty-container">
+            <div class="difficulty-header">
+                <h1><i class="fas fa-history"></i> 大萧条时代</h1>
+                <p class="game-subtitle">在股市崩盘中生存下去</p>
+            </div>
+            
+            <div class="difficulty-options">
+                <div class="difficulty-card" data-difficulty="easy">
+                    <div class="card-header">
+                        <i class="fas fa-seedling"></i>
+                        <h2>简单模式</h2>
+                    </div>
+                    <div class="card-body">
+                        <ul>
+                            <li>起始季节：春季</li>
+                            <li>目标：存活28天</li>
+                            <li>数值增长缓慢</li>
+                            <li>无房租压力</li>
+                            <li>适合新手学习</li>
+                        </ul>
+                    </div>
+                    <div class="card-footer">
+                        <button class="select-btn" onclick="Game.selectDifficulty('easy')">
+                            选择简单模式
+                        </button>
+                    </div>
+                </div>
+
+                <div class="difficulty-card" data-difficulty="normal">
+                    <div class="card-header">
+                        <i class="fas fa-fire"></i>
+                        <h2>正常模式</h2>
+                    </div>
+                    <div class="card-body">
+                        <ul>
+                            <li>起始季节：随机</li>
+                            <li>目标：存活336天（1年）</li>
+                            <li>标准数值增长</li>
+                            <li>每月支付房租</li>
+                            <li>挑战自我</li>
+                        </ul>
+                    </div>
+                    <div class="card-footer">
+                        <button class="select-btn" onclick="Game.selectDifficulty('normal')">
+                            选择正常模式
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="game-description">
+                <h3><i class="fas fa-info-circle"></i> 游戏背景</h3>
+                <p>1929年，华尔街股市崩盘，经济危机席卷全球。你将扮演一名普通投资者，在这场大萧条中艰难求生。</p>
+                <p>管理你的资金、健康和生活，在股市的起伏中寻找生存的机会。</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主游戏界面 -->
+    <div id="game-container" class="game-container">
+        <!-- 导航栏 -->
+        <nav class="navbar">
+            <div class="nav-left">
+                <button class="nav-btn active" data-tab="stocks">
+                    <i class="fas fa-chart-line"></i>
+                    <span>股票市场</span>
+                </button>
+                <button class="nav-btn" data-tab="rules">
+                    <i class="fas fa-book"></i>
+                    <span>生存指南</span>
+                </button>
+            </div>
+            
+            <div class="nav-center">
+                <div class="date-display">
+                    <i class="fas fa-calendar"></i>
+                    <span id="current-date">第1天</span>
+                </div>
+                <div class="season-display">
+                    <i class="fas fa-leaf" id="season-icon"></i>
+                    <span id="current-season">春季</span>
+                </div>
+            </div>
+            
+            <div class="nav-right">
+                <div class="cash-display">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span id="cash-amount">100.0</span>
+                </div>
+                <button id="time-toggle" class="time-toggle">
+                    <i class="fas fa-sun" id="time-icon"></i>
+                    <span id="time-text">进入黑夜</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- 主内容区域 -->
+        <main class="main-content">
+            <!-- 股票界面 -->
+            <div id="stocks-tab" class="tab-content active">
+                <div class="stocks-layout">
+                    <!-- 股票列表（左侧） -->
+                    <div class="stocks-sidebar">
+                        <div class="sidebar-header">
+                            <h3><i class="fas fa-list"></i> 可用股票</h3>
+                            <div class="stock-stats">
+                                <span id="stock-count">5</span>/<span id="max-stocks">8</span>
+                            </div>
+                        </div>
+                        <div class="stocks-list" id="stocks-list">
+                            <!-- 股票列表由JS动态生成 -->
+                        </div>
+                    </div>
+
+                    <!-- 股票详情（右侧） -->
+                    <div class="stock-details">
+                        <div class="details-header">
+                            <h3 id="selected-stock-name">选择股票查看详情</h3>
+                            <div class="stock-meta">
+                                <span class="stock-type" id="stock-type">未选择</span>
+                                <span class="volatility" id="stock-volatility">波动率：--</span>
+                            </div>
+                        </div>
+                        
+                        <!-- 股票图表 -->
+                        <div class="chart-container">
+                            <canvas id="stock-chart"></canvas>
+                            <div class="chart-tooltip" id="chart-tooltip"></div>
+                        </div>
+                        
+                        <!-- 交易面板 -->
+                        <div class="trade-panel">
+                            <div class="trade-info">
+                                <div class="info-row">
+                                    <span>当前价格：</span>
+                                    <span id="current-price" class="price">--</span>
+                                </div>
+                                <div class="info-row">
+                                    <span>持有数量：</span>
+                                    <span id="owned-shares" class="shares">0</span>
+                                </div>
+                                <div class="info-row">
+                                    <span>持仓价值：</span>
+                                    <span id="position-value" class="value">0.0</span>
+                                </div>
+                            </div>
+                            
+                            <div class="trade-controls">
+                                <div class="quantity-control">
+                                    <button class="qty-btn" onclick="Stocks.adjustQuantity(-1)">-</button>
+                                    <input type="number" id="trade-quantity" min="1" value="1">
+                                    <button class="qty-btn" onclick="Stocks.adjustQuantity(1)">+</button>
+                                </div>
+                                <div class="trade-buttons">
+                                    <button id="buy-btn" class="btn buy-btn" onclick="Stocks.buyStock()">
+                                        <i class="fas fa-arrow-up"></i> 买入
+                                    </button>
+                                    <button id="sell-btn" class="btn sell-btn" onclick="Stocks.sellStock()">
+                                        <i class="fas fa-arrow-down"></i> 卖出
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="trade-total">
+                                交易总额：<span id="trade-total">0.0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 规则界面 -->
+            <div id="rules-tab" class="tab-content">
+                <div class="rules-layout">
+                    <!-- 规则目录 -->
+                    <div class="rules-sidebar">
+                        <div class="sidebar-header">
+                            <h3><i class="fas fa-scroll"></i> 生存指南</h3>
+                        </div>
+                        <ul class="rules-menu" id="rules-menu">
+                            <li class="active" data-rule="objective">
+                                <i class="fas fa-bullseye"></i>
+                                <span>生存目标</span>
+                            </li>
+                            <li data-rule="basics">
+                                <i class="fas fa-home"></i>
+                                <span>基本生存</span>
+                            </li>
+                            <li data-rule="stocks-guide">
+                                <i class="fas fa-chart-bar"></i>
+                                <span>股票交易</span>
+                            </li>
+                            <li data-rule="health-guide">
+                                <i class="fas fa-heartbeat"></i>
+                                <span>健康管理</span>
+                            </li>
+                            <li data-rule="events-guide">
+                                <i class="fas fa-bolt"></i>
+                                <span>突发事件</span>
+                            </li>
+                            <li data-rule="rent-guide">
+                                <i class="fas fa-building"></i>
+                                <span>房租支付</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- 规则内容 -->
+                    <div class="rules-content">
+                        <div class="rule-section active" id="objective-rule">
+                            <h2><i class="fas fa-bullseye"></i> 生存目标</h2>
+                            <div class="rule-text">
+                                <p class="quote">"伙计，欢迎来到1929年的大萧条。在这儿，只有一个目标：<strong>活下去</strong>。"</p>
+                                <p>简单模式？撑过28天，你就赢了。正常模式？那可是整整一年，336个日夜的煎熬。</p>
+                                <p>记住：健康就是一切。一旦健康归零，游戏结束。股市可以亏钱，但命只有一条。</p>
+                                <p class="tip"><i class="fas fa-lightbulb"></i> 提示：关注左上角的健康条，时刻保持清醒。</p>
+                            </div>
+                        </div>
+
+                        <div class="rule-section" id="basics-rule">
+                            <h2><i class="fas fa-home"></i> 基本生存</h2>
+                            <div class="rule-text">
+                                <p>"每天只有白天和黑夜，点一下右上角的按钮，时间就推进一次。"</p>
+                                <p>每天都要面对三件事：吃饭、睡觉、赚钱。</p>
+                                <ul>
+                                    <li><strong>时间</strong>：第X天显示你的生存天数，季节会影响股市</li>
+                                    <li><strong>现金</strong>：右上角显示，买卖股票、吃饭看病都要花钱</li>
+                                    <li><strong>健康</strong>：左下角绿色条，为0时游戏结束</li>
+                                    <li><strong>饱腹</strong>：左下角蓝色条，随时间消耗，空了会扣健康</li>
+                                </ul>
+                                <p class="warning"><i class="fas fa-exclamation-triangle"></i> 注意：每次时间推进都可能发生意外，做好心理准备。</p>
+                            </div>
+                        </div>
+
+                        <div class="rule-section" id="stocks-guide-rule">
+                            <h2><i class="fas fa-chart-bar"></i> 股票交易</h2>
+                            <div class="rule-text">
+                                <p>"股市？那是赌场，也是唯一的希望。"</p>
+                                <ul>
+                                    <li><strong>股票列表</strong>：左边，点击股票查看详情</li>
+                                    <li><strong>价格走势</strong>：右边显示最近7天的价格</li>
+                                    <li><strong>交易规则</strong>：每天只能买卖一次，买了就别后悔</li>
+                                    <li><strong>股票类型</strong>：有些涨得猛跌得惨，有些稳如老狗</li>
+                                    <li><strong>崩盘风险</strong>：跌太多就没了，高风险股可能自己崩掉</li>
+                                </ul>
+                                <p>"红色是跌，绿色是涨。点击图表能看到具体数字，自己算算盈亏。"</p>
+                            </div>
+                        </div>
+
+                        <div class="rule-section" id="health-guide-rule">
+                            <h2><i class="fas fa-heartbeat"></i> 健康管理</h2>
+                            <div class="rule-text">
+                                <p>"身体是革命的本钱，没了健康，有钱也没命花。"</p>
+                                <ul>
+                                    <li><strong>饱腹度</strong>：随时间下降，点击"进食"恢复20点</li>
+                                    <li><strong>健康值</strong>：25%概率每回合扣1-10点，饿了扣更多</li>
+                                    <li><strong>进食</strong>：花费10现金，恢复20饱腹度</li>
+                                    <li><strong>治疗</strong>：健康低于80才能用，花费根据当前健康计算</li>
+                                </ul>
+                                <p>"吃饭要钱，看病更要钱。别等到快不行了才想起来照顾自己。"</p>
+                                <p class="tip"><i class="fas fa-lightbulb"></i> 建议：保持饱腹度在50以上，健康80以上。</p>
+                            </div>
+                        </div>
+
+                        <div class="rule-section" id="events-guide-rule">
+                            <h2><i class="fas fa-bolt"></i> 突发事件</h2>
+                            <div class="rule-text">
+                                <p>"这年头，什么事都可能发生。今天发横财，明天就住院。"</p>
+                                <ul>
+                                    <li><strong>个人事件</strong>：生病、捡钱、房东催租</li>
+                                    <li><strong>市场事件</strong>：股灾、牛市、公司丑闻</li>
+                                    <li><strong>社会事件</strong>：政策变化、自然灾害、罢工</li>
+                                </ul>
+                                <p>"事件有好有坏，看你怎么应对。有些事避不开，只能硬扛。"</p>
+                                <p class="warning"><i class="fas fa-exclamation-triangle"></i> 股灾来了别慌，牛市来了别疯。平常心，才能活久见。</p>
+                            </div>
+                        </div>
+
+                        <div class="rule-section" id="rent-guide-rule">
+                            <h2><i class="fas fa-building"></i> 房租支付</h2>
+                            <div class="rule-text">
+                                <p>"每个月总有那么一天...交房租。"</p>
+                                <ul>
+                                    <li><strong>简单模式</strong>：无房租压力，专心学习</li>
+                                    <li><strong>正常模式</strong>：每月支付，金额随时间上涨</li>
+                                    <li><strong>支付时间</strong>：每月第一天自动扣除</li>
+                                </ul>
+                                <p>"没钱交租？不好意思，你会被赶出去，健康直接掉一大截。"</p>
+                                <p class="tip"><i class="fas fa-lightbulb"></i> 建议：每个月留出房租钱，别全投股市。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 底部状态栏 -->
+        <footer class="status-bar">
+            <div class="status-left">
+                <div class="health-bar">
+                    <div class="bar-label">
+                        <i class="fas fa-heart"></i>
+                        <span>健康</span>
+                    </div>
+                    <div class="bar-container">
+                        <div class="bar-fill health-fill" id="health-bar" style="width: 100%"></div>
+                        <span class="bar-value" id="health-value">100</span>
+                    </div>
+                </div>
+                <div class="hunger-bar">
+                    <div class="bar-label">
+                        <i class="fas fa-utensils"></i>
+                        <span>饱腹</span>
+                    </div>
+                    <div class="bar-container">
+                        <div class="bar-fill hunger-fill" id="hunger-bar" style="width: 100%"></div>
+                        <span class="bar-value" id="hunger-value">100</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="status-center">
+                <div class="event-display" id="event-display">
+                    <div class="event-header">
+                        <i class="fas fa-newspaper"></i>
+                        <span>今日事件</span>
+                    </div>
+                    <div class="event-content" id="current-event">
+                        暂无事件发生
+                    </div>
+                </div>
+            </div>
+            
+            <div class="status-right">
+                <button id="eat-btn" class="action-btn eat-btn" onclick="Game.eat()">
+                    <i class="fas fa-apple-alt"></i>
+                    <span>进食(10)</span>
+                </button>
+                <button id="heal-btn" class="action-btn heal-btn" onclick="Game.heal()" disabled>
+                    <i class="fas fa-hospital"></i>
+                    <span>治疗</span>
+                </button>
+            </div>
+        </footer>
+    </div>
+
+    <!-- 游戏结束弹窗 -->
+    <div id="game-over-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-skull-crossbones"></i> 游戏结束</h2>
+            </div>
+            <div class="modal-body">
+                <p id="game-over-reason"></p>
+                <div class="game-stats">
+                    <p>生存天数: <span id="final-days">0</span>天</p>
+                    <p>最终现金: <span id="final-cash">0</span></p>
+                    <p>持有股票: <span id="final-stocks">0</span>支</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="Game.restart()" class="modal-btn restart-btn">
+                    <i class="fas fa-redo"></i> 重新开始
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 胜利弹窗 -->
+    <div id="victory-modal" class="modal">
+        <div class="modal-content victory">
+            <div class="modal-header">
+                <h2><i class="fas fa-trophy"></i> 生存成功！</h2>
+            </div>
+            <div class="modal-body">
+                <p class="victory-message" id="victory-message"></p>
+                <div class="victory-stats">
+                    <p>你在大萧条中存活了 <span id="victory-days">0</span> 天</p>
+                    <p>最终资产: <span id="victory-cash">0</span></p>
+                    <p>最高健康: <span id="victory-health">100</span></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="Game.restart()" class="modal-btn continue-btn">
+                    <i class="fas fa-play"></i> 开始新游戏
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 事件弹窗 -->
+    <div id="event-modal" class="modal event-modal">
+        <div class="modal-content">
+            <div class="modal-header" id="event-modal-header">
+                <h2><i class="fas fa-exclamation-circle"></i> 突发事件</h2>
+            </div>
+            <div class="modal-body">
+                <div class="event-icon" id="event-icon">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <h3 id="event-title">事件标题</h3>
+                <p id="event-description">事件描述</p>
+                <div class="event-effects" id="event-effects">
+                    <!-- 事件效果由JS动态生成 -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="UI.closeEventModal()" class="modal-btn confirm-btn">
+                    确认
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 脚本文件 -->
+    <script src="js/save.js"></script>
+    <script src="js/difficulty.js"></script>
+    <script src="js/stocks.js"></script>
+    <script src="js/events.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/game.js"></script>
+
+    <!-- 初始化 -->
+    <script>
+        // 页面加载完成后初始化游戏
+        window.addEventListener('load', function() {
+            // 检查横屏状态
+            UI.checkOrientation();
+            
+            // 加载保存的游戏
+            if (Save.loadGame()) {
+                // 有存档，直接进入游戏
+                UI.hideLoading();
+                Game.initialize();
+            } else {
+                // 无存档，显示难度选择
+                setTimeout(function() {
+                    UI.hideLoading();
+                    UI.showDifficultyScreen();
+                }, 1000);
+            }
+            
+            // 监听横屏变化
+            window.addEventListener('resize', UI.checkOrientation);
+            window.addEventListener('orientationchange', UI.checkOrientation);
+        });
+    </script>
+</body>
+</html>
