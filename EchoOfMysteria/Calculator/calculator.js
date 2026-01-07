@@ -50,49 +50,86 @@ class UnifiedCalculator {
         // 角色属性弹窗事件
         this.initializeCharacterModalEvents();
         
-        // 折叠栏切换 - 修复事件绑定
+        // 折叠栏切换
         this.initializeAccordionEvents();
     }
     
-    // 初始化折叠栏事件
+    // 初始化折叠栏事件（独立折叠）- 修复版
     initializeAccordionEvents() {
-        // 使用事件委托处理折叠栏点击
-        const calculatorView = document.getElementById('calculator-view');
-        if (calculatorView) {
-            calculatorView.addEventListener('click', (e) => {
-                const accordionHeader = e.target.closest('.accordion-header');
-                if (accordionHeader) {
-                    const accordionItem = accordionHeader.parentElement;
-                    const isActive = accordionItem.classList.contains('active');
-                    
-                    // 关闭所有折叠栏
-                    document.querySelectorAll('.accordion-item').forEach(item => {
-                        item.classList.remove('active');
-                        const icon = item.querySelector('.accordion-icon');
-                        if (icon) {
-                            icon.classList.remove('fa-chevron-up');
-                            icon.classList.add('fa-chevron-down');
-                        }
-                    });
-                    
-                    // 如果点击的不是已激活的，则激活它
-                    if (!isActive) {
-                        accordionItem.classList.add('active');
-                        const icon = accordionHeader.querySelector('.accordion-icon');
-                        if (icon) {
-                            icon.classList.remove('fa-chevron-down');
-                            icon.classList.add('fa-chevron-up');
-                        }
-                    }
+        // 移除之前绑定的事件，防止重复绑定
+        const accordionHeaders = document.querySelectorAll('.accordion-header');
+        
+        accordionHeaders.forEach(header => {
+            // 克隆元素并替换以移除所有事件监听器
+            const newHeader = header.cloneNode(true);
+            header.parentNode.replaceChild(newHeader, header);
+            
+            // 绑定点击事件
+            newHeader.addEventListener('click', (e) => {
+                this.handleAccordionClick(e);
+            });
+            
+            // 添加键盘支持
+            newHeader.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    this.handleAccordionClick(e);
                 }
             });
-        }
+            
+            // 设置可访问性
+            newHeader.setAttribute('tabindex', '0');
+            newHeader.setAttribute('role', 'button');
+            newHeader.setAttribute('aria-expanded', newHeader.parentElement.classList.contains('active') ? 'true' : 'false');
+        });
         
         // 默认展开第一个折叠栏
         const firstAccordion = document.querySelector('.accordion-item');
-        if (firstAccordion) {
-            firstAccordion.classList.add('active');
-            const icon = firstAccordion.querySelector('.accordion-icon');
+        if (firstAccordion && !firstAccordion.classList.contains('active')) {
+            this.toggleAccordion(firstAccordion);
+        }
+    }
+    
+    // 处理折叠栏点击
+    handleAccordionClick(e) {
+        const header = e.currentTarget;
+        const accordionItem = header.parentElement;
+        this.toggleAccordion(accordionItem);
+        
+        // 更新ARIA属性
+        const isExpanded = accordionItem.classList.contains('active');
+        header.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+    }
+    
+    // 切换折叠栏状态
+    toggleAccordion(accordionItem) {
+        const content = accordionItem.querySelector('.accordion-content');
+        const icon = accordionItem.querySelector('.accordion-icon');
+        
+        // 切换当前折叠栏
+        const isActive = accordionItem.classList.contains('active');
+        
+        if (isActive) {
+            accordionItem.classList.remove('active');
+            if (content) {
+                content.style.display = 'none';
+                content.style.height = '0';
+                content.style.opacity = '0';
+            }
+            if (icon) {
+                icon.classList.remove('fa-chevron-up');
+                icon.classList.add('fa-chevron-down');
+            }
+        } else {
+            accordionItem.classList.add('active');
+            if (content) {
+                content.style.display = 'block';
+                // 使用setTimeout确保transition生效
+                setTimeout(() => {
+                    content.style.height = 'auto';
+                    content.style.opacity = '1';
+                }, 10);
+            }
             if (icon) {
                 icon.classList.remove('fa-chevron-down');
                 icon.classList.add('fa-chevron-up');
@@ -152,6 +189,7 @@ class UnifiedCalculator {
         document.getElementById('character-endurance').value = this.characterEndurance;
         
         characterModal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
     }
     
     // 隐藏角色属性弹窗
@@ -159,6 +197,7 @@ class UnifiedCalculator {
         const characterModal = document.getElementById('character-modal');
         if (characterModal) {
             characterModal.style.display = 'none';
+            document.body.style.overflow = 'auto';
         }
     }
     
@@ -276,19 +315,19 @@ class UnifiedCalculator {
     
     // 添加物品到计算器
     addItem(item, mode, selectedLevel = 1) {
-        // 检查是否已存在（特质不可重复购买）
+        // 检查是否已存在（技艺不可重复购买）
         const existingItem = this.calculatorItems.find(i => i.id == item.id && i.mode === mode);
         
         if (existingItem) {
             if (mode === 'items') {
                 existingItem.quantity += 1;
             } else {
-                // 特质模式：如果已存在且等级不同，则更新等级
+                // 技艺模式：如果已存在且等级不同，则更新等级
                 if (existingItem.currentLevel !== selectedLevel) {
                     existingItem.currentLevel = selectedLevel;
                     this.showStatus(`${item.name} 等级已更新为 ${selectedLevel}`, 'success');
                 } else {
-                    // 相同等级的特质不可重复购买
+                    // 相同等级的技艺不可重复购买
                     this.showStatus(`${item.name} 已存在于计算器中`, 'warning');
                     return;
                 }
@@ -339,7 +378,7 @@ class UnifiedCalculator {
         }
     }
     
-    // 更新特质等级
+    // 更新技艺等级
     updateLevel(itemId, newLevel) {
         const item = this.calculatorItems.find(i => i.id == itemId && i.mode === 'specialties');
         if (!item) return;
@@ -359,7 +398,7 @@ class UnifiedCalculator {
     
     // 渲染计算器
     renderCalculator() {
-        // 分离物品和特质
+        // 分离物品和技艺
         const items = this.calculatorItems.filter(item => item.mode === 'items');
         const specialties = this.calculatorItems.filter(item => item.mode === 'specialties');
         
@@ -376,11 +415,14 @@ class UnifiedCalculator {
         // 渲染物品列表
         this.renderItemList(items);
         
-        // 渲染特质列表
+        // 渲染技艺列表
         this.renderSpecialtyList(specialties);
         
         // 更新总计
         this.updateSummary(items, specialties);
+        
+        // 重新绑定折叠栏事件（确保事件正确绑定）
+        this.initializeAccordionEvents();
     }
     
     // 渲染物品列表
@@ -405,7 +447,7 @@ class UnifiedCalculator {
         });
     }
     
-    // 渲染特质列表
+    // 渲染技艺列表
     renderSpecialtyList(specialties) {
         const container = document.getElementById('calculator-specialties');
         if (!container) return;
@@ -413,7 +455,7 @@ class UnifiedCalculator {
         container.innerHTML = '';
         
         if (specialties.length === 0) {
-            container.innerHTML = '<div class="empty-state">暂无学习的特质</div>';
+            container.innerHTML = '<div class="empty-state">暂无学习的技艺</div>';
             return;
         }
         
@@ -475,19 +517,17 @@ class UnifiedCalculator {
         });
     }
     
-    // 渲染特质元素
+    // 渲染技艺元素
     renderSpecialtyElement(container, specialty) {
-        // 获取当前等级的描述
-        const levelIndex = specialty.currentLevel - 1;
-        const currentDescription = this.getSpecialtyDescription(specialty, levelIndex);
-        
-        // 获取当前等级的成本
-        const currentCost = this.getSpecialtyCost(specialty, levelIndex);
+        // 获取当前等级的描述和成本
+        const currentLevel = specialty.currentLevel || 1;
+        const currentDescription = this.getSpecialtyDescription(specialty, currentLevel);
+        const currentCost = this.getSpecialtyCost(specialty, currentLevel);
         
         // 构建等级选择器选项
         const levelOptions = [];
         for (let i = 1; i <= specialty.level; i++) {
-            levelOptions.push(`<option value="${i}" ${i === specialty.currentLevel ? 'selected' : ''}>${i}</option>`);
+            levelOptions.push(`<option value="${i}" ${i === currentLevel ? 'selected' : ''}>${i}</option>`);
         }
         
         container.innerHTML = `
@@ -498,7 +538,9 @@ class UnifiedCalculator {
                 </div>
             </div>
             <div class="calculator-item-details">
-                <div class="calculator-item-description">${this.formatDescription(this.escapeHtml(currentDescription))}</div>
+                <div class="calculator-item-description specialty-description-formatted">
+                    ${this.formatSpecialtyDescription(currentDescription, currentLevel, specialty.level)}
+                </div>
                 <div class="calculator-item-controls">
                     <div class="level-control">
                         <label>等级:</label>
@@ -530,29 +572,70 @@ class UnifiedCalculator {
         });
     }
     
-    // 获取特质描述（根据等级）
-    getSpecialtyDescription(specialty, levelIndex) {
+    // 格式化技艺描述（加粗花括号内容）
+    formatSpecialtyDescription(description, currentLevel, maxLevel) {
+        if (!description) return '';
+        
+        let formatted = this.escapeHtml(description);
+        
+        // 处理花括号内的内容
+        formatted = formatted.replace(/\{([^}]+)\}/g, (match, content) => {
+            // 如果内容包含斜杠，表示是多等级格式
+            if (content.includes('/')) {
+                const parts = content.split('/');
+                const levelIndex = currentLevel - 1;
+                if (levelIndex >= 0 && levelIndex < parts.length) {
+                    // 当前等级对应的部分加粗
+                    return `<strong>${parts[levelIndex]}</strong>`;
+                } else {
+                    // 显示所有等级
+                    return parts.join('/');
+                }
+            } else {
+                // 单个内容直接加粗
+                return `<strong>${content}</strong>`;
+            }
+        });
+        
+        // 用<br>替换分号
+        formatted = formatted.replace(/;/g, '<br>');
+        
+        return formatted;
+    }
+    
+    // 获取技艺描述（根据等级）
+    getSpecialtyDescription(specialty, currentLevel) {
         if (!specialty.description) return '';
         
+        // 如果description是数组，根据等级获取对应描述
         if (Array.isArray(specialty.description)) {
+            const levelIndex = currentLevel - 1;
             if (levelIndex >= 0 && levelIndex < specialty.description.length) {
                 return specialty.description[levelIndex];
+            } else if (specialty.description.length > 0) {
+                return specialty.description[0];
+            } else {
+                return '';
             }
-            return specialty.description[0] || '';
         }
         
+        // 如果不是数组，直接返回
         return specialty.description;
     }
     
-    // 获取特质成本（根据等级）
-    getSpecialtyCost(specialty, levelIndex) {
+    // 获取技艺成本（根据等级）
+    getSpecialtyCost(specialty, currentLevel) {
         if (!specialty.cost) return 0;
         
         if (Array.isArray(specialty.cost)) {
+            const levelIndex = currentLevel - 1;
             if (levelIndex >= 0 && levelIndex < specialty.cost.length) {
                 return specialty.cost[levelIndex];
+            } else if (specialty.cost.length > 0) {
+                return specialty.cost[0];
+            } else {
+                return 0;
             }
-            return specialty.cost[0] || 0;
         }
         
         return specialty.cost;
@@ -566,14 +649,14 @@ class UnifiedCalculator {
         
         // 计算物品总消耗和总重量
         items.forEach(item => {
-            totalCost += item.cost * item.quantity;
-            totalWeight += item.weight * item.quantity;
+            totalCost += (item.cost || 0) * item.quantity;
+            totalWeight += (item.weight || 0) * item.quantity;
         });
         
-        // 计算特质总消耗
+        // 计算技艺总消耗
         specialties.forEach(specialty => {
-            const levelIndex = specialty.currentLevel - 1;
-            totalCost += this.getSpecialtyCost(specialty, levelIndex);
+            const currentLevel = specialty.currentLevel || 1;
+            totalCost += this.getSpecialtyCost(specialty, currentLevel);
         });
         
         // 更新总消耗显示
@@ -653,15 +736,15 @@ class UnifiedCalculator {
             content += '-'.repeat(50) + '\n';
             
             items.forEach((item, index) => {
-                const itemCost = item.cost * item.quantity;
-                const itemWeight = item.weight * item.quantity;
+                const itemCost = (item.cost || 0) * item.quantity;
+                const itemWeight = (item.weight || 0) * item.quantity;
                 totalCost += itemCost;
                 totalWeight += itemWeight;
                 
                 content += `${index + 1}. ${item.name}\n`;
                 content += `   ID: ${item.id}\n`;
                 content += `   数量: ${item.quantity}\n`;
-                content += `   单价: ${this.formatCurrencyForDownload(item.cost)}\n`;
+                content += `   单价: ${this.formatCurrencyForDownload(item.cost || 0)}\n`;
                 content += `   总价: ${this.formatCurrencyForDownload(itemCost)}\n`;
                 content += `   重量: ${itemWeight}\n`;
                 
@@ -676,21 +759,21 @@ class UnifiedCalculator {
             });
         }
         
-        // 添加特质列表
+        // 添加技艺列表
         if (specialties.length > 0) {
-            content += `特质列表 (${specialties.length}个):\n`;
+            content += `技艺列表 (${specialties.length}个):\n`;
             content += '-'.repeat(50) + '\n';
             
             specialties.forEach((specialty, index) => {
-                const levelIndex = specialty.currentLevel - 1;
-                const specialtyCost = this.getSpecialtyCost(specialty, levelIndex);
-                const specialtyDescription = this.getSpecialtyDescription(specialty, levelIndex);
+                const currentLevel = specialty.currentLevel || 1;
+                const specialtyCost = this.getSpecialtyCost(specialty, currentLevel);
+                const specialtyDescription = this.getSpecialtyDescription(specialty, currentLevel);
                 
                 totalCost += specialtyCost;
                 
                 content += `${index + 1}. ${specialty.name}\n`;
                 content += `   ID: ${specialty.id}\n`;
-                content += `   等级: ${specialty.currentLevel}/${specialty.level}\n`;
+                content += `   等级: ${currentLevel}/${specialty.level}\n`;
                 content += `   成本: ${specialtyCost}\n`;
                 
                 if (specialty.tag && specialty.tag.length > 0) {
@@ -700,7 +783,20 @@ class UnifiedCalculator {
                     content += `   需求: ${specialty.need.join(', ')}\n`;
                 }
                 
-                const cleanDescription = specialtyDescription.replace(/<[^>]*>/g, '');
+                // 清理描述中的HTML标签和加粗标记
+                const cleanDescription = specialtyDescription
+                    .replace(/<[^>]*>/g, '')
+                    .replace(/\{([^}]+)\}/g, (match, content) => {
+                        if (content.includes('/')) {
+                            const parts = content.split('/');
+                            const levelIndex = currentLevel - 1;
+                            if (levelIndex >= 0 && levelIndex < parts.length) {
+                                return parts[levelIndex];
+                            }
+                        }
+                        return content;
+                    });
+                
                 content += `   效果: ${cleanDescription}\n`;
                 
                 content += '\n';
@@ -730,7 +826,7 @@ class UnifiedCalculator {
         }
         
         content += `物品数量: ${items.length}\n`;
-        content += `特质数量: ${specialties.length}\n`;
+        content += `技艺数量: ${specialties.length}\n`;
         
         // 创建并下载文件
         const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });

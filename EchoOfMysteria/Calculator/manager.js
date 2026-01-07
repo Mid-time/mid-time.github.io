@@ -11,13 +11,10 @@ class UnifiedManager {
         this.currentPage = 1;
         this.itemsPerPage = 20;
         
-        // 排序相关
-        this.sortBy = 'id-asc';
-        
         // 当前模式
         this.currentMode = mode;
         
-        // 特质等级选择器状态
+        // 技艺等级选择器状态
         this.specialtyLevels = new Map();
         
         // 详情弹窗管理
@@ -26,30 +23,23 @@ class UnifiedManager {
         // 获取计算器模块引用
         this.calculatorModule = null;
         
-        // 筛选相关属性
-        this.selectedTags = new Set();
-        this.selectedRarity = new Set();
-        this.selectedSkill = new Set();
-        this.selectedNeed = new Set();
-        this.nameFilter = '';
-        this.minCost = null;
-        this.maxCost = null;
-        this.minWeight = null;
-        this.maxWeight = null;
-        this.minLevel = null;
-        this.maxLevel = null;
-        this.mainTypeFilter = '';
-        this.subTypeFilter = '';
+        // 获取筛选系统引用
+        this.filterSystem = null;
     }
     
-    // 加载数据（供外部调用的公共方法）
-    async loadData() {
-        return await this.loadCurrentData();
+    // 设置筛选系统引用
+    setFilterSystem(filterSystem) {
+        this.filterSystem = filterSystem;
     }
     
     // 设置计算器模块引用
     setCalculatorModule(calculatorModule) {
         this.calculatorModule = calculatorModule;
+    }
+    
+    // 加载数据
+    async loadData() {
+        return await this.loadCurrentData();
     }
     
     // 加载当前模式的数据
@@ -61,17 +51,16 @@ class UnifiedManager {
                 console.log(`物品数据加载完成，共${this.currentData.length}条`);
             } else {
                 this.currentData = await this.dataManager.loadSpecialties();
-                console.log(`特质数据加载完成，共${this.currentData.length}条`);
+                console.log(`技艺数据加载完成，共${this.currentData.length}条`);
                 
-                // 为所有特质初始化等级选择器状态
+                // 为所有技艺初始化等级选择器状态
                 this.currentData.forEach(specialty => {
                     this.specialtyLevels.set(specialty.id, 1);
                 });
             }
             
-            // 初始时设置筛选数据为当前数据
-            this.filteredData = [...this.currentData];
-            this.applySorting();
+            // 应用筛选和排序
+            this.applyFilterAndSort();
             
             return true;
         } catch (error) {
@@ -80,374 +69,24 @@ class UnifiedManager {
         }
     }
     
-    // 获取类型映射
-    getTypeMapping() {
-        const mainTypes = new Set();
-        const subTypesByMainType = new Map();
-        
-        this.currentData.forEach(item => {
-            const mainType = item.maintype || '';
-            const subType = item.subtype || '';
-            
-            if (mainType && mainType !== '') {
-                mainTypes.add(mainType);
-                
-                if (!subTypesByMainType.has(mainType)) {
-                    subTypesByMainType.set(mainType, new Set());
-                }
-                
-                if (subType && subType !== '') {
-                    subTypesByMainType.get(mainType).add(subType);
-                }
-            }
-        });
-        
-        return {
-            mainTypes: Array.from(mainTypes).sort(),
-            subTypesByMainType: subTypesByMainType
-        };
-    }
-    
-    // 初始化主类型筛选器
-    initializeMainTypeFilter() {
-        const mainTypeSelector = document.getElementById('main-type-filter');
-        if (!mainTypeSelector) return;
-        
-        mainTypeSelector.innerHTML = '<option value="">所有主类型</option>';
-        
-        const typeMapping = this.getTypeMapping();
-        
-        typeMapping.mainTypes.forEach(mainType => {
-            const option = document.createElement('option');
-            option.value = mainType;
-            option.textContent = mainType;
-            mainTypeSelector.appendChild(option);
-        });
-    }
-    
-    // 更新子类型筛选器
-    updateSubTypeFilter(mainType) {
-        const subTypeSelector = document.getElementById('sub-type-filter');
-        if (!subTypeSelector) return;
-        
-        subTypeSelector.innerHTML = '<option value="">所有子类型</option>';
-        
-        if (mainType) {
-            const typeMapping = this.getTypeMapping();
-            const subTypes = typeMapping.subTypesByMainType.get(mainType);
-            
-            if (subTypes && subTypes.size > 0) {
-                Array.from(subTypes).sort().forEach(subType => {
-                    const option = document.createElement('option');
-                    option.value = subType;
-                    option.textContent = subType;
-                    subTypeSelector.appendChild(option);
-                });
-                subTypeSelector.style.display = 'block';
-            } else {
-                subTypeSelector.style.display = 'none';
-            }
-        } else {
-            subTypeSelector.style.display = 'none';
+    // 应用筛选和排序
+    applyFilterAndSort() {
+        if (!this.filterSystem) {
+            this.filteredData = [...this.currentData];
+            return;
         }
-    }
-    
-    // 获取所有标签
-    getAllTags() {
-        const allTags = new Set();
-        this.currentData.forEach(item => {
-            const tags = item.tags || item.tag || [];
-            if (Array.isArray(tags)) {
-                tags.forEach(tag => {
-                    if (tag && tag !== '') allTags.add(tag);
-                });
-            }
-        });
-        return allTags;
-    }
-    
-    // 获取所有需求
-    getAllNeed() {
-        const allNeed = new Set();
-        this.currentData.forEach(item => {
-            if (item.need && Array.isArray(item.need)) {
-                item.need.forEach(need => {
-                    if (need && need !== '') allNeed.add(need);
-                });
-            }
-        });
-        return allNeed;
-    }
-    
-    // 获取所有稀有度
-    getAllRarity() {
-        const allRarity = new Set();
-        this.currentData.forEach(item => {
-            if (item.rarity && item.rarity !== '') {
-                allRarity.add(item.rarity);
-            }
-        });
-        return allRarity;
-    }
-    
-    // 获取所有技能需求（仅物品模式）
-    getAllSkill() {
-        if (this.currentMode !== 'items') return new Set();
         
-        const allSkill = new Set();
-        this.currentData.forEach(item => {
-            if (item.skill && item.skill !== '' && item.skill !== '无') {
-                allSkill.add(item.skill);
-            }
-        });
-        return allSkill;
-    }
-    
-    // 设置排序方式
-    setSortBy(sortBy) {
-        this.sortBy = sortBy;
-    }
-    
-    // 应用筛选
-    applyFilter(filters = {}) {
-        // 如果传入过滤器对象，更新当前筛选状态
-        if (filters.selectedTags) this.selectedTags = filters.selectedTags;
-        if (filters.selectedRarity) this.selectedRarity = filters.selectedRarity;
-        if (filters.selectedSkill) this.selectedSkill = filters.selectedSkill;
-        if (filters.selectedNeed) this.selectedNeed = filters.selectedNeed;
-        if (filters.nameFilter !== undefined) this.nameFilter = filters.nameFilter;
-        if (filters.minCost !== undefined) this.minCost = filters.minCost;
-        if (filters.maxCost !== undefined) this.maxCost = filters.maxCost;
-        if (filters.minWeight !== undefined) this.minWeight = filters.minWeight;
-        if (filters.maxWeight !== undefined) this.maxWeight = filters.maxWeight;
-        if (filters.minLevel !== undefined) this.minLevel = filters.minLevel;
-        if (filters.maxLevel !== undefined) this.maxLevel = filters.maxLevel;
-        if (filters.mainTypeFilter !== undefined) this.mainTypeFilter = filters.mainTypeFilter;
-        if (filters.subTypeFilter !== undefined) this.subTypeFilter = filters.subTypeFilter;
+        // 设置筛选系统模式
+        this.filterSystem.setMode(this.currentMode);
         
-        // 筛选数据
-        this.filteredData = this.currentData.filter(item => {
-            // 类型筛选
-            const mainType = item.maintype || '';
-            const subType = item.subtype || '';
-            
-            if (this.mainTypeFilter && mainType !== this.mainTypeFilter) {
-                return false;
-            }
-            if (this.subTypeFilter && subType !== this.subTypeFilter) {
-                return false;
-            }
-            
-            // 等级筛选（仅特质模式）
-            if (this.currentMode === 'specialties') {
-                if (this.minLevel !== null && item.level < this.minLevel) return false;
-                if (this.maxLevel !== null && item.level > this.maxLevel) return false;
-            }
-            
-            // 名称/描述筛选
-            if (this.nameFilter) {
-                const searchTerm = this.nameFilter.toLowerCase();
-                const nameMatch = item.name && item.name.toLowerCase().includes(searchTerm);
-                let descMatch = false;
-                
-                if (item.description) {
-                    if (Array.isArray(item.description)) {
-                        descMatch = item.description.some(desc => 
-                            desc && desc.toLowerCase().includes(searchTerm)
-                        );
-                    } else {
-                        descMatch = item.description.toLowerCase().includes(searchTerm);
-                    }
-                }
-                
-                // 检查flavortext
-                let flavorMatch = false;
-                if (item.flavortext && item.flavortext.toLowerCase().includes(searchTerm)) {
-                    flavorMatch = true;
-                }
-                
-                // 检查ID
-                const idMatch = item.id.toString().includes(searchTerm);
-                
-                if (!nameMatch && !descMatch && !flavorMatch && !idMatch) {
-                    return false;
-                }
-            }
-            
-            // 价格筛选
-            let itemCost = item.cost || 0;
-            if (Array.isArray(itemCost)) {
-                itemCost = itemCost[itemCost.length - 1] || 0;
-            }
-            
-            if (this.minCost !== null && itemCost < this.minCost) return false;
-            if (this.maxCost !== null && itemCost > this.maxCost) return false;
-            
-            // 重量筛选（仅物品模式）
-            if (this.currentMode === 'items') {
-                if (this.minWeight !== null && item.weight < this.minWeight) return false;
-                if (this.maxWeight !== null && item.weight > this.maxWeight) return false;
-            }
-            
-            // 标签筛选（AND规则）
-            const tags = item.tags || item.tag || [];
-            if (this.selectedTags.size > 0) {
-                const hasAllTags = Array.from(this.selectedTags).every(tag => 
-                    tags.includes(tag)
-                );
-                if (!hasAllTags) return false;
-            }
-            
-            // 稀有度筛选
-            if (this.selectedRarity.size > 0 && !this.selectedRarity.has(item.rarity)) {
-                return false;
-            }
-            
-            // 技能需求筛选（仅物品模式）
-            if (this.currentMode === 'items' && this.selectedSkill.size > 0 && !this.selectedSkill.has(item.skill)) {
-                return false;
-            }
-            
-            // 需求筛选（AND规则）
-            if (this.selectedNeed.size > 0) {
-                const hasAllNeed = Array.from(this.selectedNeed).every(need => 
-                    item.need && item.need.includes(need)
-                );
-                if (!hasAllNeed) return false;
-            }
-            
-            return true;
-        });
+        // 应用筛选
+        this.filteredData = this.filterSystem.applyFiltersToData(this.currentData, this.currentMode);
         
         // 应用排序
-        this.applySorting();
+        this.filteredData = this.filterSystem.sortData(this.filteredData, this.currentMode);
         
         // 重置到第一页
         this.currentPage = 1;
-    }
-    
-    // 清除所有筛选
-    clearFilters() {
-        this.selectedTags.clear();
-        this.selectedRarity.clear();
-        this.selectedSkill.clear();
-        this.selectedNeed.clear();
-        this.nameFilter = '';
-        this.minCost = null;
-        this.maxCost = null;
-        this.minWeight = null;
-        this.maxWeight = null;
-        this.minLevel = null;
-        this.maxLevel = null;
-        this.mainTypeFilter = '';
-        this.subTypeFilter = '';
-        this.sortBy = 'id-asc';
-        
-        // 重置筛选数据
-        this.filteredData = [...this.currentData];
-        this.applySorting();
-        this.currentPage = 1;
-    }
-    
-    // 获取筛选后的数据用于标签可用性检查
-    getFilteredDataForTags() {
-        if (!this.currentData || this.currentData.length === 0) {
-            return [];
-        }
-        
-        return this.currentData.filter(item => {
-            // 类型筛选
-            const mainType = item.maintype || '';
-            const subType = item.subtype || '';
-            
-            if (this.mainTypeFilter && mainType !== this.mainTypeFilter) {
-                return false;
-            }
-            if (this.subTypeFilter && subType !== this.subTypeFilter) {
-                return false;
-            }
-            
-            // 等级筛选（仅特质模式）
-            if (this.currentMode === 'specialties') {
-                if (this.minLevel !== null && item.level < this.minLevel) return false;
-                if (this.maxLevel !== null && item.level > this.maxLevel) return false;
-            }
-            
-            return true;
-        });
-    }
-    
-    // 应用排序
-    applySorting() {
-        // 确保所有数据都有必要的属性
-        this.filteredData = this.filteredData.map(item => {
-            if (!item.name) item.name = '未知';
-            if (this.currentMode === 'items') {
-                if (!item.cost) item.cost = 0;
-                if (!item.weight) item.weight = 0;
-            } else {
-                if (!item.cost) item.cost = 0;
-                if (!item.level) item.level = 1;
-            }
-            return item;
-        });
-        
-        switch(this.sortBy) {
-            case 'id-asc':
-                this.filteredData.sort((a, b) => (a.id || 0) - (b.id || 0));
-                break;
-            case 'id-desc':
-                this.filteredData.sort((a, b) => (b.id || 0) - (a.id || 0));
-                break;
-            case 'name-asc':
-                this.filteredData.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-                break;
-            case 'name-desc':
-                this.filteredData.sort((a, b) => (b.name || '').localeCompare(a.name || ''));
-                break;
-            case 'cost-asc':
-                this.filteredData.sort((a, b) => {
-                    const costA = this.getCostValue(a);
-                    const costB = this.getCostValue(b);
-                    return costA - costB;
-                });
-                break;
-            case 'cost-desc':
-                this.filteredData.sort((a, b) => {
-                    const costA = this.getCostValue(a);
-                    const costB = this.getCostValue(b);
-                    return costB - costA;
-                });
-                break;
-            case 'weight-asc':
-                if (this.currentMode === 'items') {
-                    this.filteredData.sort((a, b) => (a.weight || 0) - (b.weight || 0));
-                }
-                break;
-            case 'weight-desc':
-                if (this.currentMode === 'items') {
-                    this.filteredData.sort((a, b) => (b.weight || 0) - (a.weight || 0));
-                }
-                break;
-            case 'level-asc':
-                if (this.currentMode === 'specialties') {
-                    this.filteredData.sort((a, b) => (a.level || 0) - (b.level || 0));
-                }
-                break;
-            case 'level-desc':
-                if (this.currentMode === 'specialties') {
-                    this.filteredData.sort((a, b) => (b.level || 0) - (a.level || 0));
-                }
-                break;
-        }
-    }
-    
-    // 获取成本值
-    getCostValue(item) {
-        if (Array.isArray(item.cost)) {
-            return item.cost[item.cost.length - 1] || 0;
-        }
-        return item.cost || 0;
     }
     
     // 渲染筛选结果
@@ -462,7 +101,7 @@ class UnifiedManager {
         itemList.innerHTML = '';
         
         if (this.filteredData.length === 0) {
-            itemList.innerHTML = '<div class="empty-state">没有找到匹配的' + (this.currentMode === 'items' ? '物品' : '特质') + '</div>';
+            itemList.innerHTML = '<div class="empty-state">没有找到匹配的' + (this.currentMode === 'items' ? '物品' : '技艺') + '</div>';
             if (pagination) pagination.style.display = 'none';
             if (resultsCount) resultsCount.textContent = '0 个项目';
             return;
@@ -525,9 +164,15 @@ class UnifiedManager {
         if (this.currentMode === 'items') {
             costText = this.formatCurrency(item.cost || 0);
         } else {
-            // 特质成本显示为 "cost1/cost2/cost3"
+            // 技艺：显示成本范围或当前成本
+            const currentLevel = this.specialtyLevels.get(item.id) || 1;
             if (Array.isArray(item.cost)) {
-                costText = `成本: ${item.cost.join('/')}`;
+                const levelIndex = currentLevel - 1;
+                if (levelIndex >= 0 && levelIndex < item.cost.length) {
+                    costText = `成本: ${item.cost[levelIndex]}`;
+                } else {
+                    costText = `成本: ${item.cost.join('/')}`;
+                }
             } else {
                 costText = `成本: ${item.cost || 0}`;
             }
@@ -668,12 +313,14 @@ class UnifiedManager {
         
         // 显示弹窗
         modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
         
         // 添加关闭事件
         const closeBtn = modal.querySelector('.close-detail-btn');
         if (closeBtn) {
             closeBtn.onclick = () => {
                 modal.style.display = 'none';
+                document.body.style.overflow = 'auto';
             };
         }
         
@@ -681,6 +328,7 @@ class UnifiedManager {
         modal.onclick = (e) => {
             if (e.target === modal) {
                 modal.style.display = 'none';
+                document.body.style.overflow = 'auto';
             }
         };
         
@@ -712,53 +360,16 @@ class UnifiedManager {
             });
         }
         
-        // 更新等级选择事件（特质）- 修复描述更新问题
+        // 更新等级选择事件（技艺）
         const levelSelect = body.querySelector('.detail-level-select');
         if (levelSelect) {
             levelSelect.addEventListener('change', (e) => {
                 const newLevel = parseInt(e.target.value) || 1;
                 this.updateSpecialtyLevel(item.id, newLevel);
                 
-                // 更新成本显示
-                const costDisplay = body.querySelector('.detail-cost');
-                if (costDisplay) {
-                    const levelIndex = newLevel - 1;
-                    let currentCost = item.cost || 0;
-                    if (Array.isArray(item.cost) && levelIndex < item.cost.length) {
-                        currentCost = item.cost[levelIndex];
-                    }
-                    costDisplay.textContent = `成本: ${currentCost}`;
-                }
-                
-                // 更新描述显示 - 确保重新获取完整描述
-                const descDisplay = body.querySelector('.detail-description');
-                if (descDisplay) {
-                    let currentDesc = '';
-                    if (Array.isArray(item.description)) {
-                        const levelIndex = newLevel - 1;
-                        currentDesc = item.description[levelIndex] || item.description[0] || '';
-                    } else {
-                        currentDesc = item.description || '';
-                    }
-                    descDisplay.innerHTML = this.formatDescription(this.escapeHtml(currentDesc));
-                }
-                
-                // 如果已经在计算器中，更新计算器中的等级
-                if (this.calculatorModule && this.calculatorModule.isInCalculator(item.id, this.currentMode)) {
-                    this.calculatorModule.updateLevel(item.id, newLevel);
-                }
+                // 重新渲染详情内容以更新描述和成本
+                this.showItemDetail(item);
             });
-        }
-    }
-    
-    // 更新筛选结果列表中的单个项目
-    updateCompactItemInList(itemId) {
-        const item = this.currentData.find(i => i.id == itemId);
-        if (!item) return;
-        
-        const container = document.querySelector(`.compact-item[data-id="${itemId}"]`);
-        if (container) {
-            this.renderCompactItem(container, item);
         }
     }
     
@@ -785,9 +396,15 @@ class UnifiedManager {
                 <h4>描述</h4>
                 <div class="detail-content">
                     <div class="detail-description">${this.formatDescription(this.escapeHtml(item.description || '无描述'))}</div>
-                    ${item.flavortext ? `<div class="flavortext">${this.escapeHtml(item.flavortext)}</div>` : ''}
                 </div>
             </div>
+            
+            ${item.flavortext ? `
+            <div class="detail-section flavortext-section">
+                <h4>背景描述</h4>
+                <div class="flavortext">${this.escapeHtml(item.flavortext)}</div>
+            </div>
+            ` : ''}
             
             <div class="detail-attributes">
                 <div class="detail-attribute">
@@ -816,41 +433,31 @@ class UnifiedManager {
         `;
     }
     
-    // 渲染特质详情
+    // 渲染技艺详情
     renderSpecialtyDetail(item) {
         const inCalculator = this.calculatorModule ? this.calculatorModule.calculatorItems.find(i => i.id == item.id && i.mode === this.currentMode) : null;
         const currentLevel = this.specialtyLevels.get(item.id) || 1;
-        const levelIndex = currentLevel - 1;
+        const maxLevel = item.level || 1;
         
-        // 获取当前等级的成本
-        let currentCost = item.cost || 0;
-        if (Array.isArray(item.cost) && levelIndex < item.cost.length) {
-            currentCost = item.cost[levelIndex];
-        }
+        // 获取当前等级的描述和成本
+        let currentDescription = this.getSpecialtyDescription(item, currentLevel);
+        let currentCost = this.getSpecialtyCost(item, currentLevel);
         
-        // 获取当前等级的描述
-        let currentDescription = '';
-        if (Array.isArray(item.description)) {
-            currentDescription = item.description[levelIndex] || item.description[0] || '';
-        } else {
-            currentDescription = item.description || '';
+        // 构建等级选择器选项
+        const levelOptions = [];
+        for (let i = 1; i <= maxLevel; i++) {
+            levelOptions.push(`<option value="${i}" ${i === currentLevel ? 'selected' : ''}>${i}</option>`);
         }
         
         // 格式化需求
         const needText = item.need && item.need.length > 0 ? item.need.join(', ') : '无';
-        
-        // 构建等级选择器选项
-        const levelOptions = [];
-        for (let i = 1; i <= item.level; i++) {
-            levelOptions.push(`<option value="${i}" ${i === currentLevel ? 'selected' : ''}>${i}</option>`);
-        }
         
         return `
             <div class="detail-text-container">
                 <div class="detail-text-item"><strong>类型:</strong> ${item.maintype || ''}${item.subtype ? ' - ' + item.subtype : ''}</div>
                 <div class="detail-text-item"><strong>稀有度:</strong> ${item.rarity || '无'}</div>
                 <div class="detail-text-item"><strong>需求:</strong> ${needText}</div>
-                <div class="detail-text-item"><strong>最大等级:</strong> ${item.level || 1}</div>
+                <div class="detail-text-item"><strong>最大等级:</strong> ${maxLevel}</div>
             </div>
             
             <div class="detail-tags">
@@ -865,24 +472,34 @@ class UnifiedManager {
                         <select class="detail-level-select" data-id="${item.id}">
                             ${levelOptions.join('')}
                         </select>
-                        <span>/${item.level}</span>
+                        <span>/${maxLevel}</span>
                     </div>
                     <div class="detail-attribute" style="margin-top: 15px;">
-                        <strong>当前等级成本:</strong> ${currentCost}
+                        <strong id="detail-cost">当前等级成本: ${currentCost}</strong>
                     </div>
+                    ${Array.isArray(item.cost) ? `
                     <div class="detail-attribute">
-                        <strong>全部等级成本:</strong> ${Array.isArray(item.cost) ? item.cost.join('/') : item.cost}
+                        <strong>全部等级成本:</strong> ${item.cost.join('/')}
                     </div>
+                    ` : ''}
                 </div>
             </div>
             
             <div class="detail-section">
-                <h4>描述</h4>
+                <h4>效果</h4>
                 <div class="detail-content">
-                    <div class="detail-description">${this.formatDescription(this.escapeHtml(currentDescription))}</div>
-                    ${item.flavortext ? `<div class="flavortext">${this.escapeHtml(item.flavortext)}</div>` : ''}
+                    <div class="detail-description specialty-description-formatted">
+                        ${this.formatSpecialtyDescription(currentDescription, currentLevel, maxLevel)}
+                    </div>
                 </div>
             </div>
+            
+            ${item.flavortext ? `
+            <div class="detail-section flavortext-section">
+                <h4>背景描述</h4>
+                <div class="flavortext">${this.escapeHtml(item.flavortext)}</div>
+            </div>
+            ` : ''}
             
             <div class="detail-actions">
                 ${inCalculator ? `
@@ -894,65 +511,83 @@ class UnifiedManager {
         `;
     }
     
-    // 更新详情弹窗中的操作按钮
-    updateDetailActionButtons(itemId, body) {
-        const inCalculator = this.calculatorModule ? this.calculatorModule.calculatorItems.find(i => i.id == itemId && i.mode === this.currentMode) : null;
-        const actionsContainer = body.querySelector('.detail-actions');
+    // 获取技艺描述（根据等级）
+    getSpecialtyDescription(specialty, level) {
+        if (!specialty.description) return '';
         
-        if (!actionsContainer) return;
-        
-        if (inCalculator) {
-            if (this.currentMode === 'items') {
-                actionsContainer.innerHTML = `
-                    <div class="detail-quantity">
-                        <label>数量:</label>
-                        <input type="number" class="detail-quantity-input" value="${inCalculator.quantity}" min="0" data-id="${itemId}">
-                    </div>
-                `;
-                
-                // 重新绑定事件
-                const quantityInput = actionsContainer.querySelector('.detail-quantity-input');
-                quantityInput.addEventListener('change', (e) => {
-                    const newQuantity = parseInt(e.target.value) || 0;
-                    if (newQuantity === 0) {
-                        this.calculatorModule.removeFromCalculator(itemId, this.currentMode);
-                    } else {
-                        this.calculatorModule.updateQuantity(itemId, this.currentMode, newQuantity);
-                    }
-                    this.updateDetailActionButtons(itemId, body);
-                    
-                    // 更新筛选结果中的显示
-                    this.updateCompactItemInList(itemId);
-                });
+        // 如果description是数组，根据等级获取对应描述
+        if (Array.isArray(specialty.description)) {
+            const levelIndex = level - 1;
+            if (levelIndex >= 0 && levelIndex < specialty.description.length) {
+                return specialty.description[levelIndex];
+            } else if (specialty.description.length > 0) {
+                return specialty.description[0];
             } else {
-                actionsContainer.innerHTML = `<button class="btn-danger detail-remove-btn" data-id="${itemId}">移出计算器</button>`;
-                
-                const removeBtn = actionsContainer.querySelector('.detail-remove-btn');
-                removeBtn.addEventListener('click', () => {
-                    this.calculatorModule.removeFromCalculator(itemId, this.currentMode);
-                    this.updateDetailActionButtons(itemId, body);
-                    
-                    // 更新筛选结果中的显示
-                    this.updateCompactItemInList(itemId);
-                });
+                return '';
             }
-        } else {
-            actionsContainer.innerHTML = `<button class="btn-success detail-add-btn" data-id="${itemId}">添加到计算器</button>`;
-            
-            const addBtn = actionsContainer.querySelector('.detail-add-btn');
-            addBtn.addEventListener('click', () => {
-                this.addToCalculator(itemId, this.currentMode);
-                this.updateDetailActionButtons(itemId, body);
-                
-                // 更新筛选结果中的显示
-                this.updateCompactItemInList(itemId);
-            });
         }
+        
+        // 如果不是数组，直接返回
+        return specialty.description;
     }
     
-    // 更新特质等级
+    // 获取技艺成本（根据等级）
+    getSpecialtyCost(specialty, level) {
+        if (!specialty.cost) return 0;
+        
+        if (Array.isArray(specialty.cost)) {
+            const levelIndex = level - 1;
+            if (levelIndex >= 0 && levelIndex < specialty.cost.length) {
+                return specialty.cost[levelIndex];
+            } else if (specialty.cost.length > 0) {
+                return specialty.cost[0];
+            } else {
+                return 0;
+            }
+        }
+        
+        return specialty.cost;
+    }
+    
+    // 格式化技艺描述（加粗花括号内容）
+    formatSpecialtyDescription(description, currentLevel, maxLevel) {
+        if (!description) return '';
+        
+        let formatted = this.escapeHtml(description);
+        
+        // 处理花括号内的内容
+        formatted = formatted.replace(/\{([^}]+)\}/g, (match, content) => {
+            // 如果内容包含斜杠，表示是多等级格式
+            if (content.includes('/')) {
+                const parts = content.split('/');
+                const levelIndex = currentLevel - 1;
+                if (levelIndex >= 0 && levelIndex < parts.length) {
+                    // 当前等级对应的部分加粗
+                    return `<strong>${parts[levelIndex]}</strong>`;
+                } else {
+                    // 显示所有等级
+                    return parts.join('/');
+                }
+            } else {
+                // 单个内容直接加粗
+                return `<strong>${content}</strong>`;
+            }
+        });
+        
+        // 用<br>替换分号
+        formatted = formatted.replace(/;/g, '<br>');
+        
+        return formatted;
+    }
+    
+    // 更新技艺等级
     updateSpecialtyLevel(itemId, newLevel) {
         this.specialtyLevels.set(itemId, newLevel);
+        
+        // 如果已经在计算器中，更新计算器中的等级
+        if (this.calculatorModule && this.calculatorModule.isInCalculator(itemId, 'specialties')) {
+            this.calculatorModule.updateLevel(itemId, newLevel);
+        }
     }
     
     // 添加到计算器
@@ -963,7 +598,7 @@ class UnifiedManager {
             return;
         }
         
-        // 对于特质，获取当前选择的等级
+        // 对于技艺，获取当前选择的等级
         let selectedLevel = 1;
         if (this.currentMode === 'specialties') {
             selectedLevel = this.specialtyLevels.get(itemId) || 1;
@@ -972,42 +607,6 @@ class UnifiedManager {
         if (this.calculatorModule) {
             this.calculatorModule.addItem(item, mode || this.currentMode, selectedLevel);
             this.showStatus(`已添加 ${item.name} 到计算器`, 'success');
-        }
-    }
-    
-    // 更新每页显示数量
-    updateItemsPerPage(newValue) {
-        const value = parseInt(newValue);
-        if (value >= 5 && value <= 100) {
-            this.itemsPerPage = value;
-            this.currentPage = 1;
-            this.renderFilterResults(
-                this.currentMode === 'items' ? 'item-list' : 'specialty-list',
-                this.currentMode === 'items' ? 'results-count' : 'specialty-results-count'
-            );
-        }
-    }
-    
-    // 上一页
-    prevPage() {
-        if (this.currentPage > 1) {
-            this.currentPage--;
-            this.renderFilterResults(
-                this.currentMode === 'items' ? 'item-list' : 'specialty-list',
-                this.currentMode === 'items' ? 'results-count' : 'specialty-results-count'
-            );
-        }
-    }
-    
-    // 下一页
-    nextPage() {
-        const totalPages = Math.ceil(this.filteredData.length / this.itemsPerPage);
-        if (this.currentPage < totalPages) {
-            this.currentPage++;
-            this.renderFilterResults(
-                this.currentMode === 'items' ? 'item-list' : 'specialty-list',
-                this.currentMode === 'items' ? 'results-count' : 'specialty-results-count'
-            );
         }
     }
     

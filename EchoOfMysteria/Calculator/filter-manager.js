@@ -1,5 +1,5 @@
 // ================================
-// 统一筛选管理器 - 支持物品和特质独立筛选
+// 统一筛选管理器 - 支持物品和技艺独立筛选
 // ================================
 class UnifiedFilterManager {
     constructor(manager) {
@@ -54,6 +54,8 @@ class UnifiedFilterManager {
         if (applyFilterBtn) {
             applyFilterBtn.addEventListener('click', () => {
                 this.applyFilter();
+                // 应用筛选后关闭弹窗
+                this.hideFilterModal();
             });
         }
         
@@ -76,7 +78,7 @@ class UnifiedFilterManager {
         // 更新弹窗标题
         const modalTitle = document.getElementById('modal-title');
         if (modalTitle) {
-            modalTitle.textContent = mode === 'items' ? '物品筛选条件' : '特质筛选条件';
+            modalTitle.textContent = mode === 'items' ? '物品筛选条件' : '技艺筛选条件';
         }
         
         // 更新价格标签
@@ -93,6 +95,9 @@ class UnifiedFilterManager {
         
         // 显示弹窗
         this.filterModal.style.display = 'flex';
+        
+        // 防止滚动
+        document.body.style.overflow = 'hidden';
     }
     
     // 隐藏筛选弹窗
@@ -100,12 +105,13 @@ class UnifiedFilterManager {
         if (this.filterModal) {
             this.filterModal.style.display = 'none';
             this.currentModalMode = null;
+            document.body.style.overflow = 'auto';
         }
     }
     
     // 更新筛选器可见性
     updateFilterVisibility(mode) {
-        // 等级筛选（仅特质模式显示）
+        // 等级筛选（仅技艺模式显示）
         const levelFilter = document.getElementById('level-filter');
         if (levelFilter) {
             levelFilter.style.display = mode === 'specialties' ? 'block' : 'none';
@@ -121,7 +127,13 @@ class UnifiedFilterManager {
     // 初始化筛选器内容
     initializeFilterContent(mode) {
         // 初始化主类型筛选器
-        this.manager.initializeMainTypeFilter();
+        if (mode === 'items') {
+            this.manager.initializeMainTypeFilter();
+        } else {
+            // 技艺管理器也需要初始化类型筛选器
+            const specialtyManager = this.manager;
+            specialtyManager.initializeMainTypeFilter();
+        }
         
         // 初始化标签筛选器
         this.renderTagFilter(mode);
@@ -141,7 +153,17 @@ class UnifiedFilterManager {
         container.innerHTML = '';
         
         // 获取当前筛选条件下的数据
-        const currentData = this.manager.getFilteredDataForTags();
+        let currentData = [];
+        if (mode === 'items') {
+            currentData = this.manager.getFilteredDataForTags ? this.manager.getFilteredDataForTags() : this.manager.currentData || [];
+        } else {
+            currentData = this.manager.currentData || [];
+        }
+        
+        if (currentData.length === 0) {
+            container.innerHTML = '<div class="empty-state">无可用标签</div>';
+            return;
+        }
         
         // 创建标签分类
         const categories = [];
@@ -215,17 +237,17 @@ class UnifiedFilterManager {
                 
                 const tagElement = document.createElement('div');
                 tagElement.className = 'tag-option';
+                if (category.selected.has(value)) {
+                    tagElement.classList.add('selected');
+                }
                 tagElement.textContent = value;
                 tagElement.dataset.category = category.key;
                 tagElement.dataset.value = value;
                 
-                if (category.selected.has(value)) {
-                    tagElement.classList.add('selected');
-                }
-                
                 tagElement.addEventListener('click', () => {
                     this.toggleTag(category.key, value);
-                    this.renderTagFilter(mode);
+                    // 重新渲染当前分类
+                    this.renderTagCategory(categoryElement, category, mode);
                 });
                 
                 contentElement.appendChild(tagElement);
@@ -234,6 +256,39 @@ class UnifiedFilterManager {
             categoryElement.appendChild(titleElement);
             categoryElement.appendChild(contentElement);
             container.appendChild(categoryElement);
+        });
+        
+        // 如果没有显示任何分类
+        if (container.children.length === 0) {
+            container.innerHTML = '<div class="empty-state">无可用标签</div>';
+        }
+    }
+    
+    // 渲染单个标签分类
+    renderTagCategory(container, category, mode) {
+        const contentElement = container.querySelector('.tag-filter');
+        if (!contentElement) return;
+        
+        contentElement.innerHTML = '';
+        
+        Array.from(category.values).sort().forEach(value => {
+            if (!value || value === '') return;
+            
+            const tagElement = document.createElement('div');
+            tagElement.className = 'tag-option';
+            if (category.selected.has(value)) {
+                tagElement.classList.add('selected');
+            }
+            tagElement.textContent = value;
+            tagElement.dataset.category = category.key;
+            tagElement.dataset.value = value;
+            
+            tagElement.addEventListener('click', () => {
+                this.toggleTag(category.key, value);
+                this.renderTagCategory(container, category, mode);
+            });
+            
+            contentElement.appendChild(tagElement);
         });
     }
     
@@ -245,9 +300,11 @@ class UnifiedFilterManager {
             switch(category) {
                 case 'tags':
                     const tags = item.tags || item.tag || [];
-                    tags.forEach(tag => {
-                        if (tag && tag !== '') availableTags.add(tag);
-                    });
+                    if (Array.isArray(tags)) {
+                        tags.forEach(tag => {
+                            if (tag && tag !== '') availableTags.add(tag);
+                        });
+                    }
                     break;
                 case 'rarity':
                     if (item.rarity && item.rarity !== '') {
@@ -339,7 +396,13 @@ class UnifiedFilterManager {
             
             // 更新子类型筛选器
             if (this.manager.mainTypeFilter) {
-                this.manager.updateSubTypeFilter(this.manager.mainTypeFilter);
+                if (mode === 'items') {
+                    this.manager.updateSubTypeFilter(this.manager.mainTypeFilter);
+                } else {
+                    // 技艺管理器也需要更新
+                    const specialtyManager = this.manager;
+                    specialtyManager.updateSubTypeFilter(this.manager.mainTypeFilter);
+                }
             }
         }
         
@@ -363,22 +426,22 @@ class UnifiedFilterManager {
         const minCost = document.getElementById('min-cost');
         const maxCost = document.getElementById('max-cost');
         
-        if (minCost) minCost.value = this.manager.minCost !== null ? this.manager.minCost : '';
-        if (maxCost) maxCost.value = this.manager.maxCost !== null ? this.manager.maxCost : '';
+        if (minCost) minCost.value = this.manager.minCost !== null && this.manager.minCost !== undefined ? this.manager.minCost : '';
+        if (maxCost) maxCost.value = this.manager.maxCost !== null && this.manager.maxCost !== undefined ? this.manager.maxCost : '';
         
         // 设置重量筛选
         const minWeight = document.getElementById('min-weight');
         const maxWeight = document.getElementById('max-weight');
         
-        if (minWeight) minWeight.value = this.manager.minWeight !== null ? this.manager.minWeight : '';
-        if (maxWeight) maxWeight.value = this.manager.maxWeight !== null ? this.manager.maxWeight : '';
+        if (minWeight) minWeight.value = this.manager.minWeight !== null && this.manager.minWeight !== undefined ? this.manager.minWeight : '';
+        if (maxWeight) maxWeight.value = this.manager.maxWeight !== null && this.manager.maxWeight !== undefined ? this.manager.maxWeight : '';
         
         // 设置等级筛选
         const minLevel = document.getElementById('min-level');
         const maxLevel = document.getElementById('max-level');
         
-        if (minLevel) minLevel.value = this.manager.minLevel !== null ? this.manager.minLevel : '';
-        if (maxLevel) maxLevel.value = this.manager.maxLevel !== null ? this.manager.maxLevel : '';
+        if (minLevel) minLevel.value = this.manager.minLevel !== null && this.manager.minLevel !== undefined ? this.manager.minLevel : '';
+        if (maxLevel) maxLevel.value = this.manager.maxLevel !== null && this.manager.maxLevel !== undefined ? this.manager.maxLevel : '';
         
         // 设置排序
         const sortBy = document.getElementById('sort-by');
@@ -418,22 +481,22 @@ class UnifiedFilterManager {
         const minCostInput = document.getElementById('min-cost');
         const maxCostInput = document.getElementById('max-cost');
         
-        filters.minCost = minCostInput && minCostInput.value ? parseFloat(minCostInput.value) : null;
-        filters.maxCost = maxCostInput && maxCostInput.value ? parseFloat(maxCostInput.value) : null;
+        filters.minCost = minCostInput && minCostInput.value !== '' ? parseFloat(minCostInput.value) : null;
+        filters.maxCost = maxCostInput && maxCostInput.value !== '' ? parseFloat(maxCostInput.value) : null;
         
         // 重量筛选
         const minWeightInput = document.getElementById('min-weight');
         const maxWeightInput = document.getElementById('max-weight');
         
-        filters.minWeight = minWeightInput && minWeightInput.value ? parseFloat(minWeightInput.value) : null;
-        filters.maxWeight = maxWeightInput && maxWeightInput.value ? parseFloat(maxWeightInput.value) : null;
+        filters.minWeight = minWeightInput && minWeightInput.value !== '' ? parseFloat(minWeightInput.value) : null;
+        filters.maxWeight = maxWeightInput && maxWeightInput.value !== '' ? parseFloat(maxWeightInput.value) : null;
         
         // 等级筛选
         const minLevelInput = document.getElementById('min-level');
         const maxLevelInput = document.getElementById('max-level');
         
-        filters.minLevel = minLevelInput && minLevelInput.value ? parseInt(minLevelInput.value) : null;
-        filters.maxLevel = maxLevelInput && maxLevelInput.value ? parseInt(maxLevelInput.value) : null;
+        filters.minLevel = minLevelInput && minLevelInput.value !== '' ? parseInt(minLevelInput.value) : null;
+        filters.maxLevel = maxLevelInput && maxLevelInput.value !== '' ? parseInt(maxLevelInput.value) : null;
         
         // 排序
         const sortBy = document.getElementById('sort-by');
@@ -452,9 +515,6 @@ class UnifiedFilterManager {
             this.currentModalMode === 'items' ? 'item-list' : 'specialty-list',
             this.currentModalMode === 'items' ? 'results-count' : 'specialty-results-count'
         );
-        
-        // 关闭弹窗
-        this.hideFilterModal();
     }
     
     // 清除筛选
@@ -533,30 +593,32 @@ class UnifiedFilterManager {
         
         bubblesContainer.innerHTML = '';
         
+        // 只显示当前模式的筛选条件
+        const manager = this.manager;
         let hasActiveFilters = false;
         
         // 类型筛选
-        if (this.manager.mainTypeFilter) {
-            const bubble = this.createFilterBubble(`主类型: ${this.manager.mainTypeFilter}`, 'main-type');
+        if (manager.mainTypeFilter) {
+            const bubble = this.createFilterBubble(`主类型: ${manager.mainTypeFilter}`, 'main-type');
             bubblesContainer.appendChild(bubble);
             hasActiveFilters = true;
         }
         
-        if (this.manager.subTypeFilter) {
-            const bubble = this.createFilterBubble(`子类型: ${this.manager.subTypeFilter}`, 'sub-type');
+        if (manager.subTypeFilter) {
+            const bubble = this.createFilterBubble(`子类型: ${manager.subTypeFilter}`, 'sub-type');
             bubblesContainer.appendChild(bubble);
             hasActiveFilters = true;
         }
         
-        // 等级筛选（仅特质模式）
-        if ((this.manager.minLevel !== null || this.manager.maxLevel !== null) && mode === 'specialties') {
+        // 等级筛选（仅技艺模式）
+        if ((manager.minLevel !== null || manager.maxLevel !== null) && mode === 'specialties') {
             let levelText = '等级: ';
-            if (this.manager.minLevel !== null && this.manager.maxLevel !== null) {
-                levelText += `${this.manager.minLevel} - ${this.manager.maxLevel}`;
-            } else if (this.manager.minLevel !== null) {
-                levelText += `≥ ${this.manager.minLevel}`;
+            if (manager.minLevel !== null && manager.maxLevel !== null) {
+                levelText += `${manager.minLevel} - ${manager.maxLevel}`;
+            } else if (manager.minLevel !== null) {
+                levelText += `≥ ${manager.minLevel}`;
             } else {
-                levelText += `≤ ${this.manager.maxLevel}`;
+                levelText += `≤ ${manager.maxLevel}`;
             }
             
             const bubble = this.createFilterBubble(levelText, 'level');
@@ -565,21 +627,21 @@ class UnifiedFilterManager {
         }
         
         // 名称筛选
-        if (this.manager.nameFilter) {
-            const bubble = this.createFilterBubble(`搜索: "${this.manager.nameFilter}"`, 'name');
+        if (manager.nameFilter) {
+            const bubble = this.createFilterBubble(`搜索: "${manager.nameFilter}"`, 'name');
             bubblesContainer.appendChild(bubble);
             hasActiveFilters = true;
         }
         
         // 价格筛选
-        if (this.manager.minCost !== null || this.manager.maxCost !== null) {
+        if (manager.minCost !== null || manager.maxCost !== null) {
             let priceText = mode === 'items' ? '价格: ' : '成本: ';
-            if (this.manager.minCost !== null && this.manager.maxCost !== null) {
-                priceText += `${this.manager.minCost} - ${this.manager.maxCost}`;
-            } else if (this.manager.minCost !== null) {
-                priceText += `≥ ${this.manager.minCost}`;
+            if (manager.minCost !== null && manager.maxCost !== null) {
+                priceText += `${manager.minCost} - ${manager.maxCost}`;
+            } else if (manager.minCost !== null) {
+                priceText += `≥ ${manager.minCost}`;
             } else {
-                priceText += `≤ ${this.manager.maxCost}`;
+                priceText += `≤ ${manager.maxCost}`;
             }
             
             const bubble = this.createFilterBubble(priceText, 'price');
@@ -588,14 +650,14 @@ class UnifiedFilterManager {
         }
         
         // 重量筛选（仅物品模式）
-        if ((this.manager.minWeight !== null || this.manager.maxWeight !== null) && mode === 'items') {
+        if ((manager.minWeight !== null || manager.maxWeight !== null) && mode === 'items') {
             let weightText = '重量: ';
-            if (this.manager.minWeight !== null && this.manager.maxWeight !== null) {
-                weightText += `${this.manager.minWeight} - ${this.manager.maxWeight}`;
-            } else if (this.manager.minWeight !== null) {
-                weightText += `≥ ${this.manager.minWeight}`;
+            if (manager.minWeight !== null && manager.maxWeight !== null) {
+                weightText += `${manager.minWeight} - ${manager.maxWeight}`;
+            } else if (manager.minWeight !== null) {
+                weightText += `≥ ${manager.minWeight}`;
             } else {
-                weightText += `≤ ${this.manager.maxWeight}`;
+                weightText += `≤ ${manager.maxWeight}`;
             }
             
             const bubble = this.createFilterBubble(weightText, 'weight');
@@ -605,10 +667,10 @@ class UnifiedFilterManager {
         
         // 标签筛选
         const allSelectedTags = [
-            ...Array.from(this.manager.selectedTags).map(t => `标签: ${t}`),
-            ...Array.from(this.manager.selectedRarity).map(t => `稀有度: ${t}`),
-            ...Array.from(this.manager.selectedSkill).map(t => `技能: ${t}`),
-            ...Array.from(this.manager.selectedNeed).map(t => `需求: ${t}`)
+            ...Array.from(manager.selectedTags).map(t => `标签: ${t}`),
+            ...Array.from(manager.selectedRarity).map(t => `稀有度: ${t}`),
+            ...Array.from(manager.selectedSkill).map(t => `技能: ${t}`),
+            ...Array.from(manager.selectedNeed).map(t => `需求: ${t}`)
         ];
         
         if (allSelectedTags.length > 0) {

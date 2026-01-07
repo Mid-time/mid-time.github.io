@@ -16,9 +16,8 @@
     --text-light: #666666;
     --shadow: 0 3px 15px rgba(0, 0, 0, 0.08);
     --radius: 10px;
-    --input-height: 46px; /* 增加输入框高度 */
+    --input-height: 46px;
     --nav-height: 60px;
-    --mobile-input-height: 50px; /* 移动端更高的输入框 */
 }
 
 * {
@@ -148,6 +147,19 @@ body {
     color: white;
 }
 
+.filter-bubble.clear-all {
+    cursor: pointer;
+    background: var(--error-color);
+    color: white;
+    border-color: var(--error-color);
+    margin-left: auto;
+}
+
+.filter-bubble.clear-all:hover {
+    background: #d32f2f;
+    border-color: #d32f2f;
+}
+
 /* 结果容器 */
 .results-container {
     background: var(--card-color);
@@ -157,6 +169,7 @@ body {
     border: 1px solid var(--border-gray);
 }
 
+/* 调整结果头部布局 */
 .results-header {
     display: flex;
     justify-content: space-between;
@@ -164,28 +177,39 @@ body {
     padding: 15px 20px;
     border-bottom: 1px solid var(--border-gray);
     background: var(--light-gray);
+    position: relative;
+    min-height: 60px;
 }
 
 .results-header h3 {
     color: var(--primary-gray);
     font-weight: 600;
     font-size: 1.2rem;
+    margin: 0;
+}
+
+.results-header-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
 }
 
 .results-count {
     color: var(--text-light);
     font-size: 0.9rem;
     font-weight: 500;
+    margin-right: 15px;
 }
 
 /* 紧凑列表 */
 .compact-item-list {
-    max-height: calc(100vh - 280px);
+    max-height: calc(100vh - 300px);
     overflow-y: auto;
+    padding: 10px 0;
 }
 
 .compact-item {
-    padding: 12px 15px;
+    padding: 12px 20px;
     border-bottom: 1px solid var(--border-gray);
     cursor: pointer;
     transition: all 0.3s ease;
@@ -322,6 +346,61 @@ body {
     font-weight: 500;
 }
 
+/* 分页控件 */
+.pagination {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: nowrap;
+    margin-left: auto;
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.pagination-controls button {
+    height: 36px;
+    min-width: 36px;
+    padding: 0 10px;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+}
+
+.pagination-info {
+    color: var(--text-light);
+    font-size: 0.9rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.items-per-page {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.items-per-page label {
+    color: var(--text-light);
+    font-size: 0.9rem;
+}
+
+.items-per-page input {
+    width: 60px;
+    height: 36px;
+    padding: 0 10px;
+    text-align: center;
+    border: 1px solid var(--border-gray);
+    border-radius: var(--radius);
+    font-size: 0.9rem;
+}
+
 /* 计算器视图 */
 .calculator-summary-bar {
     background: var(--card-color);
@@ -333,17 +412,15 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    flex-wrap: nowrap; /* 防止换行 */
+    flex-wrap: wrap;
     gap: 15px;
 }
 
 .summary-grid {
     display: flex;
-    flex-wrap: nowrap; /* 防止换行 */
+    flex-wrap: wrap;
     gap: 15px;
     flex: 1;
-    overflow-x: auto; /* 允许水平滚动 */
-    padding-bottom: 5px;
 }
 
 .summary-item {
@@ -351,7 +428,6 @@ body {
     flex-direction: column;
     gap: 5px;
     min-width: 120px;
-    flex-shrink: 0; /* 防止收缩 */
 }
 
 .summary-label {
@@ -409,7 +485,7 @@ body {
     display: flex;
     gap: 10px;
     flex-shrink: 0;
-    flex-wrap: nowrap; /* 防止按钮换行 */
+    flex-wrap: wrap;
 }
 
 .summary-actions button {
@@ -424,7 +500,7 @@ body {
     white-space: nowrap;
 }
 
-/* 折叠栏 */
+/* 调整折叠栏样式 */
 .accordion-container {
     background: var(--card-color);
     border-radius: var(--radius);
@@ -449,6 +525,7 @@ body {
     gap: 12px;
     cursor: pointer;
     transition: all 0.3s ease;
+    position: relative;
 }
 
 .accordion-header:hover {
@@ -457,7 +534,6 @@ body {
 
 .accordion-header.active {
     background: var(--secondary-gray);
-    color: white;
 }
 
 .accordion-header.active h3 {
@@ -467,10 +543,13 @@ body {
 .accordion-icon {
     transition: transform 0.3s ease;
     font-size: 0.9rem;
+    width: 20px;
+    text-align: center;
 }
 
 .accordion-header.active .accordion-icon {
     transform: rotate(180deg);
+    color: white;
 }
 
 .accordion-header h3 {
@@ -478,8 +557,10 @@ body {
     font-weight: 600;
     font-size: 1.1rem;
     flex: 1;
+    margin: 0;
 }
 
+/* 调整数量统计样式 */
 .item-count {
     background: var(--accent-gray);
     color: white;
@@ -503,6 +584,17 @@ body {
     justify-content: center;
     font-size: 0.75rem;
     font-weight: 600;
+}
+
+.accordion-content {
+    display: none;
+    padding: 0;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.accordion-item.active .accordion-content {
+    display: block;
 }
 
 /* 底部导航栏 */
@@ -589,11 +681,18 @@ button:hover {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
 .btn-danger {
     background: var(--error-color);
 }
 
-.btn-danger:hover {
+.btn-danger:hover:not(:disabled) {
     background: #d32f2f;
 }
 
@@ -601,7 +700,7 @@ button:hover {
     background: var(--success-color);
 }
 
-.btn-success:hover {
+.btn-success:hover:not(:disabled) {
     background: #388e3c;
 }
 
@@ -609,7 +708,7 @@ button:hover {
     background: var(--warning-color);
 }
 
-.btn-warning:hover {
+.btn-warning:hover:not(:disabled) {
     background: #f57c00;
 }
 
@@ -617,7 +716,7 @@ button:hover {
     background: var(--accent-gray);
 }
 
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
     background: var(--primary-gray);
 }
 
@@ -654,6 +753,9 @@ button:hover {
     padding: 20px;
     border-bottom: 1px solid var(--border-gray);
     background: var(--light-gray);
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
 .filter-modal-header h3, .detail-modal-header h3, .character-modal-header h3 {
@@ -715,6 +817,40 @@ button:hover {
     background: white;
     color: var(--text-color);
     font-size: 0.95rem;
+    cursor: pointer;
+}
+
+/* 标签筛选器样式 */
+.tag-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.tag-option {
+    padding: 8px 15px;
+    background: var(--light-gray);
+    color: var(--text-color);
+    border: 1px solid var(--border-gray);
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tag-option:hover {
+    background: var(--hover-gray);
+    border-color: var(--accent-gray);
+}
+
+.tag-option.selected {
+    background: var(--accent-gray);
+    color: white;
+    border-color: var(--accent-gray);
 }
 
 /* 修复排序下拉栏样式 */
@@ -747,13 +883,23 @@ button:hover {
     font-size: 0.95rem;
 }
 
-.filter-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 15px;
-    margin-top: 25px;
-    padding-top: 20px;
+.range-inputs span {
+    color: var(--text-light);
+    font-size: 0.9rem;
+}
+
+/* 调整筛选弹窗按钮位置 */
+.filter-modal-actions {
+    position: sticky;
+    bottom: 0;
+    background: var(--card-color);
+    padding: 15px 20px;
     border-top: 1px solid var(--border-gray);
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 20px;
+    z-index: 10;
 }
 
 /* 角色属性修改弹窗 */
@@ -781,6 +927,12 @@ button:hover {
     border: 1px solid var(--border-gray);
     border-radius: var(--radius);
     font-size: 0.95rem;
+}
+
+.form-hint {
+    color: var(--text-light);
+    font-size: 0.85rem;
+    margin-top: 5px;
 }
 
 .character-actions {
@@ -842,48 +994,12 @@ button:hover {
     font-size: 1rem;
 }
 
-/* 分页控件 */
-.pagination {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px 20px;
-    border-top: 1px solid var(--border-gray);
-    background: var(--light-gray);
-}
-
-.pagination-controls {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.pagination-info {
-    color: var(--text-light);
-    font-size: 0.9rem;
-    font-weight: 500;
-}
-
-.items-per-page {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.items-per-page input {
-    width: 70px;
-    height: 36px;
-    padding: 0 10px;
-    text-align: center;
-    border: 1px solid var(--border-gray);
-    border-radius: var(--radius);
-}
-
 /* 详情弹窗样式 */
 .detail-modal-body {
     padding: 20px;
 }
 
+/* 调整详情弹窗布局 */
 .detail-section {
     margin-bottom: 20px;
 }
@@ -947,6 +1063,35 @@ button:hover {
     font-size: 1rem;
 }
 
+/* 调整特质描述格式 */
+.specialty-description-formatted {
+    line-height: 1.6;
+    margin: 10px 0;
+}
+
+.specialty-description-formatted strong {
+    color: var(--primary-gray);
+    background: var(--light-gray);
+    padding: 2px 4px;
+    border-radius: 4px;
+}
+
+.flavortext-section {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid var(--border-gray);
+}
+
+.flavortext {
+    font-style: italic;
+    color: var(--text-light);
+    line-height: 1.6;
+    padding: 10px;
+    background: var(--light-gray);
+    border-radius: var(--radius);
+    border-left: 3px solid var(--accent-gray);
+}
+
 .detail-attributes {
     display: flex;
     flex-wrap: wrap;
@@ -991,6 +1136,35 @@ button:hover {
     text-align: center;
     border: 1px solid var(--border-gray);
     border-radius: var(--radius);
+}
+
+/* 等级选择器 */
+.detail-level-selector {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.detail-level-selector label {
+    color: var(--text-color);
+    font-weight: 500;
+}
+
+.detail-level-selector select {
+    height: 36px;
+    padding: 0 10px;
+    border: 1px solid var(--border-gray);
+    border-radius: var(--radius);
+    background: white;
+    color: var(--text-color);
+    font-size: 0.95rem;
+    cursor: pointer;
+}
+
+.detail-level-selector span {
+    color: var(--text-light);
+    font-size: 0.9rem;
 }
 
 /* 计算器物品列表 */
@@ -1131,12 +1305,8 @@ button:hover {
     background: var(--accent-gray);
 }
 
-/* 响应式设计 */
+/* 调整移动端布局 */
 @media (max-width: 768px) {
-    :root {
-        --input-height: 50px; /* 移动端使用更高的输入框 */
-    }
-    
     .main-content {
         padding: 10px;
     }
@@ -1146,63 +1316,51 @@ button:hover {
     }
     
     .search-container {
-        flex-direction: row !important; /* 保持行布局 */
-        flex-wrap: nowrap; /* 防止换行 */
+        flex-direction: row;
         gap: 8px;
     }
     
     #global-search, #specialty-search {
-        height: var(--mobile-input-height);
+        height: 48px;
         padding: 0 12px;
         font-size: 1rem;
-        min-height: var(--mobile-input-height);
     }
     
     .filter-btn {
-        width: auto;
-        height: var(--mobile-input-height);
+        height: 48px;
         min-width: 80px;
         padding: 0 15px;
         font-size: 0.95rem;
-        white-space: nowrap;
     }
     
-    .calculator-summary-bar {
-        flex-direction: row;
-        flex-wrap: wrap;
+    .results-header {
+        flex-direction: column;
+        align-items: flex-start;
         gap: 10px;
-        padding: 10px;
+        padding: 12px;
     }
     
-    .summary-grid {
-        flex-direction: row;
-        flex-wrap: nowrap;
-        overflow-x: auto;
+    .results-header-right {
         width: 100%;
-        gap: 10px;
-        padding-bottom: 8px;
+        justify-content: space-between;
     }
     
-    .summary-item {
-        min-width: 100px !important;
-        flex-shrink: 0;
-        padding: 8px;
-        background: var(--light-gray);
-        border-radius: var(--radius);
-    }
-    
-    .summary-actions {
+    .pagination {
         width: 100%;
-        justify-content: center;
-        gap: 10px;
+        margin-left: 0;
+        justify-content: space-between;
         flex-wrap: wrap;
     }
     
-    .summary-actions button {
-        min-width: 100px;
-        height: 40px;
-        padding: 0 12px;
-        font-size: 0.9rem;
+    .pagination-controls {
+        width: 100%;
+        justify-content: space-between;
+        margin-bottom: 10px;
+    }
+    
+    .items-per-page {
+        width: 100%;
+        justify-content: flex-end;
     }
     
     .compact-item {
@@ -1210,7 +1368,6 @@ button:hover {
         align-items: flex-start;
         gap: 10px;
         padding: 12px;
-        min-height: 75px;
     }
     
     .compact-item-header {
@@ -1240,6 +1397,33 @@ button:hover {
         min-width: 70px;
         padding: 8px 12px !important;
         height: 38px !important;
+    }
+    
+    .calculator-summary-bar {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .summary-grid {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .summary-item {
+        min-width: 45%;
+        margin-bottom: 10px;
+    }
+    
+    .summary-actions {
+        width: 100%;
+        justify-content: center;
+        gap: 10px;
+    }
+    
+    .summary-actions button {
+        flex: 1;
+        min-width: auto;
+        height: 40px;
     }
     
     .bottom-nav {
@@ -1291,12 +1475,21 @@ button:hover {
         height: 48px;
     }
     
-    .filter-actions {
-        flex-direction: row;
+    .filter-modal-actions {
+        flex-direction: column;
+    }
+    
+    .filter-modal-actions button {
+        width: 100%;
+        height: 48px;
+    }
+    
+    .character-actions {
+        flex-direction: column;
         gap: 10px;
     }
     
-    .filter-actions button {
+    .character-actions button {
         width: 100%;
         height: 48px;
     }
@@ -1321,6 +1514,30 @@ button:hover {
     .calculator-item-cost {
         text-align: left;
         min-width: auto;
+    }
+    
+    /* 移动端增加输入框高度 */
+    input[type="text"],
+    input[type="number"],
+    select,
+    textarea {
+        height: 48px !important;
+        min-height: 48px !important;
+        font-size: 1rem !important;
+        padding: 0 12px !important;
+    }
+    
+    button {
+        height: 48px !important;
+        min-height: 48px !important;
+        font-size: 1rem !important;
+        padding: 0 16px !important;
+    }
+    
+    .tag-option {
+        padding: 10px 16px;
+        height: 44px;
+        min-height: 44px;
     }
 }
 
@@ -1351,7 +1568,56 @@ button:hover {
         gap: 10px;
     }
     
-    .filter-actions {
-        flex-direction: column;
+    .results-header h3 {
+        font-size: 1.1rem;
     }
+}
+
+/* 折叠栏动画效果 */
+.accordion-content {
+    display: none;
+    padding: 0;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    max-height: 0;
+    opacity: 0;
+}
+
+.accordion-item.active .accordion-content {
+    display: block;
+    max-height: 500px; /* 根据内容调整 */
+    opacity: 1;
+    padding: 10px;
+}
+
+/* 计算器物品列表滚动 */
+.calculator-items-list {
+    max-height: 400px;
+    overflow-y: auto;
+    padding: 10px;
+    transition: max-height 0.3s ease;
+}
+
+/* 标签筛选器选项动画 */
+.tag-option {
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 筛选数值输入框的实时反馈 */
+.range-inputs input:focus {
+    border-color: var(--accent-gray);
+    box-shadow: 0 0 0 2px rgba(90, 90, 90, 0.1);
+}
+
+/* 下拉框样式优化 */
+select {
+    transition: all 0.2s ease;
+}
+
+select:focus {
+    border-color: var(--accent-gray);
+    box-shadow: 0 0 0 2px rgba(90, 90, 90, 0.1);
 }
