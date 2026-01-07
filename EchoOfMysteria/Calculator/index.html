@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>统一计算器</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌌</text></svg>">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- 主内容容器 -->
+    <main class="main-content" id="main-content">
+        <!-- 物品视图 -->
+        <section class="view active" id="items-view">
+            <!-- 筛选栏 -->
+            <div class="filter-bar">
+                <div class="search-container">
+                    <input type="text" id="global-search" placeholder="搜索物品名称、描述或ID...">
+                    <button id="filter-toggle" class="filter-btn">
+                        <i class="fas fa-filter"></i> 筛选
+                    </button>
+                </div>
+                
+                <!-- 活动筛选泡泡 -->
+                <div id="active-filter-bubbles" class="filter-bubbles">
+                    <div class="filter-bubble" style="background: transparent; border: 2px dashed var(--border-gray); color: var(--text-light);">无活动筛选条件</div>
+                </div>
+            </div>
+
+            <!-- 筛选结果 -->
+            <div class="results-container">
+                <div class="results-header">
+                    <h3>物品列表</h3>
+                    <div id="results-count" class="results-count">0 个项目</div>
+                </div>
+                
+                <div id="item-list" class="compact-item-list">
+                    <div class="empty-state">正在加载数据...</div>
+                </div>
+                
+                <!-- 分页控件 -->
+                <div id="pagination" class="pagination" style="display: none;">
+                    <div class="pagination-controls">
+                        <button id="prev-page"><i class="fas fa-chevron-left"></i> 上一页</button>
+                        <span id="page-info" class="pagination-info">第 1 页，共 1 页</span>
+                        <button id="next-page">下一页 <i class="fas fa-chevron-right"></i></button>
+                    </div>
+                    <div class="items-per-page">
+                        <label for="items-per-page">每页:</label>
+                        <input type="number" id="items-per-page" min="5" max="100" value="20">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 特质视图 -->
+        <section class="view" id="specialties-view">
+            <!-- 筛选栏 -->
+            <div class="filter-bar">
+                <div class="search-container">
+                    <input type="text" id="specialty-search" placeholder="搜索特质名称、描述或ID...">
+                    <button id="specialty-filter-toggle" class="filter-btn">
+                        <i class="fas fa-filter"></i> 筛选
+                    </button>
+                </div>
+                
+                <!-- 活动筛选泡泡 -->
+                <div id="specialty-filter-bubbles" class="filter-bubbles">
+                    <div class="filter-bubble" style="background: transparent; border: 2px dashed var(--border-gray); color: var(--text-light);">无活动筛选条件</div>
+                </div>
+            </div>
+
+            <!-- 筛选结果 -->
+            <div class="results-container">
+                <div class="results-header">
+                    <h3>特质列表</h3>
+                    <div id="specialty-results-count" class="results-count">0 个项目</div>
+                </div>
+                
+                <div id="specialty-list" class="compact-item-list">
+                    <div class="empty-state">正在加载数据...</div>
+                </div>
+                
+                <!-- 分页控件 -->
+                <div id="specialty-pagination" class="pagination" style="display: none;">
+                    <div class="pagination-controls">
+                        <button id="specialty-prev-page"><i class="fas fa-chevron-left"></i> 上一页</button>
+                        <span id="specialty-page-info" class="pagination-info">第 1 页，共 1 页</span>
+                        <button id="specialty-next-page">下一页 <i class="fas fa-chevron-right"></i></button>
+                    </div>
+                    <div class="items-per-page">
+                        <label for="specialty-items-per-page">每页:</label>
+                        <input type="number" id="specialty-items-per-page" min="5" max="100" value="20">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 计算器视图 -->
+        <section class="view" id="calculator-view">
+            <!-- 计算器顶部栏 -->
+            <div class="calculator-summary-bar">
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <div class="summary-label">总消耗</div>
+                        <div class="summary-value" id="total-cost">0 铜币</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">负重</div>
+                        <div class="summary-value" id="weight-summary">0/20</div>
+                        <div class="weight-status-badge" id="weight-status-badge">轻快</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">力量</div>
+                        <div class="summary-value" id="strength-value">5</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">耐性</div>
+                        <div class="summary-value" id="endurance-value">5</div>
+                    </div>
+                </div>
+                <div class="summary-actions">
+                    <button class="btn-primary" id="edit-character">
+                        <i class="fas fa-user-edit"></i> 修改参数
+                    </button>
+                    <button class="btn-danger" id="clear-calculator">
+                        <i class="fas fa-trash"></i> 清除
+                    </button>
+                    <button class="btn-success" id="download-calculator">
+                        <i class="fas fa-download"></i> 下载
+                    </button>
+                </div>
+            </div>
+
+            <!-- 折叠栏容器 -->
+            <div class="accordion-container">
+                <!-- 物品折叠栏 -->
+                <div class="accordion-item active">
+                    <div class="accordion-header">
+                        <i class="fas fa-chevron-down accordion-icon"></i>
+                        <h3>已购买物品</h3>
+                        <span class="item-count" id="items-count">0</span>
+                    </div>
+                    <div class="accordion-content">
+                        <div id="calculator-items" class="calculator-items-list">
+                            <div class="empty-state">暂无购买的物品</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 特质折叠栏 -->
+                <div class="accordion-item">
+                    <div class="accordion-header">
+                        <i class="fas fa-chevron-down accordion-icon"></i>
+                        <h3>已学习技艺</h3>
+                        <span class="item-count learned-count" id="specialties-count">0</span>
+                    </div>
+                    <div class="accordion-content">
+                        <div id="calculator-specialties" class="calculator-items-list">
+                            <div class="empty-state">暂无学习的特质</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 底部导航栏 -->
+    <nav class="bottom-nav">
+        <a href="#" class="nav-item active" data-view="items-view">
+            <i class="fas fa-box nav-icon"></i>
+            <span class="nav-label">物品表</span>
+        </a>
+        <a href="#" class="nav-item" data-view="specialties-view">
+            <i class="fas fa-star nav-icon"></i>
+            <span class="nav-label">技艺表</span>
+        </a>
+        <a href="#" class="nav-item" data-view="calculator-view">
+            <i class="fas fa-calculator nav-icon"></i>
+            <span class="nav-label">计算器</span>
+        </a>
+    </nav>
+
+    <!-- 筛选弹窗 -->
+    <div id="filter-modal" class="filter-modal">
+        <div class="filter-modal-content">
+            <div class="filter-modal-header">
+                <h3 id="modal-title">筛选条件</h3>
+                <button class="close-filter-btn">×</button>
+            </div>
+            
+            <div class="filter-modal-body">
+                <div class="filter-section">
+                    <h4>类型筛选</h4>
+                    <div class="type-selector">
+                        <select id="main-type-filter">
+                            <option value="">所有主类型</option>
+                        </select>
+                        <select id="sub-type-filter" style="display: none;">
+                            <option value="">所有子类型</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div id="level-filter" class="filter-section" style="display: none;">
+                    <h4>等级范围</h4>
+                    <div class="range-inputs">
+                        <input type="number" id="min-level" placeholder="最低" min="1">
+                        <span>至</span>
+                        <input type="number" id="max-level" placeholder="最高" min="1">
+                    </div>
+                </div>
+                
+                <div class="filter-section">
+                    <h4 id="price-filter-label">价格范围</h4>
+                    <div class="range-inputs">
+                        <input type="number" id="min-cost" placeholder="最低" min="0">
+                        <span>至</span>
+                        <input type="number" id="max-cost" placeholder="最高" min="0">
+                    </div>
+                </div>
+                
+                <div id="weight-filter" class="filter-section">
+                    <h4>重量范围</h4>
+                    <div class="range-inputs">
+                        <input type="number" id="min-weight" placeholder="最低" min="0">
+                        <span>至</span>
+                        <input type="number" id="max-weight" placeholder="最高" min="0">
+                    </div>
+                </div>
+                
+                <div id="tag-filter-container" class="filter-section">
+                    <!-- 动态生成的标签筛选器 -->
+                </div>
+                
+                <div class="filter-section">
+                    <h4>排序方式</h4>
+                    <select id="sort-by">
+                        <option value="id-asc">ID 从小到大</option>
+                        <option value="id-desc">ID 从大到小</option>
+                        <option value="name-asc">名称 A-Z</option>
+                        <option value="name-desc">名称 Z-A</option>
+                        <option value="cost-asc">价格 低到高</option>
+                        <option value="cost-desc">价格 高到低</option>
+                    </select>
+                </div>
+                
+                <div class="filter-actions">
+                    <button type="button" id="clear-filter" class="btn-warning">清除筛选</button>
+                    <button type="button" id="apply-filter" class="btn-success">应用筛选</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 详情弹窗 -->
+    <div id="detail-modal" class="detail-modal">
+        <div class="detail-modal-content">
+            <div class="detail-modal-header">
+                <h3 id="detail-title"></h3>
+                <button class="close-detail-btn">×</button>
+            </div>
+            <div class="detail-modal-body">
+                <!-- 动态填充详情内容 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 角色属性修改弹窗 -->
+    <div id="character-modal" class="character-modal">
+        <div class="character-modal-content">
+            <div class="character-modal-header">
+                <h3>修改角色属性</h3>
+                <button class="close-character-btn">×</button>
+            </div>
+            <div class="character-modal-body">
+                <form id="character-form" class="character-form">
+                    <div class="form-group">
+                        <label for="character-strength">力量</label>
+                        <input type="number" id="character-strength" min="1" max="20" value="5">
+                        <div class="form-hint">影响负重能力，每点力量增加1负重</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="character-endurance">耐性</label>
+                        <input type="number" id="character-endurance" min="1" max="20" value="5">
+                        <div class="form-hint">影响负重能力，每点耐性增加3负重</div>
+                    </div>
+                    <div class="character-actions">
+                        <button type="button" class="btn-warning" id="reset-character">重置默认</button>
+                        <button type="submit" class="btn-success" id="save-character">保存属性</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 数据状态提示 -->
+    <div id="data-status" class="data-status"></div>
+
+    <!-- 脚本 -->
+    <script src="data-manager.js"></script>
+    <script src="manager.js"></script>
+    <script src="filter-manager.js"></script>
+    <script src="calculator.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
