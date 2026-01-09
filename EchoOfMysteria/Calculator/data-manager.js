@@ -106,7 +106,23 @@ class UnifiedDataManager {
                 
                 if (header === 'id') {
                     item[header] = parseInt(value) || i;
-                } else if (header === 'cost' || header === 'weight') {
+                } else if (header === 'cost') {
+                    // 处理花括号格式的成本数据（特别是用于技艺的多级成本）
+                    if (value.startsWith('{') && value.endsWith('}')) {
+                        // 去除花括号，按斜杠分割
+                        const inner = value.substring(1, value.length - 1);
+                        if (inner.includes('/')) {
+                            // 多级成本：转换为数字数组
+                            item[header] = inner.split('/').map(v => parseFloat(v.trim()) || 0);
+                        } else {
+                            // 单级成本：转换为数字
+                            item[header] = parseFloat(inner) || 0;
+                        }
+                    } else {
+                        // 非花括号格式：直接解析为数字
+                        item[header] = parseFloat(value) || 0;
+                    }
+                } else if (header === 'weight') {
                     item[header] = parseFloat(value) || 0;
                 } else if (header === 'level') {
                     item[header] = parseInt(value) || 1;
