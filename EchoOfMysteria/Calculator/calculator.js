@@ -667,6 +667,12 @@ class UnifiedCalculator {
             totalCostElement.textContent = this.formatCurrency(totalCopperCost, 'items');
         }
         
+        // 新增：更新技艺点总消耗显示（之前遗漏）
+        const totalSpecialtyElement = document.getElementById('total-specialty-cost');
+        if (totalSpecialtyElement) {
+            totalSpecialtyElement.textContent = `${totalSpecialtyCost} 点`;
+        }
+        
         // 计算负重状态
         const carryCapacity = 20 + this.characterStrength + (this.characterEndurance * 3);
         const carryPercentage = totalWeight / carryCapacity;
