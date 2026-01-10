@@ -229,9 +229,6 @@ class UnifiedCalculator {
         // 保存到localStorage
         this.saveCharacterAttributesToStorage();
         
-        // 更新UI显示
-        this.updateCharacterAttributesDisplay();
-        
         // 重新渲染计算器以更新负重状态
         this.renderCalculator();
         
@@ -271,15 +268,6 @@ class UnifiedCalculator {
         } catch (error) {
             console.warn('保存角色属性失败:', error);
         }
-    }
-    
-    // 更新角色属性显示
-    updateCharacterAttributesDisplay() {
-        const strengthValue = document.getElementById('strength-value');
-        const enduranceValue = document.getElementById('endurance-value');
-        
-        if (strengthValue) strengthValue.textContent = this.characterStrength;
-        if (enduranceValue) enduranceValue.textContent = this.characterEndurance;
     }
     
     // 从localStorage加载计算器物品
@@ -409,9 +397,6 @@ class UnifiedCalculator {
         if (itemsCount) itemsCount.textContent = items.length;
         if (specialtiesCount) specialtiesCount.textContent = specialties.length;
         
-        // 更新角色属性显示
-        this.updateCharacterAttributesDisplay();
-        
         // 渲染物品列表
         this.renderItemList(items);
         
@@ -521,8 +506,6 @@ class UnifiedCalculator {
     renderSpecialtyElement(container, specialty) {
         // 获取当前等级的描述和成本
         const currentLevel = specialty.currentLevel || 1;
-        const currentDescription = this.getSpecialtyDescription(specialty, currentLevel);
-        const currentCost = this.getSpecialtyCost(specialty, currentLevel);
         
         // 构建等级选择器选项
         const levelOptions = [];
@@ -538,8 +521,8 @@ class UnifiedCalculator {
                 </div>
             </div>
             <div class="calculator-item-details">
-                <div class="calculator-item-description specialty-description-formatted">
-                    ${this.formatSpecialtyDescription(currentDescription, currentLevel, specialty.level)}
+                <div class="calculator-item-description">
+                    ${this.formatDescription(this.escapeHtml(specialty.description || ''))}
                 </div>
                 <div class="calculator-item-controls">
                     <div class="level-control">
@@ -549,7 +532,7 @@ class UnifiedCalculator {
                         </select>
                         <span class="level-display">/${specialty.level}</span>
                     </div>
-                    <span class="calculator-item-cost">消耗: ${currentCost} 技艺点</span>
+                    <span class="calculator-item-cost">消耗: ${this.getSpecialtyCost(specialty, currentLevel)} 技艺点</span>
                     <button class="btn-danger remove-btn" data-id="${specialty.id}" data-mode="specialties">删除</button>
                 </div>
             </div>
@@ -570,57 +553,6 @@ class UnifiedCalculator {
             const itemId = e.target.dataset.id;
             this.removeFromCalculator(itemId, 'specialties');
         });
-    }
-    
-    // 格式化技艺描述（加粗花括号内容）
-    formatSpecialtyDescription(description, currentLevel, maxLevel) {
-        if (!description) return '';
-        
-        let formatted = this.escapeHtml(description);
-        
-        // 处理花括号内的内容
-        formatted = formatted.replace(/\{([^}]+)\}/g, (match, content) => {
-            // 如果内容包含斜杠，表示是多等级格式
-            if (content.includes('/')) {
-                const parts = content.split('/');
-                const levelIndex = currentLevel - 1;
-                if (levelIndex >= 0 && levelIndex < parts.length) {
-                    // 当前等级对应的部分加粗
-                    return `<strong>${parts[levelIndex]}</strong>`;
-                } else {
-                    // 显示所有等级
-                    return parts.join('/');
-                }
-            } else {
-                // 单个内容直接加粗
-                return `<strong>${content}</strong>`;
-            }
-        });
-        
-        // 用<br>替换分号
-        formatted = formatted.replace(/;/g, '<br>');
-        
-        return formatted;
-    }
-    
-    // 获取技艺描述（根据等级）
-    getSpecialtyDescription(specialty, currentLevel) {
-        if (!specialty.description) return '';
-        
-        // 如果description是数组，根据等级获取对应描述
-        if (Array.isArray(specialty.description)) {
-            const levelIndex = currentLevel - 1;
-            if (levelIndex >= 0 && levelIndex < specialty.description.length) {
-                return specialty.description[levelIndex];
-            } else if (specialty.description.length > 0) {
-                return specialty.description[0];
-            } else {
-                return '';
-            }
-        }
-        
-        // 如果不是数组，直接返回
-        return specialty.description;
     }
     
     // 获取技艺成本（根据等级）
@@ -660,13 +592,6 @@ class UnifiedCalculator {
             totalSpecialtyCost += this.getSpecialtyCost(specialty, currentLevel);
         });
         
-        // 更新总消耗显示
-        const totalCostElement = document.getElementById('total-cost');
-        if (totalCostElement) {
-            // 显示铜币总消耗
-            totalCostElement.textContent = this.formatCurrency(totalCopperCost, 'items');
-        }
-        
         // 计算负重状态
         const carryCapacity = 20 + this.characterStrength + (this.characterEndurance * 3);
         const carryPercentage = totalWeight / carryCapacity;
@@ -691,9 +616,20 @@ class UnifiedCalculator {
         // 更新负重显示
         const weightSummary = document.getElementById('weight-summary');
         const weightStatusBadge = document.getElementById('weight-status-badge');
+        const totalSpecialtyCostElement = document.getElementById('total-specialty-cost');
         
         if (weightSummary) {
-            weightSummary.textContent = `${totalWeight}/${carryCapacity}`;
+            weightSummary.innerHTML = `
+                <span style="font-size: 1.4rem; font-weight: bold;">${totalWeight}</span>
+                <span style="font-size: 0.9rem; color: var(--text-light);">/${carryCapacity}</span>
+            `;
+        }
+        
+        if (totalSpecialtyCostElement) {
+            totalSpecialtyCostElement.innerHTML = `
+                <span style="font-size: 1.4rem; font-weight: bold;">${totalSpecialtyCost}</span>
+                <span style="font-size: 0.9rem; color: var(--text-light);"> 点</span>
+            `;
         }
         
         if (weightStatusBadge) {
@@ -752,11 +688,17 @@ class UnifiedCalculator {
                 totalWeight += itemWeight;
                 
                 content += `${index + 1}. ${item.name}\n`;
-                content += `   ID: ${item.id}\n`;
                 content += `   数量: ${item.quantity}\n`;
                 content += `   单价: ${this.formatCurrencyForDownload(item.cost || 0)}\n`;
-                content += `   总价: ${this.formatCurrencyForDownload(itemCost)}\n`;
+                content += `   总价: ${this.formatCurrencyForDownload(itemCost)} (${item.cost || 0} × ${item.quantity})\n`;
                 content += `   重量: ${itemWeight}\n`;
+                
+                // 添加物品描述
+                if (item.description) {
+                    // 清理描述中的HTML标签
+                    const cleanDesc = item.description.replace(/<[^>]*>/g, '');
+                    content += `   描述: ${cleanDesc}\n`;
+                }
                 
                 if (item.tags && item.tags.length > 0) {
                     content += `   标签: ${item.tags.join(', ')}\n`;
@@ -782,9 +724,13 @@ class UnifiedCalculator {
                 totalSpecialtyCost += specialtyCost;
                 
                 content += `${index + 1}. ${specialty.name}\n`;
-                content += `   ID: ${specialty.id}\n`;
                 content += `   等级: ${currentLevel}/${specialty.level}\n`;
                 content += `   消耗: ${specialtyCost} 技艺点\n`;
+                
+                // 显示所有等级的成本
+                if (Array.isArray(specialty.cost)) {
+                    content += `   所有等级成本: ${specialty.cost.join('/')}\n`;
+                }
                 
                 if (specialty.tag && specialty.tag.length > 0) {
                     content += `   标签: ${specialty.tag.join(', ')}\n`;
@@ -793,7 +739,7 @@ class UnifiedCalculator {
                     content += `   需求: ${specialty.need.join(', ')}\n`;
                 }
                 
-                // 清理描述中的HTML标签和加粗标记
+                // 显示描述
                 const cleanDescription = specialtyDescription
                     .replace(/<[^>]*>/g, '')
                     .replace(/\{([^}]+)\}/g, (match, content) => {
@@ -855,6 +801,26 @@ class UnifiedCalculator {
         URL.revokeObjectURL(url);
         
         this.showStatus(`已下载清单: ${fileName}`, 'success');
+    }
+    
+    // 获取技艺描述（根据等级）
+    getSpecialtyDescription(specialty, currentLevel) {
+        if (!specialty.description) return '';
+        
+        // 如果description是数组，根据等级获取对应描述
+        if (Array.isArray(specialty.description)) {
+            const levelIndex = currentLevel - 1;
+            if (levelIndex >= 0 && levelIndex < specialty.description.length) {
+                return specialty.description[levelIndex];
+            } else if (specialty.description.length > 0) {
+                return specialty.description[0];
+            } else {
+                return '';
+            }
+        }
+        
+        // 如果不是数组，直接返回
+        return specialty.description;
     }
     
     // 货币格式化 - 修复版：区分物品和技艺
