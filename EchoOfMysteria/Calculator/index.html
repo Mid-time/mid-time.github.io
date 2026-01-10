@@ -99,17 +99,37 @@
 
         <!-- 计算器视图 -->
         <section class="view" id="calculator-view">
-            <!-- 计算器顶部栏 -->
+            <!-- 计算器顶部栏 - 修改格式 -->
             <div class="calculator-summary-bar">
                 <div class="summary-grid">
                     <div class="summary-item">
                         <div class="summary-label">载荷</div>
-                        <div class="summary-value" id="weight-summary">0/20</div>
-                        <div class="weight-status-badge" id="weight-status-badge">轻快</div>
+                        <div class="summary-value" id="weight-summary">
+                            <div class="weight-display">
+                                <span class="weight-current" id="weight-current">0</span>
+                                <span class="weight-separator">/</span>
+                                <span class="weight-capacity" id="weight-capacity">20</span>
+                            </div>
+                            <div class="weight-status-badge" id="weight-status-badge">轻快</div>
+                        </div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">总消耗</div>
+                        <div class="summary-value" id="total-cost">
+                            <div class="cost-display">
+                                <span class="cost-copper" id="cost-copper">0</span>
+                                <span class="cost-unit">铜币</span>
+                            </div>
+                        </div>
                     </div>
                     <div class="summary-item">
                         <div class="summary-label">技艺点</div>
-                        <div class="summary-value" id="total-specialty-cost">0 点</div>
+                        <div class="summary-value" id="total-specialty-cost">
+                            <div class="specialty-cost-display">
+                                <span class="specialty-cost-value" id="specialty-cost-value">0</span>
+                                <span class="specialty-cost-unit">点</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="summary-actions">
@@ -124,38 +144,6 @@
                     </button>
                 </div>
             </div>
-
-    <!-- 折叠栏容器 -->
-    <div class="accordion-container">
-        <!-- 物品折叠栏 -->
-        <div class="accordion-item active">
-            <div class="accordion-header">
-                <i class="fas fa-chevron-down accordion-icon"></i>
-                <h3>已购买物品</h3>
-                <span class="item-count" id="items-count">0</span>
-            </div>
-            <div class="accordion-content">
-                <div id="calculator-items" class="calculator-items-list">
-                    <div class="empty-state">暂无购买的物品</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 技艺折叠栏 -->
-        <div class="accordion-item">
-            <div class="accordion-header">
-                <i class="fas fa-chevron-down accordion-icon"></i>
-                <h3>已学习技艺</h3>
-                <span class="item-count learned-count" id="specialties-count">0</span>
-            </div>
-            <div class="accordion-content">
-                <div id="calculator-specialties" class="calculator-items-list">
-                    <div class="empty-state">暂无学习的技艺</div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
 
             <!-- 折叠栏容器 -->
             <div class="accordion-container">
