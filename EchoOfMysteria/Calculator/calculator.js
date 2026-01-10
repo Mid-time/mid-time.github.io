@@ -74,6 +74,7 @@ if (typeof UnifiedCalculator === 'undefined') {
                     else { this.showStatus(`${item.name} 已在计算器中（相同等级）`, 'warning'); return; }
                 }
             } else {
+                // 确保 raw 对象包含 level 属性
                 const entry = {
                     id: item.id,
                     mode: mode,
@@ -82,7 +83,10 @@ if (typeof UnifiedCalculator === 'undefined') {
                     currentLevel: mode === 'specialties' ? selectedLevel : 0,
                     cost: item.cost,
                     weight: item.weight || 0,
-                    raw: item
+                    raw: {
+                        ...item,  // 复制所有属性
+                        level: item.level || 1  // 确保有 level 属性
+                    }
                 };
                 if (mode === 'items') entry.quantity = 1;
                 this.calculatorItems.push(entry);
@@ -90,35 +94,60 @@ if (typeof UnifiedCalculator === 'undefined') {
             this.saveCalculatorItems();
             this.renderCalculator();
         }
-
-        removeFromCalculator(itemId, mode) {
-            this.calculatorItems = this.calculatorItems.filter(i => !(i.id == itemId && i.mode === mode));
-            this.saveCalculatorItems();
-            this.renderCalculator();
+        
+        // 在 renderSpecialtyList 方法中，使用安全的属性访问
+        renderSpecialtyList(specs) {
+            const container = document.getElementById('calculator-specialties');
+            if (!container) return;
+            container.innerHTML = '';
+            if (specs.length === 0) { container.innerHTML = '<div class="empty-state">暂无学习的技艺</div>'; return; }
+            specs.forEach(s => {
+                // 安全的属性访问，防止 s.raw 为 undefined
+                const rawLevel = s.raw ? s.raw.level : (s.level || 1);
+                const maxLevel = rawLevel || 1;
+                const levelOptions = [];
+                for (let i = 1; i <= maxLevel; i++) levelOptions.push(`<option value="${i}" ${i === s.currentLevel ? 'selected' : ''}>${i}</option>`);
+                const costNow = Array.isArray(s.cost) ? (s.cost[s.currentLevel - 1] || s.cost[0]) : s.cost;
+                const el = document.createElement('div');
+                el.className = 'calculator-item';
+                el.dataset.id = s.id;
+                el.innerHTML = `
+                    <div class="calculator-item-header">
+                        <div class="calculator-item-name">${this.escapeHtml(s.name)}</div>
+                    </div>
+                    <div class="calculator-item-details">
+                        <div class="calculator-item-controls">
+                            <div class="level-control">
+                                <label>等级:</label>
+                                <select class="level-select" data-id="${s.id}">${levelOptions.join('')}</select>
+                                <span class="level-display">/${maxLevel}</span>
+                            </div>
+                            <span class="calculator-item-cost">消耗: ${costNow} 技艺点</span>
+                            <button class="btn-danger remove-btn" data-id="${s.id}">删除</button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(el);
+                const sel = el.querySelector('.level-select');
+                const rem = el.querySelector('.remove-btn');
+                sel.addEventListener('change', (e) => this.updateLevel(s.id, parseInt(e.target.value) || 1));
+                rem.addEventListener('click', (e) => { e.stopPropagation(); this.removeFromCalculator(s.id, 'specialties'); });
+            });
         }
-
-        updateQuantity(itemId, mode, newQuantity) {
-            const it = this.calculatorItems.find(i => i.id == itemId && i.mode === mode);
-            if (!it) return;
-            newQuantity = parseInt(newQuantity) || 0;
-            if (newQuantity <= 0) this.removeFromCalculator(itemId, mode);
-            else {
-                it.quantity = newQuantity;
-                this.saveCalculatorItems();
-                this.renderCalculator();
-            }
-        }
-
+        
+        // 在 updateLevel 方法中也添加安全访问
         updateLevel(itemId, newLevel) {
             const it = this.calculatorItems.find(i => i.id == itemId && i.mode === 'specialties');
             if (!it) return;
-            const max = it.raw && it.raw.level ? it.raw.level : (it.level || 1);
+            // 安全的属性访问
+            const rawLevel = it.raw ? it.raw.level : (it.level || 1);
+            const max = rawLevel || 1;
             newLevel = Math.max(1, Math.min(parseInt(newLevel) || 1, max));
             it.currentLevel = newLevel;
             this.saveCalculatorItems();
             this.renderCalculator();
         }
-
+        
         // 计算并渲染
         renderCalculator() {
             const items = this.calculatorItems.filter(i => i.mode === 'items');
