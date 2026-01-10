@@ -488,7 +488,7 @@ class UnifiedCalculator {
                         <label>数量:</label>
                         <input type="number" class="quantity-input" value="${item.quantity}" min="0" data-id="${item.id}" data-mode="items">
                     </div>
-                    <span class="calculator-item-cost">${this.formatCurrency(itemCost)}</span>
+                    <span class="calculator-item-cost">${this.formatCurrency(itemCost, 'items')}</span>
                     <span class="calculator-item-weight">重量: ${itemWeight}</span>
                     <button class="btn-danger remove-btn" data-id="${item.id}" data-mode="items">删除</button>
                 </div>
@@ -549,7 +549,7 @@ class UnifiedCalculator {
                         </select>
                         <span class="level-display">/${specialty.level}</span>
                     </div>
-                    <span class="calculator-item-cost">成本: ${currentCost}</span>
+                    <span class="calculator-item-cost">消耗: ${currentCost} 技艺点</span>
                     <button class="btn-danger remove-btn" data-id="${specialty.id}" data-mode="specialties">删除</button>
                 </div>
             </div>
@@ -644,25 +644,27 @@ class UnifiedCalculator {
     // 更新总计
     updateSummary(items, specialties) {
         // 计算总消耗
-        let totalCost = 0;
+        let totalCopperCost = 0;  // 铜币总消耗
+        let totalSpecialtyCost = 0; // 技艺点总消耗
         let totalWeight = 0;
         
         // 计算物品总消耗和总重量
         items.forEach(item => {
-            totalCost += (item.cost || 0) * item.quantity;
+            totalCopperCost += (item.cost || 0) * item.quantity;
             totalWeight += (item.weight || 0) * item.quantity;
         });
         
-        // 计算技艺总消耗
+        // 计算技艺总消耗（技艺点）
         specialties.forEach(specialty => {
             const currentLevel = specialty.currentLevel || 1;
-            totalCost += this.getSpecialtyCost(specialty, currentLevel);
+            totalSpecialtyCost += this.getSpecialtyCost(specialty, currentLevel);
         });
         
         // 更新总消耗显示
         const totalCostElement = document.getElementById('total-cost');
         if (totalCostElement) {
-            totalCostElement.textContent = this.formatCurrency(totalCost);
+            // 显示铜币总消耗
+            totalCostElement.textContent = this.formatCurrency(totalCopperCost, 'items');
         }
         
         // 计算负重状态
@@ -698,6 +700,13 @@ class UnifiedCalculator {
             weightStatusBadge.textContent = statusText;
             weightStatusBadge.className = 'weight-status-badge ' + statusClass;
         }
+        
+        // 返回总消耗信息，供其他函数使用
+        return {
+            copperCost: totalCopperCost,
+            specialtyCost: totalSpecialtyCost,
+            weight: totalWeight
+        };
     }
     
     // 清空计算器
@@ -720,7 +729,8 @@ class UnifiedCalculator {
         }
         
         let content = '';
-        let totalCost = 0;
+        let totalCopperCost = 0;
+        let totalSpecialtyCost = 0;
         let totalWeight = 0;
         const timestamp = new Date().toLocaleString('zh-CN');
         
@@ -738,7 +748,7 @@ class UnifiedCalculator {
             items.forEach((item, index) => {
                 const itemCost = (item.cost || 0) * item.quantity;
                 const itemWeight = (item.weight || 0) * item.quantity;
-                totalCost += itemCost;
+                totalCopperCost += itemCost;
                 totalWeight += itemWeight;
                 
                 content += `${index + 1}. ${item.name}\n`;
@@ -769,12 +779,12 @@ class UnifiedCalculator {
                 const specialtyCost = this.getSpecialtyCost(specialty, currentLevel);
                 const specialtyDescription = this.getSpecialtyDescription(specialty, currentLevel);
                 
-                totalCost += specialtyCost;
+                totalSpecialtyCost += specialtyCost;
                 
                 content += `${index + 1}. ${specialty.name}\n`;
                 content += `   ID: ${specialty.id}\n`;
                 content += `   等级: ${currentLevel}/${specialty.level}\n`;
-                content += `   成本: ${specialtyCost}\n`;
+                content += `   消耗: ${specialtyCost} 技艺点\n`;
                 
                 if (specialty.tag && specialty.tag.length > 0) {
                     content += `   标签: ${specialty.tag.join(', ')}\n`;
@@ -806,7 +816,8 @@ class UnifiedCalculator {
         // 添加总计
         content += '总计:\n';
         content += '-'.repeat(50) + '\n';
-        content += `总消耗: ${this.formatCurrencyForDownload(totalCost)}\n`;
+        content += `铜币总消耗: ${this.formatCurrencyForDownload(totalCopperCost)}\n`;
+        content += `技艺点总消耗: ${totalSpecialtyCost} 点\n`;
         
         if (items.length > 0) {
             content += `总重量: ${totalWeight}\n`;
@@ -822,7 +833,6 @@ class UnifiedCalculator {
             
             content += `负重状态: ${carryStatus}\n`;
             content += `负重容量: ${carryCapacity} (当前 ${totalWeight}/${carryCapacity})\n`;
-            content += `角色属性: 力量 ${this.characterStrength}, 耐性 ${this.characterEndurance}\n`;
         }
         
         content += `物品数量: ${items.length}\n`;
@@ -847,8 +857,13 @@ class UnifiedCalculator {
         this.showStatus(`已下载清单: ${fileName}`, 'success');
     }
     
-    // 为下载格式化货币
-    formatCurrencyForDownload(copper) {
+    // 货币格式化 - 修复版：区分物品和技艺
+    formatCurrency(copper, mode = 'items') {
+        if (mode === 'specialties') {
+            // 技艺点直接显示
+            return `${copper} 技艺点`;
+        }
+        
         const gold = Math.floor(copper / 10000);
         const silver = Math.floor((copper % 10000) / 100);
         const copperRemainder = copper % 100;
@@ -861,8 +876,8 @@ class UnifiedCalculator {
         return result.join(' ');
     }
     
-    // 货币格式化
-    formatCurrency(copper) {
+    // 为下载格式化货币
+    formatCurrencyForDownload(copper) {
         const gold = Math.floor(copper / 10000);
         const silver = Math.floor((copper % 10000) / 100);
         const copperRemainder = copper % 100;
