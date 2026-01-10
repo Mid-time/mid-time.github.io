@@ -45,8 +45,39 @@ if (typeof UnifiedCalculator === 'undefined') {
         loadCalculatorItems() {
             try {
                 const s = localStorage.getItem('unified-calculator-items');
-                return s ? JSON.parse(s) : [];
-            } catch (e) { console.warn(e); return []; }
+                if (!s) return [];
+                
+                const items = JSON.parse(s);
+                
+                // 验证和修复加载的数据
+                return items.map(item => {
+                    // 确保每个技艺条目都有必要的属性
+                    if (item.mode === 'specialties') {
+                        // 确保 raw 对象存在
+                        if (!item.raw) {
+                            item.raw = {};
+                        }
+                        
+                        // 确保有 level 属性
+                        if (!item.raw.level && item.level) {
+                            item.raw.level = item.level;
+                        } else if (!item.raw.level && !item.level) {
+                            item.raw.level = 1;
+                        }
+                        
+                        // 确保 currentLevel 有效
+                        const maxLevel = this.getSafeLevel(item);
+                        if (item.currentLevel > maxLevel) {
+                            item.currentLevel = maxLevel;
+                        }
+                    }
+                    
+                    return item;
+                });
+            } catch (e) { 
+                console.warn('加载计算器数据失败:', e); 
+                return []; 
+            }
         }
 
         saveCalculatorItems() {
@@ -64,17 +95,56 @@ if (typeof UnifiedCalculator === 'undefined') {
             return it ? it.quantity : 0;
         }
 
+        // 添加一个辅助方法来安全地获取等级
+        getSafeLevel(item) {
+            if (!item) return 1;
+            
+            // 先尝试从 raw 对象获取
+            if (item.raw && item.raw.level !== undefined && item.raw.level !== null) {
+                return parseInt(item.raw.level) || 1;
+            }
+            
+            // 然后尝试直接从 item 获取
+            if (item.level !== undefined && item.level !== null) {
+                return parseInt(item.level) || 1;
+            }
+            
+            // 最后尝试从 raw 的其他属性获取
+            if (item.raw) {
+                // 检查 raw 对象是否有其他表示等级的属性
+                for (const key in item.raw) {
+                    if (key.toLowerCase().includes('level') && item.raw[key]) {
+                        return parseInt(item.raw[key]) || 1;
+                    }
+                }
+            }
+            
+            return 1; // 默认值
+        }
+
         addItem(item, mode = 'items', selectedLevel = 1) {
             const existing = this.calculatorItems.find(i => i.id == item.id && i.mode === mode);
             if (existing) {
                 if (mode === 'items') {
                     existing.quantity = (existing.quantity || 0) + 1;
                 } else {
-                    if (existing.currentLevel !== selectedLevel) existing.currentLevel = selectedLevel;
-                    else { this.showStatus(`${item.name} 已在计算器中（相同等级）`, 'warning'); return; }
+                    // 对于技艺，检查等级是否相同
+                    const maxLevel = this.getSafeLevel(item);
+                    selectedLevel = Math.min(selectedLevel, maxLevel);
+                    
+                    if (existing.currentLevel !== selectedLevel) {
+                        existing.currentLevel = selectedLevel;
+                    } else { 
+                        this.showStatus(`${item.name} 已在计算器中（相同等级）`, 'warning'); 
+                        return; 
+                    }
                 }
             } else {
-                // 确保 raw 对象包含 level 属性
+                // 确保 item 有 level 属性
+                if (mode === 'specialties' && !item.level) {
+                    item.level = 1;
+                }
+                
                 const entry = {
                     id: item.id,
                     mode: mode,
@@ -83,71 +153,50 @@ if (typeof UnifiedCalculator === 'undefined') {
                     currentLevel: mode === 'specialties' ? selectedLevel : 0,
                     cost: item.cost,
                     weight: item.weight || 0,
-                    raw: {
-                        ...item,  // 复制所有属性
-                        level: item.level || 1  // 确保有 level 属性
-                    }
+                    raw: { ...item }  // 创建 raw 对象的副本
                 };
-                if (mode === 'items') entry.quantity = 1;
+                
+                if (mode === 'items') {
+                    entry.quantity = 1;
+                }
+                
                 this.calculatorItems.push(entry);
             }
             this.saveCalculatorItems();
             this.renderCalculator();
         }
-        
-        // 在 renderSpecialtyList 方法中，使用安全的属性访问
-        renderSpecialtyList(specs) {
-            const container = document.getElementById('calculator-specialties');
-            if (!container) return;
-            container.innerHTML = '';
-            if (specs.length === 0) { container.innerHTML = '<div class="empty-state">暂无学习的技艺</div>'; return; }
-            specs.forEach(s => {
-                // 安全的属性访问，防止 s.raw 为 undefined
-                const rawLevel = s.raw ? s.raw.level : (s.level || 1);
-                const maxLevel = rawLevel || 1;
-                const levelOptions = [];
-                for (let i = 1; i <= maxLevel; i++) levelOptions.push(`<option value="${i}" ${i === s.currentLevel ? 'selected' : ''}>${i}</option>`);
-                const costNow = Array.isArray(s.cost) ? (s.cost[s.currentLevel - 1] || s.cost[0]) : s.cost;
-                const el = document.createElement('div');
-                el.className = 'calculator-item';
-                el.dataset.id = s.id;
-                el.innerHTML = `
-                    <div class="calculator-item-header">
-                        <div class="calculator-item-name">${this.escapeHtml(s.name)}</div>
-                    </div>
-                    <div class="calculator-item-details">
-                        <div class="calculator-item-controls">
-                            <div class="level-control">
-                                <label>等级:</label>
-                                <select class="level-select" data-id="${s.id}">${levelOptions.join('')}</select>
-                                <span class="level-display">/${maxLevel}</span>
-                            </div>
-                            <span class="calculator-item-cost">消耗: ${costNow} 技艺点</span>
-                            <button class="btn-danger remove-btn" data-id="${s.id}">删除</button>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(el);
-                const sel = el.querySelector('.level-select');
-                const rem = el.querySelector('.remove-btn');
-                sel.addEventListener('change', (e) => this.updateLevel(s.id, parseInt(e.target.value) || 1));
-                rem.addEventListener('click', (e) => { e.stopPropagation(); this.removeFromCalculator(s.id, 'specialties'); });
-            });
+
+        removeFromCalculator(itemId, mode) {
+            this.calculatorItems = this.calculatorItems.filter(i => !(i.id == itemId && i.mode === mode));
+            this.saveCalculatorItems();
+            this.renderCalculator();
         }
-        
-        // 在 updateLevel 方法中也添加安全访问
+
+        updateQuantity(itemId, mode, newQuantity) {
+            const it = this.calculatorItems.find(i => i.id == itemId && i.mode === mode);
+            if (!it) return;
+            newQuantity = parseInt(newQuantity) || 0;
+            if (newQuantity <= 0) this.removeFromCalculator(itemId, mode);
+            else {
+                it.quantity = newQuantity;
+                this.saveCalculatorItems();
+                this.renderCalculator();
+            }
+        }
+
         updateLevel(itemId, newLevel) {
             const it = this.calculatorItems.find(i => i.id == itemId && i.mode === 'specialties');
             if (!it) return;
-            // 安全的属性访问
-            const rawLevel = it.raw ? it.raw.level : (it.level || 1);
-            const max = rawLevel || 1;
-            newLevel = Math.max(1, Math.min(parseInt(newLevel) || 1, max));
+            
+            // 获取最大等级
+            const maxLevel = this.getSafeLevel(it);
+            
+            newLevel = Math.max(1, Math.min(parseInt(newLevel) || 1, maxLevel));
             it.currentLevel = newLevel;
             this.saveCalculatorItems();
             this.renderCalculator();
         }
-        
+
         // 计算并渲染
         renderCalculator() {
             const items = this.calculatorItems.filter(i => i.mode === 'items');
@@ -202,12 +251,29 @@ if (typeof UnifiedCalculator === 'undefined') {
             const container = document.getElementById('calculator-specialties');
             if (!container) return;
             container.innerHTML = '';
-            if (specs.length === 0) { container.innerHTML = '<div class="empty-state">暂无学习的技艺</div>'; return; }
+            if (specs.length === 0) { 
+                container.innerHTML = '<div class="empty-state">暂无学习的技艺</div>'; 
+                return; 
+            }
+            
             specs.forEach(s => {
-                const maxLevel = s.raw.level || s.level || 1;
+                // 使用安全的等级获取方法
+                const maxLevel = this.getSafeLevel(s);
+                
+                // 生成等级选项
                 const levelOptions = [];
-                for (let i = 1; i <= maxLevel; i++) levelOptions.push(`<option value="${i}" ${i === s.currentLevel ? 'selected' : ''}>${i}</option>`);
-                const costNow = Array.isArray(s.cost) ? (s.cost[s.currentLevel - 1] || s.cost[0]) : s.cost;
+                for (let i = 1; i <= maxLevel; i++) {
+                    levelOptions.push(`<option value="${i}" ${i === s.currentLevel ? 'selected' : ''}>${i}</option>`);
+                }
+                
+                // 安全地获取成本
+                let costNow = 0;
+                if (Array.isArray(s.cost)) {
+                    costNow = s.cost[s.currentLevel - 1] || s.cost[0] || 0;
+                } else {
+                    costNow = s.cost || 0;
+                }
+                
                 const el = document.createElement('div');
                 el.className = 'calculator-item';
                 el.dataset.id = s.id;
@@ -223,15 +289,25 @@ if (typeof UnifiedCalculator === 'undefined') {
                                 <span class="level-display">/${maxLevel}</span>
                             </div>
                             <span class="calculator-item-cost">消耗: ${costNow} 技艺点</span>
-                            <button class="btn-danger remove-btn" data-id="${s.id}">���除</button>
+                            <button class="btn-danger remove-btn" data-id="${s.id}">删除</button>
                         </div>
                     </div>
                 `;
                 container.appendChild(el);
+                
                 const sel = el.querySelector('.level-select');
                 const rem = el.querySelector('.remove-btn');
-                sel.addEventListener('change', (e) => this.updateLevel(s.id, parseInt(e.target.value) || 1));
-                rem.addEventListener('click', (e) => { e.stopPropagation(); this.removeFromCalculator(s.id, 'specialties'); });
+                if (sel) {
+                    sel.addEventListener('change', (e) => {
+                        this.updateLevel(s.id, parseInt(e.target.value) || 1);
+                    });
+                }
+                if (rem) {
+                    rem.addEventListener('click', (e) => { 
+                        e.stopPropagation(); 
+                        this.removeFromCalculator(s.id, 'specialties'); 
+                    });
+                }
             });
         }
 
@@ -298,7 +374,7 @@ if (typeof UnifiedCalculator === 'undefined') {
                     const cur = s.currentLevel || 1;
                     const cost = Array.isArray(s.cost) ? (s.cost[cur - 1] || s.cost[0]) : s.cost || 0;
                     totalSpec += cost;
-                    content += `${idx+1}. ${s.name}\n   ID:${s.id}\n   等级:${cur}/${s.raw.level || s.level || 1}\n   消耗:${cost} 技艺点\n\n`;
+                    content += `${idx+1}. ${s.name}\n   ID:${s.id}\n   等级:${cur}/${this.getSafeLevel(s)}\n   消耗:${cost} 技艺点\n\n`;
                 });
             }
 
