@@ -1,5 +1,5 @@
 // ================================
-// 统一管理器 - 负责数据管理和UI交互
+// 统一管理器 - 负责数据管理和UI交互 - 修复版
 // ================================
 class UnifiedManager {
     constructor(dataManager, mode = 'items') {
@@ -127,7 +127,9 @@ class UnifiedManager {
                 if (!e.target.closest('.compact-add-btn') && 
                     !e.target.closest('.quantity-adjuster') &&
                     !e.target.closest('button') &&
-                    !e.target.closest('input')) {
+                    !e.target.closest('input') &&
+                    !e.target.closest('.level-selector-compact') &&
+                    !e.target.closest('select')) {
                     this.showItemDetail(item);
                 }
             });
@@ -158,19 +160,17 @@ class UnifiedManager {
         }
     }
     
-    // 渲染紧凑列表项
+    // 渲染紧凑列表项 - 修复版：技艺显示所有等级成本
     renderCompactItem(container, item) {
         let costText = '';
         if (this.currentMode === 'items') {
             costText = this.formatCurrency(item.cost || 0);
         } else {
-            // 技艺：显示成本范围或当前成本
-            const currentLevel = this.specialtyLevels.get(item.id) || 1;
+            // 技艺：显示所有等级的成本，用斜杠分隔
             if (Array.isArray(item.cost)) {
-                // 显示所有等级的成本，用斜杠分隔
-                costText = `成本: ${item.cost.join('/')}`;
+                costText = `消耗: ${item.cost.join('/')}`;
             } else {
-                costText = `成本: ${item.cost || 0}`;
+                costText = `消耗: ${item.cost || 0}`;
             }
         }
         
@@ -199,24 +199,44 @@ class UnifiedManager {
                 actionButtons = `<button class="btn-success compact-add-btn" data-id="${item.id}" data-mode="${this.currentMode}">添加</button>`;
             }
         } else {
-            // 技艺模式：显示等级选择器
+            // 技艺模式
             const currentLevel = this.specialtyLevels.get(item.id) || 1;
             const maxLevel = item.level || 1;
             
-            const levelOptions = [];
-            for (let i = 1; i <= maxLevel; i++) {
-                levelOptions.push(`<option value="${i}" ${i === currentLevel ? 'selected' : ''}>${i}</option>`);
+            if (isInCalculator) {
+                // 如果已在计算器中，显示等级调整器
+                const levelOptions = [];
+                for (let i = 1; i <= maxLevel; i++) {
+                    levelOptions.push(`<option value="${i}" ${i === currentLevel ? 'selected' : ''}>${i}</option>`);
+                }
+                
+                actionButtons = `
+                    <div class="level-selector-compact">
+                        <label>等级:</label>
+                        <select class="level-select-compact" data-id="${item.id}">
+                            ${levelOptions.join('')}
+                        </select>
+                        <span class="level-max">/${maxLevel}</span>
+                    </div>
+                `;
+            } else {
+                // 如果不在计算器中，显示添加按钮和等级选择器
+                const levelOptions = [];
+                for (let i = 1; i <= maxLevel; i++) {
+                    levelOptions.push(`<option value="${i}" ${i === 1 ? 'selected' : ''}>${i}</option>`);
+                }
+                
+                actionButtons = `
+                    <div class="level-selector-compact">
+                        <label>等级:</label>
+                        <select class="level-select-compact" data-id="${item.id}">
+                            ${levelOptions.join('')}
+                        </select>
+                        <span class="level-max">/${maxLevel}</span>
+                        <button class="btn-success compact-add-btn" data-id="${item.id}" data-mode="${this.currentMode}">添加</button>
+                    </div>
+                `;
             }
-            
-            actionButtons = `
-                <div class="level-selector-compact">
-                    <select class="level-select-compact" data-id="${item.id}">
-                        ${levelOptions.join('')}
-                    </select>
-                    <span class="level-max">/${maxLevel}</span>
-                    <button class="btn-success compact-add-btn" data-id="${item.id}" data-mode="${this.currentMode}">添加</button>
-                </div>
-            `;
         }
         
         container.innerHTML = `
@@ -256,84 +276,101 @@ class UnifiedManager {
                     }
                 };
                 
-                decreaseBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const itemId = e.target.dataset.id;
-                    const mode = e.target.dataset.mode;
-                    const currentQuantity = parseInt(quantityInput.value);
-                    if (currentQuantity > 0) {
-                        const newQuantity = currentQuantity - 1;
+                if (decreaseBtn) {
+                    decreaseBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const itemId = e.target.dataset.id;
+                        const mode = e.target.dataset.mode;
+                        const currentQuantity = parseInt(quantityInput.value);
+                        if (currentQuantity > 0) {
+                            const newQuantity = currentQuantity - 1;
+                            updateQuantityHandler(itemId, mode, newQuantity);
+                        }
+                    });
+                }
+                
+                if (increaseBtn) {
+                    increaseBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const itemId = e.target.dataset.id;
+                        const mode = e.target.dataset.mode;
+                        const currentQuantity = parseInt(quantityInput.value);
+                        const newQuantity = currentQuantity + 1;
                         updateQuantityHandler(itemId, mode, newQuantity);
-                    }
-                });
+                    });
+                }
                 
-                increaseBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const itemId = e.target.dataset.id;
-                    const mode = e.target.dataset.mode;
-                    const currentQuantity = parseInt(quantityInput.value);
-                    const newQuantity = currentQuantity + 1;
-                    updateQuantityHandler(itemId, mode, newQuantity);
-                });
-                
-                quantityInput.addEventListener('change', (e) => {
-                    e.stopPropagation();
-                    const itemId = e.target.dataset.id;
-                    const mode = e.target.dataset.mode;
-                    const newQuantity = parseInt(e.target.value) || 0;
-                    updateQuantityHandler(itemId, mode, newQuantity);
-                });
-                
-                quantityInput.addEventListener('blur', (e) => {
-                    e.stopPropagation();
-                    const itemId = e.target.dataset.id;
-                    const mode = e.target.dataset.mode;
-                    const newQuantity = parseInt(e.target.value) || 0;
-                    updateQuantityHandler(itemId, mode, newQuantity);
-                });
+                if (quantityInput) {
+                    quantityInput.addEventListener('change', (e) => {
+                        e.stopPropagation();
+                        const itemId = e.target.dataset.id;
+                        const mode = e.target.dataset.mode;
+                        const newQuantity = parseInt(e.target.value) || 0;
+                        updateQuantityHandler(itemId, mode, newQuantity);
+                    });
+                    
+                    quantityInput.addEventListener('blur', (e) => {
+                        e.stopPropagation();
+                        const itemId = e.target.dataset.id;
+                        const mode = e.target.dataset.mode;
+                        const newQuantity = parseInt(e.target.value) || 0;
+                        updateQuantityHandler(itemId, mode, newQuantity);
+                    });
+                }
             } else {
                 // 添加按钮事件
                 const addBtn = container.querySelector('.compact-add-btn');
-                addBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const itemId = e.target.dataset.id;
-                    const mode = e.target.dataset.mode;
-                    this.addToCalculator(itemId, mode);
-                    
-                    // 重新渲染该项以显示数量调整器
-                    setTimeout(() => {
-                        this.renderCompactItem(container, item);
-                    }, 100);
-                });
+                if (addBtn) {
+                    addBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const itemId = e.target.dataset.id;
+                        const mode = e.target.dataset.mode;
+                        this.addToCalculator(itemId, mode);
+                        
+                        // 重新渲染该项以显示数量调整器
+                        setTimeout(() => {
+                            this.renderCompactItem(container, item);
+                        }, 100);
+                    });
+                }
             }
         } else {
             // 技艺模式：等级选择器事件
             const levelSelect = container.querySelector('.level-select-compact');
             const addBtn = container.querySelector('.compact-add-btn');
             
-            levelSelect.addEventListener('change', (e) => {
-                e.stopPropagation();
-                const itemId = e.target.dataset.id;
-                const newLevel = parseInt(e.target.value) || 1;
-                this.updateSpecialtyLevel(itemId, newLevel);
-                
-                // 更新成本显示
-                const costElement = container.querySelector('.compact-item-cost');
-                if (costElement && Array.isArray(item.cost)) {
-                    costElement.textContent = `成本: ${item.cost.join('/')}`;
-                }
-            });
+            if (levelSelect) {
+                levelSelect.addEventListener('change', (e) => {
+                    e.stopPropagation();
+                    const itemId = e.target.dataset.id;
+                    const newLevel = parseInt(e.target.value) || 1;
+                    this.updateSpecialtyLevel(itemId, newLevel);
+                    
+                    // 更新成本显示
+                    const costElement = container.querySelector('.compact-item-cost');
+                    if (costElement && Array.isArray(item.cost)) {
+                        costElement.textContent = `消耗: ${item.cost.join('/')}`;
+                    }
+                    
+                    // 如果已在计算器中，更新计算器中的等级
+                    if (this.calculatorModule && this.calculatorModule.isInCalculator(itemId, 'specialties')) {
+                        this.calculatorModule.updateLevel(itemId, newLevel);
+                    }
+                });
+            }
             
-            addBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const itemId = e.target.dataset.id;
-                const mode = e.target.dataset.mode;
-                this.addToCalculator(itemId, mode);
-            });
+            if (addBtn) {
+                addBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const itemId = e.target.dataset.id;
+                    const mode = e.target.dataset.mode;
+                    this.addToCalculator(itemId, mode);
+                });
+            }
         }
     }
     
-    // 显示物品详情
+    // 显示物品详情 - 修复实时更新问题
     showItemDetail(item) {
         const modal = document.getElementById('detail-modal');
         const title = document.getElementById('detail-title');
@@ -406,6 +443,9 @@ class UnifiedManager {
                 
                 // 重新渲染详情内容以更新描述和成本
                 this.showItemDetail(item);
+                
+                // 更新列表中的项
+                this.updateCompactItemInList(item.id);
             });
         }
     }
@@ -470,7 +510,7 @@ class UnifiedManager {
         `;
     }
     
-    // 渲染技艺详情
+    // 渲染技艺详情 - 修复版：分开等级调整和消耗显示
     renderSpecialtyDetail(item) {
         const inCalculator = this.calculatorModule ? this.calculatorModule.calculatorItems.find(i => i.id == item.id && i.mode === this.currentMode) : null;
         const currentLevel = this.specialtyLevels.get(item.id) || 1;
@@ -488,6 +528,12 @@ class UnifiedManager {
         
         // 格式化需求
         const needText = item.need && item.need.length > 0 ? item.need.join(', ') : '无';
+        
+        // 格式化消耗显示（当前等级加粗）
+        const formattedCost = this.formatSpecialtyCostWithBold(costText, currentLevel);
+        
+        // 格式化描述显示（当前等级加粗）
+        const formattedDescription = this.formatSpecialtyDescriptionWithBold(descriptionText, currentLevel);
         
         return `
             <div class="detail-text-container">
@@ -518,7 +564,7 @@ class UnifiedManager {
                 <h4>消耗</h4>
                 <div class="detail-content">
                     <div class="detail-cost specialty-cost-formatted">
-                        ${this.formatSpecialtyCost(costText, currentLevel, maxLevel)}
+                        ${formattedCost}
                     </div>
                 </div>
             </div>
@@ -527,7 +573,7 @@ class UnifiedManager {
                 <h4>效果</h4>
                 <div class="detail-content">
                     <div class="detail-description specialty-description-formatted">
-                        ${this.formatSpecialtyAllDescriptions(descriptionText, currentLevel, maxLevel)}
+                        ${formattedDescription}
                     </div>
                 </div>
             </div>
@@ -563,8 +609,32 @@ class UnifiedManager {
         return Array(maxLevel).fill(specialty.description);
     }
     
-    // 格式化技艺所有等级的描述（当前等级加粗）
-    formatSpecialtyAllDescriptions(description, currentLevel, maxLevel) {
+    // 格式化技艺消耗（当前等级加粗）
+    formatSpecialtyCostWithBold(costText, currentLevel) {
+        if (!costText) return '';
+        
+        let formatted = '';
+        
+        if (costText.includes('/')) {
+            const parts = costText.split('/');
+            formatted = parts.map((part, index) => {
+                const level = index + 1;
+                const cleanPart = this.escapeHtml(part.trim());
+                if (level === currentLevel) {
+                    return `<strong class="current-level">${cleanPart}</strong>`;
+                } else {
+                    return cleanPart;
+                }
+            }).join(' / ');
+        } else {
+            formatted = costText;
+        }
+        
+        return formatted;
+    }
+    
+    // 格式化技艺描述（当前等级加粗）
+    formatSpecialtyDescriptionWithBold(description, currentLevel) {
         if (!description) return '';
         
         let formatted = '';
@@ -574,36 +644,13 @@ class UnifiedManager {
                 const level = index + 1;
                 const descText = this.formatDescription(this.escapeHtml(desc || ''));
                 if (level === currentLevel) {
-                    return `<strong>${descText}</strong>`;
+                    return `<strong class="current-level">${descText}</strong>`;
                 } else {
                     return descText;
                 }
             }).join(' / ');
         } else {
             formatted = this.formatDescription(this.escapeHtml(description));
-        }
-        
-        return formatted;
-    }
-    
-    // 格式化技艺成本（当前等级加粗）
-    formatSpecialtyCost(costText, currentLevel, maxLevel) {
-        if (!costText) return '';
-        
-        let formatted = '';
-        
-        if (costText.includes('/')) {
-            const parts = costText.split('/');
-            formatted = parts.map((part, index) => {
-                const level = index + 1;
-                if (level === currentLevel) {
-                    return `<strong>${part}</strong>`;
-                } else {
-                    return part;
-                }
-            }).join(' / ');
-        } else {
-            formatted = costText;
         }
         
         return formatted;
