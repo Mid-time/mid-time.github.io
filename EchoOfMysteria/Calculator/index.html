@@ -99,37 +99,29 @@
 
         <!-- 计算器视图 -->
         <section class="view" id="calculator-view">
-            <!-- 计算器顶部栏 - 修改格式 -->
+            <!-- 计算器顶部栏 -->
             <div class="calculator-summary-bar">
                 <div class="summary-grid">
                     <div class="summary-item">
-                        <div class="summary-label">载荷</div>
-                        <div class="summary-value" id="weight-summary">
-                            <div class="weight-display">
-                                <span class="weight-current" id="weight-current">0</span>
-                                <span class="weight-separator">/</span>
-                                <span class="weight-capacity" id="weight-capacity">20</span>
-                            </div>
-                            <div class="weight-status-badge" id="weight-status-badge">轻快</div>
-                        </div>
-                    </div>
-                    <div class="summary-item">
                         <div class="summary-label">总消耗</div>
-                        <div class="summary-value" id="total-cost">
-                            <div class="cost-display">
-                                <span class="cost-copper" id="cost-copper">0</span>
-                                <span class="cost-unit">铜币</span>
-                            </div>
-                        </div>
+                        <div class="summary-value" id="total-cost">0 铜币</div>
                     </div>
                     <div class="summary-item">
                         <div class="summary-label">技艺点</div>
-                        <div class="summary-value" id="total-specialty-cost">
-                            <div class="specialty-cost-display">
-                                <span class="specialty-cost-value" id="specialty-cost-value">0</span>
-                                <span class="specialty-cost-unit">点</span>
-                            </div>
-                        </div>
+                        <div class="summary-value" id="total-specialty-cost">0 点</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">负重</div>
+                        <div class="summary-value" id="weight-summary">0/20</div>
+                        <div class="weight-status-badge" id="weight-status-badge">轻快</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">力量</div>
+                        <div class="summary-value" id="strength-value">5</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">耐性</div>
+                        <div class="summary-value" id="endurance-value">5</div>
                     </div>
                 </div>
                 <div class="summary-actions">

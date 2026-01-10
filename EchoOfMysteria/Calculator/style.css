@@ -1,4 +1,4 @@
-/* 统一计算器样式 - 高级灰主题 - 修复版 */
+/* 统一计算器样式 - 高级灰主题 */
 :root {
     --primary-gray: #3c3c3c;
     --secondary-gray: #4a4a4a;
@@ -276,40 +276,10 @@ body {
 .compact-item-cost {
     font-weight: 600;
     color: var(--primary-gray);
-    min-width: 120px;
+    min-width: 100px;
     text-align: right;
     font-size: 0.95rem;
     white-space: nowrap;
-}
-
-/* 等级选择器（紧凑视图） */
-.level-selector-compact {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
-    margin-left: 5px;
-}
-
-.level-selector-compact label {
-    color: var(--text-light);
-    font-size: 0.9rem;
-    white-space: nowrap;
-}
-
-.level-selector-compact select {
-    height: 32px;
-    padding: 0 8px;
-    border: 1px solid var(--border-gray);
-    border-radius: 6px;
-    font-size: 0.9rem;
-    background: white;
-    min-width: 60px;
-}
-
-.level-selector-compact .level-max {
-    color: var(--text-light);
-    font-size: 0.9rem;
 }
 
 /* 数量调整控件 */
@@ -431,7 +401,7 @@ body {
     font-size: 0.9rem;
 }
 
-/* 计算器视图 - 修改格式 */
+/* 计算器视图 */
 .calculator-summary-bar {
     background: var(--card-color);
     border-radius: var(--radius);
@@ -449,15 +419,15 @@ body {
 .summary-grid {
     display: flex;
     flex-wrap: wrap;
-    gap: 20px;
+    gap: 15px;
     flex: 1;
 }
 
 .summary-item {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    min-width: 140px;
+    gap: 5px;
+    min-width: 120px;
 }
 
 .summary-label {
@@ -468,67 +438,22 @@ body {
 }
 
 .summary-value {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-/* 载荷显示样式 */
-.weight-display {
-    display: flex;
-    align-items: baseline;
-    gap: 2px;
-}
-
-.weight-current {
     font-weight: 700;
     color: var(--primary-gray);
-    font-size: 1.6rem;
-    line-height: 1;
-}
-
-.weight-separator {
-    color: var(--text-light);
     font-size: 1.2rem;
-    font-weight: 400;
-}
-
-.weight-capacity {
-    font-weight: 400;
-    color: var(--text-light);
-    font-size: 1rem;
-}
-
-/* 消耗显示样式 */
-.cost-display, .specialty-cost-display {
-    display: flex;
-    align-items: baseline;
-    gap: 4px;
-}
-
-.cost-copper, .specialty-cost-value {
-    font-weight: 700;
-    color: var(--primary-gray);
-    font-size: 1.6rem;
-    line-height: 1;
-}
-
-.cost-unit, .specialty-cost-unit {
-    font-weight: 400;
-    color: var(--text-light);
-    font-size: 1rem;
+    white-space: nowrap;
 }
 
 .weight-status-badge {
     background: var(--light-gray);
     color: var(--text-color);
-    padding: 6px 12px;
+    padding: 4px 10px;
     border-radius: 15px;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: 600;
     border: 1px solid var(--border-gray);
     align-self: flex-start;
-    margin-top: 4px;
+    margin-top: 5px;
     white-space: nowrap;
 }
 
@@ -1138,27 +1063,17 @@ button:disabled {
     font-size: 1rem;
 }
 
-/* 当前等级加粗样式 */
-.current-level {
-    color: var(--primary-gray);
-    font-weight: 700;
-    background: rgba(90, 90, 90, 0.1);
-    padding: 2px 4px;
-    border-radius: 4px;
-}
-
 /* 调整特质描述格式 */
 .specialty-description-formatted {
     line-height: 1.6;
     margin: 10px 0;
-    font-size: 1rem;
 }
 
-.specialty-cost-formatted {
-    font-size: 1.1rem;
-    font-weight: 500;
-    color: var(--text-color);
-    line-height: 1.6;
+.specialty-description-formatted strong {
+    color: var(--primary-gray);
+    background: var(--light-gray);
+    padding: 2px 4px;
+    border-radius: 4px;
 }
 
 .flavortext-section {
@@ -1495,8 +1410,8 @@ button:disabled {
     }
     
     .summary-item {
-        min-width: 100%;
-        margin-bottom: 15px;
+        min-width: 45%;
+        margin-bottom: 10px;
     }
     
     .summary-actions {

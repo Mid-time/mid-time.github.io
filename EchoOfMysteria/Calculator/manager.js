@@ -1,5 +1,5 @@
 // ================================
-// 统一管理器 - 负责数据管理和UI交互 - 修复版
+// 统一管理器 - 负责数据管理和UI交互
 // ================================
 class UnifiedManager {
     constructor(dataManager, mode = 'items') {
@@ -127,9 +127,7 @@ class UnifiedManager {
                 if (!e.target.closest('.compact-add-btn') && 
                     !e.target.closest('.quantity-adjuster') &&
                     !e.target.closest('button') &&
-                    !e.target.closest('input') &&
-                    !e.target.closest('.level-selector-compact') &&
-                    !e.target.closest('select')) {
+                    !e.target.closest('input')) {
                     this.showItemDetail(item);
                 }
             });
@@ -160,17 +158,23 @@ class UnifiedManager {
         }
     }
     
-    // 渲染紧凑列表项 - 修复版：技艺显示所有等级成本
+    // 渲染紧凑列表项
     renderCompactItem(container, item) {
         let costText = '';
         if (this.currentMode === 'items') {
             costText = this.formatCurrency(item.cost || 0);
         } else {
-            // 技艺：显示所有等级的成本，用斜杠分隔
+            // 技艺：显示成本范围或当前成本
+            const currentLevel = this.specialtyLevels.get(item.id) || 1;
             if (Array.isArray(item.cost)) {
-                costText = `消耗: ${item.cost.join('/')}`;
+                const levelIndex = currentLevel - 1;
+                if (levelIndex >= 0 && levelIndex < item.cost.length) {
+                    costText = `成本: ${item.cost[levelIndex]}`;
+                } else {
+                    costText = `成本: ${item.cost.join('/')}`;
+                }
             } else {
-                costText = `消耗: ${item.cost || 0}`;
+                costText = `成本: ${item.cost || 0}`;
             }
         }
         
@@ -184,59 +188,18 @@ class UnifiedManager {
         
         let actionButtons = '';
         
-        if (this.currentMode === 'items') {
-            if (isInCalculator && calculatorQuantity > 0) {
-                // 如果已在计算器中且数量大于0，显示数量调整器
-                actionButtons = `
-                    <div class="quantity-adjuster">
-                        <button class="btn-danger decrease-btn" data-id="${item.id}" data-mode="${this.currentMode}">-</button>
-                        <input type="number" class="quantity-input" value="${calculatorQuantity}" min="0" data-id="${item.id}" data-mode="${this.currentMode}">
-                        <button class="btn-success increase-btn" data-id="${item.id}" data-mode="${this.currentMode}">+</button>
-                    </div>
-                `;
-            } else {
-                // 如果不在计算器中，显示添加按钮
-                actionButtons = `<button class="btn-success compact-add-btn" data-id="${item.id}" data-mode="${this.currentMode}">添加</button>`;
-            }
+        if (isInCalculator && calculatorQuantity > 0) {
+            // 如果已在计算器中且数量大于0，显示数量调整器
+            actionButtons = `
+                <div class="quantity-adjuster">
+                    <button class="btn-danger decrease-btn" data-id="${item.id}" data-mode="${this.currentMode}">-</button>
+                    <input type="number" class="quantity-input" value="${calculatorQuantity}" min="0" data-id="${item.id}" data-mode="${this.currentMode}">
+                    <button class="btn-success increase-btn" data-id="${item.id}" data-mode="${this.currentMode}">+</button>
+                </div>
+            `;
         } else {
-            // 技艺模式
-            const currentLevel = this.specialtyLevels.get(item.id) || 1;
-            const maxLevel = item.level || 1;
-            
-            if (isInCalculator) {
-                // 如果已在计算器中，显示等级调整器
-                const levelOptions = [];
-                for (let i = 1; i <= maxLevel; i++) {
-                    levelOptions.push(`<option value="${i}" ${i === currentLevel ? 'selected' : ''}>${i}</option>`);
-                }
-                
-                actionButtons = `
-                    <div class="level-selector-compact">
-                        <label>等级:</label>
-                        <select class="level-select-compact" data-id="${item.id}">
-                            ${levelOptions.join('')}
-                        </select>
-                        <span class="level-max">/${maxLevel}</span>
-                    </div>
-                `;
-            } else {
-                // 如果不在计算器中，显示添加按钮和等级选择器
-                const levelOptions = [];
-                for (let i = 1; i <= maxLevel; i++) {
-                    levelOptions.push(`<option value="${i}" ${i === 1 ? 'selected' : ''}>${i}</option>`);
-                }
-                
-                actionButtons = `
-                    <div class="level-selector-compact">
-                        <label>等级:</label>
-                        <select class="level-select-compact" data-id="${item.id}">
-                            ${levelOptions.join('')}
-                        </select>
-                        <span class="level-max">/${maxLevel}</span>
-                        <button class="btn-success compact-add-btn" data-id="${item.id}" data-mode="${this.currentMode}">添加</button>
-                    </div>
-                `;
-            }
+            // 如果不在计算器中，显示添加按钮
+            actionButtons = `<button class="btn-success compact-add-btn" data-id="${item.id}" data-mode="${this.currentMode}">添加</button>`;
         }
         
         container.innerHTML = `
@@ -254,123 +217,80 @@ class UnifiedManager {
         `;
         
         // 添加按钮事件
-        if (this.currentMode === 'items') {
-            if (isInCalculator && calculatorQuantity > 0) {
-                // 数量调整器事件
-                const decreaseBtn = container.querySelector('.decrease-btn');
-                const increaseBtn = container.querySelector('.increase-btn');
-                const quantityInput = container.querySelector('.quantity-input');
-                
-                const updateQuantityHandler = (itemId, mode, newQuantity) => {
-                    if (this.calculatorModule) {
-                        if (newQuantity === 0) {
-                            this.calculatorModule.removeFromCalculator(itemId, mode);
-                        } else {
-                            this.calculatorModule.updateQuantity(itemId, mode, newQuantity);
-                        }
-                        
-                        // 重新渲染该项以更新按钮状态
-                        setTimeout(() => {
-                            this.renderCompactItem(container, item);
-                        }, 100);
+        if (isInCalculator && calculatorQuantity > 0) {
+            // 数量调整器事件
+            const decreaseBtn = container.querySelector('.decrease-btn');
+            const increaseBtn = container.querySelector('.increase-btn');
+            const quantityInput = container.querySelector('.quantity-input');
+            
+            const updateQuantityHandler = (itemId, mode, newQuantity) => {
+                if (this.calculatorModule) {
+                    if (newQuantity === 0) {
+                        this.calculatorModule.removeFromCalculator(itemId, mode);
+                    } else {
+                        this.calculatorModule.updateQuantity(itemId, mode, newQuantity);
                     }
-                };
-                
-                if (decreaseBtn) {
-                    decreaseBtn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        const itemId = e.target.dataset.id;
-                        const mode = e.target.dataset.mode;
-                        const currentQuantity = parseInt(quantityInput.value);
-                        if (currentQuantity > 0) {
-                            const newQuantity = currentQuantity - 1;
-                            updateQuantityHandler(itemId, mode, newQuantity);
-                        }
-                    });
-                }
-                
-                if (increaseBtn) {
-                    increaseBtn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        const itemId = e.target.dataset.id;
-                        const mode = e.target.dataset.mode;
-                        const currentQuantity = parseInt(quantityInput.value);
-                        const newQuantity = currentQuantity + 1;
-                        updateQuantityHandler(itemId, mode, newQuantity);
-                    });
-                }
-                
-                if (quantityInput) {
-                    quantityInput.addEventListener('change', (e) => {
-                        e.stopPropagation();
-                        const itemId = e.target.dataset.id;
-                        const mode = e.target.dataset.mode;
-                        const newQuantity = parseInt(e.target.value) || 0;
-                        updateQuantityHandler(itemId, mode, newQuantity);
-                    });
                     
-                    quantityInput.addEventListener('blur', (e) => {
-                        e.stopPropagation();
-                        const itemId = e.target.dataset.id;
-                        const mode = e.target.dataset.mode;
-                        const newQuantity = parseInt(e.target.value) || 0;
-                        updateQuantityHandler(itemId, mode, newQuantity);
-                    });
+                    // 重新渲染该项以更新按钮状态
+                    setTimeout(() => {
+                        this.renderCompactItem(container, item);
+                    }, 100);
                 }
-            } else {
-                // 添加按钮事件
-                const addBtn = container.querySelector('.compact-add-btn');
-                if (addBtn) {
-                    addBtn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        const itemId = e.target.dataset.id;
-                        const mode = e.target.dataset.mode;
-                        this.addToCalculator(itemId, mode);
-                        
-                        // 重新渲染该项以显示数量调整器
-                        setTimeout(() => {
-                            this.renderCompactItem(container, item);
-                        }, 100);
-                    });
+            };
+            
+            decreaseBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const itemId = e.target.dataset.id;
+                const mode = e.target.dataset.mode;
+                const currentQuantity = parseInt(quantityInput.value);
+                if (currentQuantity > 0) {
+                    const newQuantity = currentQuantity - 1;
+                    updateQuantityHandler(itemId, mode, newQuantity);
                 }
-            }
+            });
+            
+            increaseBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const itemId = e.target.dataset.id;
+                const mode = e.target.dataset.mode;
+                const currentQuantity = parseInt(quantityInput.value);
+                const newQuantity = currentQuantity + 1;
+                updateQuantityHandler(itemId, mode, newQuantity);
+            });
+            
+            quantityInput.addEventListener('change', (e) => {
+                e.stopPropagation();
+                const itemId = e.target.dataset.id;
+                const mode = e.target.dataset.mode;
+                const newQuantity = parseInt(e.target.value) || 0;
+                updateQuantityHandler(itemId, mode, newQuantity);
+            });
+            
+            quantityInput.addEventListener('blur', (e) => {
+                e.stopPropagation();
+                const itemId = e.target.dataset.id;
+                const mode = e.target.dataset.mode;
+                const newQuantity = parseInt(e.target.value) || 0;
+                updateQuantityHandler(itemId, mode, newQuantity);
+            });
         } else {
-            // 技艺模式：等级选择器事件
-            const levelSelect = container.querySelector('.level-select-compact');
+            // 添加按钮事件
             const addBtn = container.querySelector('.compact-add-btn');
-            
-            if (levelSelect) {
-                levelSelect.addEventListener('change', (e) => {
-                    e.stopPropagation();
-                    const itemId = e.target.dataset.id;
-                    const newLevel = parseInt(e.target.value) || 1;
-                    this.updateSpecialtyLevel(itemId, newLevel);
-                    
-                    // 更新成本显示
-                    const costElement = container.querySelector('.compact-item-cost');
-                    if (costElement && Array.isArray(item.cost)) {
-                        costElement.textContent = `消耗: ${item.cost.join('/')}`;
-                    }
-                    
-                    // 如果已在计算器中，更新计算器中的等级
-                    if (this.calculatorModule && this.calculatorModule.isInCalculator(itemId, 'specialties')) {
-                        this.calculatorModule.updateLevel(itemId, newLevel);
-                    }
-                });
-            }
-            
-            if (addBtn) {
-                addBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const itemId = e.target.dataset.id;
-                    const mode = e.target.dataset.mode;
-                    this.addToCalculator(itemId, mode);
-                });
-            }
+            addBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const itemId = e.target.dataset.id;
+                const mode = e.target.dataset.mode;
+                this.addToCalculator(itemId, mode);
+                
+                // 重新渲染该项以显示数量调整器
+                setTimeout(() => {
+                    this.renderCompactItem(container, item);
+                }, 100);
+            });
         }
     }
     
-    // 显示物品详情 - 修复实时更新问题
+    // 显示物品详情
     showItemDetail(item) {
         const modal = document.getElementById('detail-modal');
         const title = document.getElementById('detail-title');
@@ -412,10 +332,16 @@ class UnifiedManager {
             }
         };
         
-        // 更新详细视图中的操作按钮
-        this.updateDetailActionButtons(item.id, body);
+        // 添加添加到计算器的事件
+        const addBtn = body.querySelector('.detail-add-btn');
+        if (addBtn) {
+            addBtn.addEventListener('click', () => {
+                this.addToCalculator(item.id, this.currentMode);
+                this.updateDetailActionButtons(item.id, body);
+            });
+        }
         
-        // 更新数量输入事件（物品）
+        // 更新数量输入事件
         const quantityInput = body.querySelector('.detail-quantity-input');
         if (quantityInput) {
             quantityInput.addEventListener('change', (e) => {
@@ -443,9 +369,6 @@ class UnifiedManager {
                 
                 // 重新渲染详情内容以更新描述和成本
                 this.showItemDetail(item);
-                
-                // 更新列表中的项
-                this.updateCompactItemInList(item.id);
             });
         }
     }
@@ -510,15 +433,15 @@ class UnifiedManager {
         `;
     }
     
-    // 渲染技艺详情 - 修复版：分开等级调整和消耗显示
+    // 渲染技艺详情
     renderSpecialtyDetail(item) {
         const inCalculator = this.calculatorModule ? this.calculatorModule.calculatorItems.find(i => i.id == item.id && i.mode === this.currentMode) : null;
         const currentLevel = this.specialtyLevels.get(item.id) || 1;
         const maxLevel = item.level || 1;
         
-        // 获取所有等级的描述和成本
-        let descriptionText = this.getSpecialtyAllDescriptions(item);
-        let costText = Array.isArray(item.cost) ? item.cost.join('/') : (item.cost || 0);
+        // 获取当前等级的描述和成本
+        let currentDescription = this.getSpecialtyDescription(item, currentLevel);
+        let currentCost = this.getSpecialtyCost(item, currentLevel);
         
         // 构建等级选择器选项
         const levelOptions = [];
@@ -528,12 +451,6 @@ class UnifiedManager {
         
         // 格式化需求
         const needText = item.need && item.need.length > 0 ? item.need.join(', ') : '无';
-        
-        // 格式化消耗显示（当前等级加粗）
-        const formattedCost = this.formatSpecialtyCostWithBold(costText, currentLevel);
-        
-        // 格式化描述显示（当前等级加粗）
-        const formattedDescription = this.formatSpecialtyDescriptionWithBold(descriptionText, currentLevel);
         
         return `
             <div class="detail-text-container">
@@ -557,15 +474,14 @@ class UnifiedManager {
                         </select>
                         <span>/${maxLevel}</span>
                     </div>
-                </div>
-            </div>
-            
-            <div class="detail-section">
-                <h4>消耗</h4>
-                <div class="detail-content">
-                    <div class="detail-cost specialty-cost-formatted">
-                        ${formattedCost}
+                    <div class="detail-attribute" style="margin-top: 15px;">
+                        <strong id="detail-cost">当前等级成本: ${currentCost}</strong>
                     </div>
+                    ${Array.isArray(item.cost) ? `
+                    <div class="detail-attribute">
+                        <strong>全部等级成本:</strong> ${item.cost.join('/')}
+                    </div>
+                    ` : ''}
                 </div>
             </div>
             
@@ -573,7 +489,7 @@ class UnifiedManager {
                 <h4>效果</h4>
                 <div class="detail-content">
                     <div class="detail-description specialty-description-formatted">
-                        ${formattedDescription}
+                        ${this.formatSpecialtyDescription(currentDescription, currentLevel, maxLevel)}
                     </div>
                 </div>
             </div>
@@ -593,67 +509,6 @@ class UnifiedManager {
                 `}
             </div>
         `;
-    }
-    
-    // 获取技艺所有等级的描述
-    getSpecialtyAllDescriptions(specialty) {
-        if (!specialty.description) return '';
-        
-        // 如果description是数组，直接返回
-        if (Array.isArray(specialty.description)) {
-            return specialty.description;
-        }
-        
-        // 否则，返回一个数组，包含最大等级的描述（根据最大等级重复）
-        const maxLevel = specialty.level || 1;
-        return Array(maxLevel).fill(specialty.description);
-    }
-    
-    // 格式化技艺消耗（当前等级加粗）
-    formatSpecialtyCostWithBold(costText, currentLevel) {
-        if (!costText) return '';
-        
-        let formatted = '';
-        
-        if (costText.includes('/')) {
-            const parts = costText.split('/');
-            formatted = parts.map((part, index) => {
-                const level = index + 1;
-                const cleanPart = this.escapeHtml(part.trim());
-                if (level === currentLevel) {
-                    return `<strong class="current-level">${cleanPart}</strong>`;
-                } else {
-                    return cleanPart;
-                }
-            }).join(' / ');
-        } else {
-            formatted = costText;
-        }
-        
-        return formatted;
-    }
-    
-    // 格式化技艺描述（当前等级加粗）
-    formatSpecialtyDescriptionWithBold(description, currentLevel) {
-        if (!description) return '';
-        
-        let formatted = '';
-        
-        if (Array.isArray(description)) {
-            formatted = description.map((desc, index) => {
-                const level = index + 1;
-                const descText = this.formatDescription(this.escapeHtml(desc || ''));
-                if (level === currentLevel) {
-                    return `<strong class="current-level">${descText}</strong>`;
-                } else {
-                    return descText;
-                }
-            }).join(' / ');
-        } else {
-            formatted = this.formatDescription(this.escapeHtml(description));
-        }
-        
-        return formatted;
     }
     
     // 获取技艺描述（根据等级）
@@ -694,6 +549,37 @@ class UnifiedManager {
         return specialty.cost;
     }
     
+    // 格式化技艺描述（加粗花括号内容）
+    formatSpecialtyDescription(description, currentLevel, maxLevel) {
+        if (!description) return '';
+        
+        let formatted = this.escapeHtml(description);
+        
+        // 处理花括号内的内容
+        formatted = formatted.replace(/\{([^}]+)\}/g, (match, content) => {
+            // 如果内容包含斜杠，表示是多等级格式
+            if (content.includes('/')) {
+                const parts = content.split('/');
+                const levelIndex = currentLevel - 1;
+                if (levelIndex >= 0 && levelIndex < parts.length) {
+                    // 当前等级对应的部分加粗
+                    return `<strong>${parts[levelIndex]}</strong>`;
+                } else {
+                    // 显示所有等级
+                    return parts.join('/');
+                }
+            } else {
+                // 单个内容直接加粗
+                return `<strong>${content}</strong>`;
+            }
+        });
+        
+        // 用<br>替换分号
+        formatted = formatted.replace(/;/g, '<br>');
+        
+        return formatted;
+    }
+    
     // 更新技艺等级
     updateSpecialtyLevel(itemId, newLevel) {
         this.specialtyLevels.set(itemId, newLevel);
@@ -721,55 +607,6 @@ class UnifiedManager {
         if (this.calculatorModule) {
             this.calculatorModule.addItem(item, mode || this.currentMode, selectedLevel);
             this.showStatus(`已添加 ${item.name} 到计算器`, 'success');
-            
-            // 更新列表中的显示
-            this.updateCompactItemInList(itemId);
-        }
-    }
-    
-    // 更新详细视图中的操作按钮
-    updateDetailActionButtons(itemId, detailBody) {
-        const inCalculator = this.calculatorModule ? this.calculatorModule.calculatorItems.find(i => i.id == itemId && i.mode === this.currentMode) : null;
-        const actionsContainer = detailBody.querySelector('.detail-actions');
-        
-        if (!actionsContainer) return;
-        
-        // 根据是否在计算器中更新按钮
-        if (inCalculator) {
-            // 已经在计算器中，显示移除按钮
-            actionsContainer.innerHTML = `<button class="btn-danger detail-remove-btn" data-id="${itemId}">移出计算器</button>`;
-            
-            // 绑定移除事件
-            const removeBtn = actionsContainer.querySelector('.detail-remove-btn');
-            removeBtn.addEventListener('click', () => {
-                this.calculatorModule.removeFromCalculator(itemId, this.currentMode);
-                this.updateDetailActionButtons(itemId, detailBody);
-                // 同时更新列表中的项
-                this.updateCompactItemInList(itemId);
-            });
-        } else {
-            // 不在计算器中，显示添加按钮
-            actionsContainer.innerHTML = `<button class="btn-success detail-add-btn" data-id="${itemId}">添加到计算器</button>`;
-            
-            // 绑定添加事件
-            const addBtn = actionsContainer.querySelector('.detail-add-btn');
-            addBtn.addEventListener('click', () => {
-                this.addToCalculator(itemId, this.currentMode);
-                this.updateDetailActionButtons(itemId, detailBody);
-                // 同时更新列表中的项
-                this.updateCompactItemInList(itemId);
-            });
-        }
-    }
-    
-    // 更新列表中的项
-    updateCompactItemInList(itemId) {
-        const item = this.currentData.find(i => i.id == itemId);
-        if (!item) return;
-        
-        const itemElement = document.querySelector(`.compact-item[data-id="${itemId}"]`);
-        if (itemElement) {
-            this.renderCompactItem(itemElement, item);
         }
     }
     
