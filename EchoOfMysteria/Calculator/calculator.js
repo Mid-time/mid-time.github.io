@@ -1,5 +1,5 @@
 // ================================
-// 统一计算器模块 - 支持新界面布局
+// 统一计算器模块 - 支持新界面布局 - 修复版
 // ================================
 class UnifiedCalculator {
     constructor(itemManager, specialtyManager) {
@@ -573,7 +573,7 @@ class UnifiedCalculator {
         return specialty.cost;
     }
     
-    // 更新总计
+    // 更新总计 - 修复版：修复技艺点数计算
     updateSummary(items, specialties) {
         // 计算总消耗
         let totalCopperCost = 0;  // 铜币总消耗
@@ -586,7 +586,7 @@ class UnifiedCalculator {
             totalWeight += (item.weight || 0) * item.quantity;
         });
         
-        // 计算技艺总消耗（技艺点）
+        // 计算技艺总消耗（技艺点）- 修复：使用当前等级的成本
         specialties.forEach(specialty => {
             const currentLevel = specialty.currentLevel || 1;
             totalSpecialtyCost += this.getSpecialtyCost(specialty, currentLevel);
@@ -611,6 +611,27 @@ class UnifiedCalculator {
         } else {
             statusText = '超重';
             statusClass = 'overloaded';
+        }
+        
+        // 格式化总消耗显示
+        const totalCostElement = document.getElementById('total-cost');
+        if (totalCostElement) {
+            const gold = Math.floor(totalCopperCost / 10000);
+            const silver = Math.floor((totalCopperCost % 10000) / 100);
+            const copper = totalCopperCost % 100;
+            
+            let costHtml = '';
+            if (gold > 0) {
+                costHtml += `<span style="font-size: 1.4rem; font-weight: bold;">${gold}</span><span style="font-size: 0.9rem; color: var(--text-light);">金币</span> `;
+            }
+            if (silver > 0) {
+                costHtml += `<span style="font-size: 1.4rem; font-weight: bold;">${silver}</span><span style="font-size: 0.9rem; color: var(--text-light);">银币</span> `;
+            }
+            if (copper > 0 || (gold === 0 && silver === 0)) {
+                costHtml += `<span style="font-size: 1.4rem; font-weight: bold;">${copper}</span><span style="font-size: 0.9rem; color: var(--text-light);">铜币</span>`;
+            }
+            
+            totalCostElement.innerHTML = costHtml;
         }
         
         // 更新负重显示
@@ -654,7 +675,7 @@ class UnifiedCalculator {
         this.showStatus('计算器已清空', 'success');
     }
     
-    // 下载计算器清单
+    // 下载计算器清单 - 修复版：修改物品描述和消耗格式，不显示ID
     downloadCalculatorData() {
         const items = this.calculatorItems.filter(item => item.mode === 'items');
         const specialties = this.calculatorItems.filter(item => item.mode === 'specialties');
@@ -671,7 +692,7 @@ class UnifiedCalculator {
         const timestamp = new Date().toLocaleString('zh-CN');
         
         // 添加标题
-        content += `统一计算器清单\n`;
+        content += `资源计算器清单\n`;
         content += `生成时间: ${timestamp}\n`;
         content += `角色属性: 力量 ${this.characterStrength}, 耐性 ${this.characterEndurance}\n`;
         content += '='.repeat(50) + '\n\n';
@@ -696,7 +717,11 @@ class UnifiedCalculator {
                 // 添加物品描述
                 if (item.description) {
                     // 清理描述中的HTML标签
-                    const cleanDesc = item.description.replace(/<[^>]*>/g, '');
+                    const cleanDesc = item.description
+                        .replace(/<[^>]*>/g, '')
+                        .replace(/\n/g, ' ')
+                        .replace(/\s+/g, ' ')
+                        .trim();
                     content += `   描述: ${cleanDesc}\n`;
                 }
                 
@@ -751,7 +776,10 @@ class UnifiedCalculator {
                             }
                         }
                         return content;
-                    });
+                    })
+                    .replace(/\n/g, ' ')
+                    .replace(/\s+/g, ' ')
+                    .trim();
                 
                 content += `   效果: ${cleanDescription}\n`;
                 
