@@ -1,266 +1,676 @@
 // ================================
-// 统一管理器 - 负责数据管理、筛选与与计算器交互（防重复声明）
+// 统一管理器 - 负责数据管理和UI交互
 // ================================
-if (typeof UnifiedManager === 'undefined') {
-    class UnifiedManager {
-        constructor(dataManager, mode = 'items') {
-            this.dataManager = dataManager;
-            this.currentMode = mode; // 'items' 或 'specialties'
-            this.currentData = [];
-            this.filteredData = [];
-            this.currentPage = 1;
-            this.itemsPerPage = 20;
-
-            // 筛选状态（由 UnifiedFilterSystem 管理并注入）
-            this.filterSystem = null;
-
-            // 计算器模块引用（由 app 初始化后注入）
-            this.calculatorModule = null;
-
-            // 技艺等级选择（仅 specialties）
-            this.specialtyLevels = new Map();
-        }
-
-        setFilterSystem(filterSystem) {
-            this.filterSystem = filterSystem;
-        }
-
-        setCalculatorModule(calculatorModule) {
-            this.calculatorModule = calculatorModule;
-        }
-
-        async loadData() {
+class UnifiedManager {
+    constructor(dataManager, mode = 'items') {
+        this.dataManager = dataManager;
+        this.currentData = [];
+        this.filteredData = [];
+        
+        // 分页相关
+        this.currentPage = 1;
+        this.itemsPerPage = 20;
+        
+        // 当前模式
+        this.currentMode = mode;
+        
+        // 技艺等级选择器状态
+        this.specialtyLevels = new Map();
+        
+        // 详情弹窗管理
+        this.detailModal = null;
+        
+        // 获取计算器模块引用
+        this.calculatorModule = null;
+        
+        // 获取筛选系统引用
+        this.filterSystem = null;
+    }
+    
+    // 设置筛选系统引用
+    setFilterSystem(filterSystem) {
+        this.filterSystem = filterSystem;
+    }
+    
+    // 设置计算器模块引用
+    setCalculatorModule(calculatorModule) {
+        this.calculatorModule = calculatorModule;
+    }
+    
+    // 加载数据
+    async loadData() {
+        return await this.loadCurrentData();
+    }
+    
+    // 加载当前模式的数据
+    async loadCurrentData() {
+        try {
+            console.log(`开始加载${this.currentMode}数据...`);
             if (this.currentMode === 'items') {
                 this.currentData = await this.dataManager.loadItems();
+                console.log(`物品数据加载完成，共${this.currentData.length}条`);
             } else {
                 this.currentData = await this.dataManager.loadSpecialties();
-                this.currentData.forEach(s => this.specialtyLevels.set(s.id, 1));
+                console.log(`技艺数据加载完成，共${this.currentData.length}条`);
+                
+                // 为所有技艺初始化等级选择器状态
+                this.currentData.forEach(specialty => {
+                    this.specialtyLevels.set(specialty.id, 1);
+                });
             }
+            
+            // 应用筛选和排序
             this.applyFilterAndSort();
+            
             return true;
+        } catch (error) {
+            console.error(`加载${this.currentMode}数据失败:`, error);
+            return false;
         }
-
-        applyFilterAndSort() {
-            if (!this.filterSystem) {
-                this.filteredData = [...this.currentData];
-            } else {
-                this.filterSystem.setMode(this.currentMode);
-                this.filteredData = this.filterSystem.applyFiltersToData(this.currentData, this.currentMode);
-                this.filteredData = this.filterSystem.sortData(this.filteredData, this.currentMode);
-            }
-            this.currentPage = 1;
+    }
+    
+    // 应用筛选和排序
+    applyFilterAndSort() {
+        if (!this.filterSystem) {
+            this.filteredData = [...this.currentData];
+            return;
         }
-
-        // 渲染结果列表（item-list / specialty-list）
-        renderFilterResults(listId = 'item-list', countId = 'results-count') {
-            const container = document.getElementById(listId);
-            const resultsCount = document.getElementById(countId);
-            const pagination = document.getElementById(listId.includes('specialty') ? 'specialty-pagination' : 'pagination');
-            if (!container) return;
-
-            container.innerHTML = '';
-            if (!this.filteredData || this.filteredData.length === 0) {
-                container.innerHTML = `<div class="empty-state">没有找到匹配的${this.currentMode === 'items' ? '物品' : '技艺'}</div>`;
-                if (pagination) pagination.style.display = 'none';
-                if (resultsCount) resultsCount.textContent = '0 个项目';
-                return;
-            }
-
-            const totalPages = Math.max(1, Math.ceil(this.filteredData.length / this.itemsPerPage));
-            if (this.currentPage > totalPages) this.currentPage = totalPages;
-            const start = (this.currentPage - 1) * this.itemsPerPage;
-            const pageItems = this.filteredData.slice(start, start + this.itemsPerPage);
-
-            pageItems.forEach(item => {
-                const el = document.createElement('div');
-                el.className = 'compact-item';
-                el.dataset.id = item.id;
-                this.renderCompactItem(el, item);
-                container.appendChild(el);
+        
+        // 设置筛选系统模式
+        this.filterSystem.setMode(this.currentMode);
+        
+        // 应用筛选
+        this.filteredData = this.filterSystem.applyFiltersToData(this.currentData, this.currentMode);
+        
+        // 应用排序
+        this.filteredData = this.filterSystem.sortData(this.filteredData, this.currentMode);
+        
+        // 重置到第一页
+        this.currentPage = 1;
+    }
+    
+    // 渲染筛选结果
+    renderFilterResults(listId = 'item-list', countId = 'results-count') {
+        const itemList = document.getElementById(listId);
+        const pagination = document.getElementById(listId.includes('specialty') ? 'specialty-pagination' : 'pagination');
+        const resultsCount = document.getElementById(countId);
+        
+        if (!itemList) return;
+        
+        // 清空列表
+        itemList.innerHTML = '';
+        
+        if (this.filteredData.length === 0) {
+            itemList.innerHTML = '<div class="empty-state">没有找到匹配的' + (this.currentMode === 'items' ? '物品' : '技艺') + '</div>';
+            if (pagination) pagination.style.display = 'none';
+            if (resultsCount) resultsCount.textContent = '0 个项目';
+            return;
+        }
+        
+        // 计算分页
+        const totalPages = Math.ceil(this.filteredData.length / this.itemsPerPage);
+        const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+        const endIndex = Math.min(startIndex + this.itemsPerPage, this.filteredData.length);
+        const pageItems = this.filteredData.slice(startIndex, endIndex);
+        
+        // 渲染当前页的数据
+        pageItems.forEach(item => {
+            const compactItem = document.createElement('div');
+            compactItem.className = 'compact-item';
+            compactItem.dataset.id = item.id;
+            
+            this.renderCompactItem(compactItem, item);
+            
+            // 添加点击事件显示详情
+            compactItem.addEventListener('click', (e) => {
+                // 防止点击按钮或数量调整器时触发详情
+                if (!e.target.closest('.compact-add-btn') && 
+                    !e.target.closest('.quantity-adjuster') &&
+                    !e.target.closest('button') &&
+                    !e.target.closest('input')) {
+                    this.showItemDetail(item);
+                }
             });
-
-            if (resultsCount) resultsCount.textContent = `${this.filteredData.length} 个项目`;
-
-            // 分页显示
-            if (pagination) {
-                pagination.style.display = 'flex';
-                const pageInfo = document.getElementById(listId.includes('specialty') ? 'specialty-page-info' : 'page-info');
-                if (pageInfo) pageInfo.textContent = `第 ${this.currentPage} 页，共 ${totalPages} 页`;
-                const prev = document.getElementById(listId.includes('specialty') ? 'specialty-prev-page' : 'prev-page');
-                const next = document.getElementById(listId.includes('specialty') ? 'specialty-next-page' : 'next-page');
-                if (prev) prev.disabled = this.currentPage <= 1;
-                if (next) next.disabled = this.currentPage >= totalPages;
+            
+            itemList.appendChild(compactItem);
+        });
+        
+        // 更新结果计数
+        if (resultsCount) {
+            resultsCount.textContent = `${this.filteredData.length} 个项目`;
+        }
+        
+        // 更新分页信息
+        const pageInfo = document.getElementById(listId.includes('specialty') ? 'specialty-page-info' : 'page-info');
+        if (pageInfo) {
+            pageInfo.textContent = `第 ${this.currentPage} 页，共 ${totalPages} 页`;
+        }
+        
+        // 显示分页控件
+        if (pagination) {
+            pagination.style.display = 'flex';
+            
+            // 更新分页按钮状态
+            const prevPage = document.getElementById(listId.includes('specialty') ? 'specialty-prev-page' : 'prev-page');
+            const nextPage = document.getElementById(listId.includes('specialty') ? 'specialty-next-page' : 'next-page');
+            if (prevPage) prevPage.disabled = this.currentPage === 1;
+            if (nextPage) nextPage.disabled = this.currentPage === totalPages;
+        }
+    }
+    
+    // 渲染紧凑列表项
+    renderCompactItem(container, item) {
+        let costText = '';
+        if (this.currentMode === 'items') {
+            costText = this.formatCurrency(item.cost || 0);
+        } else {
+            // 技艺：显示成本范围或当前成本
+            const currentLevel = this.specialtyLevels.get(item.id) || 1;
+            if (Array.isArray(item.cost)) {
+                const levelIndex = currentLevel - 1;
+                if (levelIndex >= 0 && levelIndex < item.cost.length) {
+                    costText = `成本: ${item.cost[levelIndex]}`;
+                } else {
+                    costText = `成本: ${item.cost.join('/')}`;
+                }
+            } else {
+                costText = `成本: ${item.cost || 0}`;
             }
         }
-
-        // 渲染紧凑条目：包含添加/数量调节或等级选择（技艺）
-        renderCompactItem(container, item) {
-            const tags = item.tags || item.tag || [];
-            const displayTags = tags.slice(0, 3);
-            let costText = '';
-
-            if (this.currentMode === 'items') {
-                costText = this.formatCurrency(item.cost || 0);
-            } else {
-                const lvl = this.specialtyLevels.get(item.id) || 1;
-                if (Array.isArray(item.cost)) {
-                    costText = `成本: ${item.cost[lvl - 1] !== undefined ? item.cost[lvl - 1] : item.cost.join('/')}`;
-                } else {
-                    costText = `成本: ${item.cost || 0}`;
-                }
-            }
-
-            // 是否在计算器中
-            const inCalc = this.calculatorModule ? this.calculatorModule.isInCalculator(item.id, this.currentMode) : false;
-            const calcQty = this.calculatorModule ? this.calculatorModule.getCalculatorQuantity(item.id, this.currentMode) : 0;
-
-            let actionHtml = '';
-            if (this.currentMode === 'items') {
-                if (inCalc && calcQty > 0) {
-                    actionHtml = `
-                        <div class="quantity-adjuster">
-                            <button class="btn-danger decrease-btn" data-id="${item.id}" data-mode="items">-</button>
-                            <input type="number" class="quantity-input" value="${calcQty}" min="0" data-id="${item.id}" data-mode="items">
-                            <button class="btn-success increase-btn" data-id="${item.id}" data-mode="items">+</button>
-                        </div>
-                    `;
-                } else {
-                    actionHtml = `<button class="btn-success compact-add-btn" data-id="${item.id}" data-mode="items">添加</button>`;
-                }
-            } else {
-                // specialties: 添加为等级选择之前
-                if (inCalc) {
-                    actionHtml = `<button class="btn-danger compact-remove-btn" data-id="${item.id}" data-mode="specialties">移除</button>`;
-                } else {
-                    actionHtml = `<button class="btn-success compact-add-btn" data-id="${item.id}" data-mode="specialties">添加</button>`;
-                }
-            }
-
-            container.innerHTML = `
-                <div class="compact-item-header">
-                    <div class="compact-item-name">${this.escapeHtml(item.name)}</div>
-                    <div class="compact-item-tags">
-                        ${displayTags.map(t => `<span class="compact-tag">${this.escapeHtml(t)}</span>`).join('')}
-                        ${tags.length > 3 ? `<span class="compact-tag">+${tags.length - 3}</span>` : ''}
-                    </div>
-                </div>
-                <div class="compact-item-details">
-                    <div class="compact-item-cost">${costText}</div>
-                    ${actionHtml}
+        
+        // 获取标签显示
+        const tags = item.tags || item.tag || [];
+        const displayTags = tags.slice(0, 3); // 只显示前3个标签
+        
+        // 检查是否在计算器中
+        const isInCalculator = this.calculatorModule ? this.calculatorModule.isInCalculator(item.id, this.currentMode) : false;
+        const calculatorQuantity = isInCalculator ? this.calculatorModule.getCalculatorQuantity(item.id, this.currentMode) : 0;
+        
+        let actionButtons = '';
+        
+        if (isInCalculator && calculatorQuantity > 0) {
+            // 如果已在计算器中且数量大于0，显示数量调整器
+            actionButtons = `
+                <div class="quantity-adjuster">
+                    <button class="btn-danger decrease-btn" data-id="${item.id}" data-mode="${this.currentMode}">-</button>
+                    <input type="number" class="quantity-input" value="${calculatorQuantity}" min="0" data-id="${item.id}" data-mode="${this.currentMode}">
+                    <button class="btn-success increase-btn" data-id="${item.id}" data-mode="${this.currentMode}">+</button>
                 </div>
             `;
-
-            // 绑定事件
+        } else {
+            // 如果不在计算器中，显示添加按钮
+            actionButtons = `<button class="btn-success compact-add-btn" data-id="${item.id}" data-mode="${this.currentMode}">添加</button>`;
+        }
+        
+        container.innerHTML = `
+            <div class="compact-item-header">
+                <div class="compact-item-name">${this.escapeHtml(item.name)}</div>
+                <div class="compact-item-tags">
+                    ${displayTags.map(tag => `<span class="compact-tag">${this.escapeHtml(tag)}</span>`).join('')}
+                    ${tags.length > 3 ? `<span class="compact-tag">+${tags.length - 3}</span>` : ''}
+                </div>
+            </div>
+            <div class="compact-item-details">
+                <div class="compact-item-cost">${costText}</div>
+                ${actionButtons}
+            </div>
+        `;
+        
+        // 添加按钮事件
+        if (isInCalculator && calculatorQuantity > 0) {
+            // 数量调整器事件
+            const decreaseBtn = container.querySelector('.decrease-btn');
+            const increaseBtn = container.querySelector('.increase-btn');
+            const quantityInput = container.querySelector('.quantity-input');
+            
+            const updateQuantityHandler = (itemId, mode, newQuantity) => {
+                if (this.calculatorModule) {
+                    if (newQuantity === 0) {
+                        this.calculatorModule.removeFromCalculator(itemId, mode);
+                    } else {
+                        this.calculatorModule.updateQuantity(itemId, mode, newQuantity);
+                    }
+                    
+                    // 重新渲染该项以更新按钮状态
+                    setTimeout(() => {
+                        this.renderCompactItem(container, item);
+                    }, 100);
+                }
+            };
+            
+            decreaseBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const itemId = e.target.dataset.id;
+                const mode = e.target.dataset.mode;
+                const currentQuantity = parseInt(quantityInput.value);
+                if (currentQuantity > 0) {
+                    const newQuantity = currentQuantity - 1;
+                    updateQuantityHandler(itemId, mode, newQuantity);
+                }
+            });
+            
+            increaseBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const itemId = e.target.dataset.id;
+                const mode = e.target.dataset.mode;
+                const currentQuantity = parseInt(quantityInput.value);
+                const newQuantity = currentQuantity + 1;
+                updateQuantityHandler(itemId, mode, newQuantity);
+            });
+            
+            quantityInput.addEventListener('change', (e) => {
+                e.stopPropagation();
+                const itemId = e.target.dataset.id;
+                const mode = e.target.dataset.mode;
+                const newQuantity = parseInt(e.target.value) || 0;
+                updateQuantityHandler(itemId, mode, newQuantity);
+            });
+            
+            quantityInput.addEventListener('blur', (e) => {
+                e.stopPropagation();
+                const itemId = e.target.dataset.id;
+                const mode = e.target.dataset.mode;
+                const newQuantity = parseInt(e.target.value) || 0;
+                updateQuantityHandler(itemId, mode, newQuantity);
+            });
+        } else {
+            // 添加按钮事件
             const addBtn = container.querySelector('.compact-add-btn');
-            if (addBtn) {
-                addBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    this.addToCalculator(item.id, this.currentMode);
-                    // 小延迟后重新渲染当前项以显示数量控件
-                    setTimeout(() => this.renderCompactItem(container, item), 120);
-                });
+            addBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const itemId = e.target.dataset.id;
+                const mode = e.target.dataset.mode;
+                this.addToCalculator(itemId, mode);
+                
+                // 重新渲染该项以显示数量调整器
+                setTimeout(() => {
+                    this.renderCompactItem(container, item);
+                }, 100);
+            });
+        }
+    }
+    
+    // 显示物品详情
+    showItemDetail(item) {
+        const modal = document.getElementById('detail-modal');
+        const title = document.getElementById('detail-title');
+        const body = document.querySelector('.detail-modal-body');
+        
+        if (!modal || !title || !body) return;
+        
+        // 填充详情内容
+        title.textContent = item.name;
+        
+        let detailHtml = '';
+        
+        if (this.currentMode === 'items') {
+            detailHtml = this.renderItemDetail(item);
+        } else {
+            detailHtml = this.renderSpecialtyDetail(item);
+        }
+        
+        body.innerHTML = detailHtml;
+        
+        // 显示弹窗
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        
+        // 添加关闭事件
+        const closeBtn = modal.querySelector('.close-detail-btn');
+        if (closeBtn) {
+            closeBtn.onclick = () => {
+                modal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            };
+        }
+        
+        // 点击弹窗外关闭
+        modal.onclick = (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+                document.body.style.overflow = 'auto';
             }
-
-            const decrease = container.querySelector('.decrease-btn');
-            const increase = container.querySelector('.increase-btn');
-            const qtyInput = container.querySelector('.quantity-input');
-
-            if (decrease) {
-                decrease.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const id = e.target.dataset.id;
-                    const cur = parseInt(qtyInput.value) || 0;
-                    const newQ = Math.max(0, cur - 1);
-                    this.calculatorModule.updateQuantity(id, 'items', newQ);
-                    setTimeout(() => this.renderCompactItem(container, item), 100);
-                });
-            }
-            if (increase) {
-                increase.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const id = e.target.dataset.id;
-                    const cur = parseInt(qtyInput.value) || 0;
-                    const newQ = cur + 1;
-                    this.calculatorModule.updateQuantity(id, 'items', newQ);
-                    setTimeout(() => this.renderCompactItem(container, item), 100);
-                });
-            }
-            if (qtyInput) {
-                qtyInput.addEventListener('change', (e) => {
-                    e.stopPropagation();
-                    const id = e.target.dataset.id;
-                    const newQ = parseInt(e.target.value) || 0;
-                    this.calculatorModule.updateQuantity(id, 'items', newQ);
-                    setTimeout(() => this.renderCompactItem(container, item), 100);
-                });
-            }
-
-            const removeBtn = container.querySelector('.compact-remove-btn');
-            if (removeBtn) {
-                removeBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const id = e.target.dataset.id;
-                    this.calculatorModule.removeFromCalculator(id, 'specialties');
-                    setTimeout(() => this.renderCompactItem(container, item), 100);
-                });
+        };
+        
+        // 添加添加到计算器的事件
+        const addBtn = body.querySelector('.detail-add-btn');
+        if (addBtn) {
+            addBtn.addEventListener('click', () => {
+                this.addToCalculator(item.id, this.currentMode);
+                this.updateDetailActionButtons(item.id, body);
+            });
+        }
+        
+        // 更新数量输入事件
+        const quantityInput = body.querySelector('.detail-quantity-input');
+        if (quantityInput) {
+            quantityInput.addEventListener('change', (e) => {
+                const newQuantity = parseInt(e.target.value) || 0;
+                if (this.calculatorModule) {
+                    if (newQuantity === 0) {
+                        this.calculatorModule.removeFromCalculator(item.id, this.currentMode);
+                    } else {
+                        this.calculatorModule.updateQuantity(item.id, this.currentMode, newQuantity);
+                    }
+                    this.updateDetailActionButtons(item.id, body);
+                    
+                    // 更新筛选结果中的显示
+                    this.updateCompactItemInList(item.id);
+                }
+            });
+        }
+        
+        // 更新等级选择事件（技艺）
+        const levelSelect = body.querySelector('.detail-level-select');
+        if (levelSelect) {
+            levelSelect.addEventListener('change', (e) => {
+                const newLevel = parseInt(e.target.value) || 1;
+                this.updateSpecialtyLevel(item.id, newLevel);
+                
+                // 重新渲染详情内容以更新描述和成本
+                this.showItemDetail(item);
+            });
+        }
+    }
+    
+    // 渲染物品详情
+    renderItemDetail(item) {
+        const inCalculator = this.calculatorModule ? this.calculatorModule.calculatorItems.find(i => i.id == item.id && i.mode === this.currentMode) : null;
+        const quantity = inCalculator ? inCalculator.quantity : 0;
+        
+        // 格式化需求
+        const needText = item.need && item.need.length > 0 ? item.need.join(', ') : '无';
+        
+        return `
+            <div class="detail-text-container">
+                <div class="detail-text-item"><strong>类型:</strong> ${item.maintype || ''}${item.subtype ? ' - ' + item.subtype : ''}</div>
+                <div class="detail-text-item"><strong>稀有度:</strong> ${item.rarity || '无'}</div>
+                <div class="detail-text-item"><strong>需求:</strong> ${needText}</div>
+            </div>
+            
+            <div class="detail-tags">
+                ${(item.tags || []).map(tag => `<span class="detail-tag">${this.escapeHtml(tag)}</span>`).join('')}
+            </div>
+            
+            <div class="detail-section">
+                <h4>描述</h4>
+                <div class="detail-content">
+                    <div class="detail-description">${this.formatDescription(this.escapeHtml(item.description || '无描述'))}</div>
+                </div>
+            </div>
+            
+            ${item.flavortext ? `
+            <div class="detail-section flavortext-section">
+                <h4>背景描述</h4>
+                <div class="flavortext">${this.escapeHtml(item.flavortext)}</div>
+            </div>
+            ` : ''}
+            
+            <div class="detail-attributes">
+                <div class="detail-attribute">
+                    <strong>价格:</strong> ${this.formatCurrency(item.cost || 0)}
+                </div>
+                <div class="detail-attribute">
+                    <strong>重量:</strong> ${item.weight || 0} 荷
+                </div>
+                ${item.skill && item.skill !== '无' ? `
+                <div class="detail-attribute">
+                    <strong>技能需求:</strong> ${item.skill}
+                </div>
+                ` : ''}
+            </div>
+            
+            <div class="detail-actions">
+                ${inCalculator ? `
+                    <div class="detail-quantity">
+                        <label>数量:</label>
+                        <input type="number" class="detail-quantity-input" value="${quantity}" min="0" data-id="${item.id}">
+                    </div>
+                ` : `
+                    <button class="btn-success detail-add-btn" data-id="${item.id}">添加到计算器</button>
+                `}
+            </div>
+        `;
+    }
+    
+    // 渲染技艺详情
+    renderSpecialtyDetail(item) {
+        const inCalculator = this.calculatorModule ? this.calculatorModule.calculatorItems.find(i => i.id == item.id && i.mode === this.currentMode) : null;
+        const currentLevel = this.specialtyLevels.get(item.id) || 1;
+        const maxLevel = item.level || 1;
+        
+        // 获取当前等级的描述和成本
+        let currentDescription = this.getSpecialtyDescription(item, currentLevel);
+        let currentCost = this.getSpecialtyCost(item, currentLevel);
+        
+        // 构建等级选择器选项
+        const levelOptions = [];
+        for (let i = 1; i <= maxLevel; i++) {
+            levelOptions.push(`<option value="${i}" ${i === currentLevel ? 'selected' : ''}>${i}</option>`);
+        }
+        
+        // 格式化需求
+        const needText = item.need && item.need.length > 0 ? item.need.join(', ') : '无';
+        
+        return `
+            <div class="detail-text-container">
+                <div class="detail-text-item"><strong>类型:</strong> ${item.maintype || ''}${item.subtype ? ' - ' + item.subtype : ''}</div>
+                <div class="detail-text-item"><strong>稀有度:</strong> ${item.rarity || '无'}</div>
+                <div class="detail-text-item"><strong>需求:</strong> ${needText}</div>
+                <div class="detail-text-item"><strong>最大等级:</strong> ${maxLevel}</div>
+            </div>
+            
+            <div class="detail-tags">
+                ${(item.tag || []).map(tag => `<span class="detail-tag">${this.escapeHtml(tag)}</span>`).join('')}
+            </div>
+            
+            <div class="detail-section">
+                <h4>等级选择</h4>
+                <div class="detail-content">
+                    <div class="detail-level-selector">
+                        <label>选择等级:</label>
+                        <select class="detail-level-select" data-id="${item.id}">
+                            ${levelOptions.join('')}
+                        </select>
+                        <span>/${maxLevel}</span>
+                    </div>
+                    <div class="detail-attribute" style="margin-top: 15px;">
+                        <strong id="detail-cost">当前等级成本: ${currentCost}</strong>
+                    </div>
+                    ${Array.isArray(item.cost) ? `
+                    <div class="detail-attribute">
+                        <strong>全部等级成本:</strong> ${item.cost.join('/')}
+                    </div>
+                    ` : ''}
+                </div>
+            </div>
+            
+            <div class="detail-section">
+                <h4>效果</h4>
+                <div class="detail-content">
+                    <div class="detail-description specialty-description-formatted">
+                        ${this.formatSpecialtyDescription(currentDescription, currentLevel, maxLevel)}
+                    </div>
+                </div>
+            </div>
+            
+            ${item.flavortext ? `
+            <div class="detail-section flavortext-section">
+                <h4>背景描述</h4>
+                <div class="flavortext">${this.escapeHtml(item.flavortext)}</div>
+            </div>
+            ` : ''}
+            
+            <div class="detail-actions">
+                ${inCalculator ? `
+                    <button class="btn-danger detail-remove-btn" data-id="${item.id}">移出计算器</button>
+                ` : `
+                    <button class="btn-success detail-add-btn" data-id="${item.id}">添加到计算器</button>
+                `}
+            </div>
+        `;
+    }
+    
+    // 获取技艺描述（根据等级）
+    getSpecialtyDescription(specialty, level) {
+        if (!specialty.description) return '';
+        
+        // 如果description是数组，根据等级获取对应描述
+        if (Array.isArray(specialty.description)) {
+            const levelIndex = level - 1;
+            if (levelIndex >= 0 && levelIndex < specialty.description.length) {
+                return specialty.description[levelIndex];
+            } else if (specialty.description.length > 0) {
+                return specialty.description[0];
+            } else {
+                return '';
             }
         }
-
-        addToCalculator(itemId, mode) {
-            const item = this.currentData.find(i => i.id == itemId);
-            if (!item) return;
-            let level = 1;
-            if (this.currentMode === 'specialties') level = this.specialtyLevels.get(itemId) || 1;
-            if (this.calculatorModule) {
-                this.calculatorModule.addItem(item, mode || this.currentMode, level);
+        
+        // 如果不是数组，直接返回
+        return specialty.description;
+    }
+    
+    // 获取技艺成本（根据等级）
+    getSpecialtyCost(specialty, level) {
+        if (!specialty.cost) return 0;
+        
+        if (Array.isArray(specialty.cost)) {
+            const levelIndex = level - 1;
+            if (levelIndex >= 0 && levelIndex < specialty.cost.length) {
+                return specialty.cost[levelIndex];
+            } else if (specialty.cost.length > 0) {
+                return specialty.cost[0];
+            } else {
+                return 0;
             }
         }
-
-        // 更新技艺等级（只修改本管理器的状态）
-        updateSpecialtyLevel(itemId, newLevel) {
-            this.specialtyLevels.set(itemId, newLevel);
-            if (this.calculatorModule && this.calculatorModule.isInCalculator(itemId, 'specialties')) {
-                this.calculatorModule.updateLevel(itemId, newLevel);
+        
+        return specialty.cost;
+    }
+    
+    // 格式化技艺描述（加粗花括号内容）
+    formatSpecialtyDescription(description, currentLevel, maxLevel) {
+        if (!description) return '';
+        
+        let formatted = this.escapeHtml(description);
+        
+        // 处理花括号内的内容
+        formatted = formatted.replace(/\{([^}]+)\}/g, (match, content) => {
+            // 如果内容包含斜杠，表示是多等级格式
+            if (content.includes('/')) {
+                const parts = content.split('/');
+                const levelIndex = currentLevel - 1;
+                if (levelIndex >= 0 && levelIndex < parts.length) {
+                    // 当前等级对应的部分加粗
+                    return `<strong>${parts[levelIndex]}</strong>`;
+                } else {
+                    // 显示所有等级
+                    return parts.join('/');
+                }
+            } else {
+                // 单个内容直接加粗
+                return `<strong>${content}</strong>`;
             }
+        });
+        
+        // 用<br>替换分号
+        formatted = formatted.replace(/;/g, '<br>');
+        
+        return formatted;
+    }
+    
+    // 更新技艺等级
+    updateSpecialtyLevel(itemId, newLevel) {
+        this.specialtyLevels.set(itemId, newLevel);
+        
+        // 如果已经在计算器中，更新计算器中的等级
+        if (this.calculatorModule && this.calculatorModule.isInCalculator(itemId, 'specialties')) {
+            this.calculatorModule.updateLevel(itemId, newLevel);
         }
-
-        // 工具方法
-        formatCurrency(copper) {
-            const gold = Math.floor(copper / 10000);
-            const silver = Math.floor((copper % 10000) / 100);
-            const copperRemainder = copper % 100;
-            const parts = [];
-            if (gold > 0) parts.push(`${gold}金币`);
-            if (silver > 0) parts.push(`${silver}银币`);
-            if (copperRemainder > 0 || parts.length === 0) parts.push(`${copperRemainder}铜币`);
-            return parts.join(' ');
+    }
+    
+    // 添加到计算器
+    addToCalculator(itemId, mode) {
+        const item = this.currentData.find(i => i.id == itemId);
+        if (!item) {
+            console.warn(`未找到数据: ${itemId}`);
+            return;
         }
-
-        escapeHtml(text) {
-            if (!text) return '';
-            const d = document.createElement('div');
-            d.textContent = text;
-            return d.innerHTML;
+        
+        // 对于技艺，获取当前选择的等级
+        let selectedLevel = 1;
+        if (this.currentMode === 'specialties') {
+            selectedLevel = this.specialtyLevels.get(itemId) || 1;
         }
-
-        formatDescription(text) {
-            if (!text) return '';
-            return text.replace(/;/g, '<br>').replace(/\{([^}]+)\}/g, '<strong>$1</strong>');
+        
+        if (this.calculatorModule) {
+            this.calculatorModule.addItem(item, mode || this.currentMode, selectedLevel);
+            this.showStatus(`已添加 ${item.name} 到计算器`, 'success');
         }
-
-        showStatus(msg, type) {
-            const el = document.getElementById('data-status');
-            if (!el) return;
-            el.textContent = msg;
-            el.className = 'data-status';
-            if (type === 'success') el.classList.add('success');
-            if (type === 'error') el.classList.add('error');
-            if (type === 'warning') el.classList.add('warning');
+    }
+    
+    // 货币格式化
+    formatCurrency(copper) {
+        const gold = Math.floor(copper / 10000);
+        const silver = Math.floor((copper % 10000) / 100);
+        const copperRemainder = copper % 100;
+        
+        let result = [];
+        if (gold > 0) result.push(`${gold}金币`);
+        if (silver > 0) result.push(`${silver}银币`);
+        if (copperRemainder > 0 || result.length === 0) result.push(`${copperRemainder}铜币`);
+        
+        return result.join(' ');
+    }
+    
+    // HTML转义函数
+    escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    // 格式化描述（分号换行，加粗{}内容）
+    formatDescription(text) {
+        if (!text) return '';
+        
+        // 用<br>替换分号
+        let formatted = text.replace(/;/g, '<br>');
+        
+        // 加粗{}中的内容
+        formatted = formatted.replace(/\{([^}]+)\}/g, '<strong>$1</strong>');
+        
+        return formatted;
+    }
+    
+    // 显示状态消息
+    showStatus(message, type) {
+        const statusElement = document.getElementById('data-status');
+        if (!statusElement) return;
+        
+        statusElement.textContent = message;
+        statusElement.className = 'data-status';
+        
+        if (type === 'success') {
+            statusElement.classList.add('success');
+        } else if (type === 'error') {
+            statusElement.classList.add('error');
+        } else if (type === 'warning') {
+            statusElement.classList.add('warning');
+        } else if (type === 'loading') {
+            statusElement.classList.add('loading');
+        }
+        
+        // 3秒后自动清除成功消息
+        if (type === 'success' || type === 'error' || type === 'warning') {
             setTimeout(() => {
-                if (el.textContent === msg) { el.textContent = ''; el.className = 'data-status'; }
+                if (statusElement.textContent === message) {
+                    statusElement.textContent = '';
+                    statusElement.className = 'data-status';
+                }
             }, 3000);
         }
     }
-
-    window.UnifiedManager = UnifiedManager;
 }
