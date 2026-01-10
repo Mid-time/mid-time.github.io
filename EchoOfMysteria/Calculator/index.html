@@ -98,44 +98,64 @@
         </section>
 
         <!-- 计算器视图 -->
-        <section class="view" id="calculator-view">
-            <!-- 计算器顶部栏 -->
-            <div class="calculator-summary-bar">
-                <div class="summary-grid">
-                    <div class="summary-item">
-                        <div class="summary-label">总消耗</div>
-                        <div class="summary-value" id="total-cost">0 铜币</div>
-                    </div>
-                    <div class="summary-item">
-                        <div class="summary-label">技艺点</div>
-                        <div class="summary-value" id="total-specialty-cost">0 点</div>
-                    </div>
-                    <div class="summary-item">
-                        <div class="summary-label">负重</div>
-                        <div class="summary-value" id="weight-summary">0/20</div>
-                        <div class="weight-status-badge" id="weight-status-badge">轻快</div>
-                    </div>
-                    <div class="summary-item">
-                        <div class="summary-label">力量</div>
-                        <div class="summary-value" id="strength-value">5</div>
-                    </div>
-                    <div class="summary-item">
-                        <div class="summary-label">耐性</div>
-                        <div class="summary-value" id="endurance-value">5</div>
-                    </div>
-                </div>
-                <div class="summary-actions">
-                    <button class="btn-primary" id="edit-character">
-                        <i class="fas fa-user-edit"></i> 修改参数
-                    </button>
-                    <button class="btn-danger" id="clear-calculator">
-                        <i class="fas fa-trash"></i> 清除
-                    </button>
-                    <button class="btn-success" id="download-calculator">
-                        <i class="fas fa-download"></i> 下载
-                    </button>
+<section class="view" id="calculator-view">
+    <!-- 计算器顶部栏 -->
+    <div class="calculator-summary-bar">
+        <div class="summary-grid">
+            <div class="summary-item">
+                <div class="summary-label">载荷</div>
+                <div class="summary-value" id="weight-summary">0/20</div>
+                <div class="weight-status-badge" id="weight-status-badge">轻快</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-label">技艺点</div>
+                <div class="summary-value" id="total-specialty-cost">0 点</div>
+            </div>
+        </div>
+        <div class="summary-actions">
+            <button class="btn-primary" id="edit-character">
+                <i class="fas fa-user-edit"></i> 修改参数
+            </button>
+            <button class="btn-danger" id="clear-calculator">
+                <i class="fas fa-trash"></i> 清除
+            </button>
+            <button class="btn-success" id="download-calculator">
+                <i class="fas fa-download"></i> 下载
+            </button>
+        </div>
+    </div>
+
+    <!-- 折叠栏容器 -->
+    <div class="accordion-container">
+        <!-- 物品折叠栏 -->
+        <div class="accordion-item active">
+            <div class="accordion-header">
+                <i class="fas fa-chevron-down accordion-icon"></i>
+                <h3>已购买物品</h3>
+                <span class="item-count" id="items-count">0</span>
+            </div>
+            <div class="accordion-content">
+                <div id="calculator-items" class="calculator-items-list">
+                    <div class="empty-state">暂无购买的物品</div>
                 </div>
             </div>
+        </div>
+
+        <!-- 技艺折叠栏 -->
+        <div class="accordion-item">
+            <div class="accordion-header">
+                <i class="fas fa-chevron-down accordion-icon"></i>
+                <h3>已学习技艺</h3>
+                <span class="item-count learned-count" id="specialties-count">0</span>
+            </div>
+            <div class="accordion-content">
+                <div id="calculator-specialties" class="calculator-items-list">
+                    <div class="empty-state">暂无学习的技艺</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 
             <!-- 折叠栏容器 -->
             <div class="accordion-container">
