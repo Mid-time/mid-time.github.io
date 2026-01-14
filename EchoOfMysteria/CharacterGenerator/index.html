@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>《神秘回响》角色生成器</title>
+    
+    <!-- 外部依赖 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+        
+        .card-glass {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+        }
+        
+        .selected {
+            box-shadow: 0 0 0 3px #3b82f6, 0 10px 25px rgba(59, 130, 246, 0.3);
+            transform: translateY(-5px);
+        }
+        
+        .advantage {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(21, 128, 61, 0.2) 100%);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+        
+        .disadvantage {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(185, 28, 28, 0.2) 100%);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        
+        .character-view {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        .extra-stat {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.2) 100%);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+        
+        .extra-stat-negative {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(185, 28, 28, 0.2) 100%);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        
+        .small-card {
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .small-card .text-xl {
+            font-size: 1.125rem;
+        }
+        
+        .small-card .text-lg {
+            font-size: 1rem;
+        }
+        
+        .small-card .text-sm {
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="container mx-auto px-4 py-8 max-w-6xl">
+            <!-- 标题 -->
+            <header class="text-center mb-10">
+                <h1 class="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-purple-500 via-blue-500 to-cyan-400 bg-clip-text text-transparent">
+                    《神秘回响》角色生成器
+                </h1>
+            </header>
+            
+            <!-- 角色生成区域 -->
+            <div v-if="!characterCreated" class="card-glass p-6 md:p-8 mb-8">
+                <div class="text-center mb-10">
+                    <h2 class="text-3xl font-bold mb-4">创建你的角色</h2>
+                </div>
+                
+                <!-- 躯体选择 -->
+                <div class="mb-12">
+                    <h3 class="text-2xl font-bold mb-6">第一步：选择躯体</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                        <div v-for="(body, index) in bodyOptions" :key="index"
+                             @click="selectBodyOption(index)"
+                             :class="[
+                                 'p-4 rounded-xl border-2 transition-all duration-300 cursor-pointer hover:scale-[1.02] small-card',
+                                 selectedBodyIndex === index ? 'selected border-blue-500 bg-blue-900/20' : 'border-slate-700 bg-slate-800/50'
+                             ]">
+                            
+                            <!-- 基本属性 -->
+                            <div class="mb-4">
+                                <div class="flex justify-between items-center mb-3">
+                                    <div>
+                                        <div class="text-xl font-bold">{{ body.gender }} · {{ body.age }}岁</div>
+                                    </div>
+                                    <div class="text-sm px-3 py-1 rounded-full bg-slate-700 font-bold">
+                                        寿命 {{ body.lifespan }}年
+                                    </div>
+                                </div>
+                                
+                                <!-- 属性总和 -->
+                                <div class="mb-4 p-2 bg-slate-900/50 rounded-lg">
+                                    <div class="flex justify-between items-center">
+                                        <div class="text-sm text-slate-400">属性总和</div>
+                                        <div class="font-bold text-lg">{{ body.totalAttributes }}</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 九大属性 -->
+                                <div class="grid grid-cols-3 gap-2">
+                                    <div v-for="(attr, attrIndex) in body.attributes" :key="attrIndex"
+                                         class="text-center p-2 bg-slate-900/70 rounded">
+                                        <div class="text-xs text-slate-400 mb-1">{{ attributeNames[attrIndex] }}</div>
+                                        <div class="text-lg font-bold" :class="getAttributeClass(attr.value)">
+                                            {{ attr.value }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 选择指示器 -->
+                            <div class="text-center pt-3 border-t border-slate-700">
+                                <div v-if="selectedBodyIndex === index" class="text-blue-400 font-bold text-sm">
+                                    <i class="fas fa-check-circle mr-1"></i>已选择
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 修正选择 -->
+                <div>
+                    <h3 class="text-2xl font-bold mb-6">第二步：选择修正</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                        <div v-for="(ability, index) in abilityOptions" :key="index"
+                             @click="selectAbilityOption(index)"
+                             :class="[
+                                 'p-4 rounded-xl border-2 transition-all duration-300 cursor-pointer hover:scale-[1.02] small-card',
+                                 selectedAbilityIndex === index ? 'selected border-green-500 bg-green-900/20' : 'border-slate-700 bg-slate-800/50'
+                             ]">
+                            
+                            <!-- 修正概览 -->
+                            <div class="mb-4">
+                                <div class="flex justify-between items-center mb-3">
+                                    <div class="text-xl font-bold">修正组合 {{ index + 1 }}</div>
+                                </div>
+                                
+                                <!-- 属性修正详细 -->
+                                <div class="mb-3">
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <div v-for="(stat, statIndex) in ability.extraStats" :key="statIndex"
+                                             :class="[
+                                                 'p-2 rounded-lg text-xs',
+                                                 stat.name === 'SPd' && stat.value < 0 ? 'extra-stat-negative' : 'extra-stat'
+                                             ]">
+                                            <div class="font-bold">{{ getExtraStatChineseName(stat.name) }}</div>
+                                            <div class="text-blue-300" 
+                                                 :class="stat.name === 'SPd' && stat.value < 0 ? 'text-red-300' : 'text-blue-300'">
+                                                {{ stat.name === 'SPd' && stat.value < 0 ? '' : '' }}{{ stat.value }}{{ stat.unit }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 优势与劣势修正混合显示 -->
+                                <div class="space-y-2">
+                                    <!-- 优势修正 -->
+                                    <div v-for="(adv, advIndex) in ability.advantages" :key="'adv-' + advIndex"
+                                         class="p-2 rounded-lg advantage text-xs">
+                                        <div class="flex justify-between items-center">
+                                            <div class="font-bold text-green-300">{{ adv.name }}</div>
+                                            <div class="text-green-300">{{ formatAbilityValue(adv.value, adv.unit) }}</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- 劣势修正 -->
+                                    <div v-for="(dis, disIndex) in ability.disadvantages" :key="'dis-' + disIndex"
+                                         class="p-2 rounded-lg disadvantage text-xs">
+                                        <div class="flex justify-between items-center">
+                                            <div class="font-bold text-red-300">{{ dis.name }}</div>
+                                            <div class="text-red-300">{{ formatAbilityValue(dis.value, dis.unit) }}</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div v-if="ability.advantages.length === 0 && ability.disadvantages.length === 0" 
+                                         class="p-2 text-center text-slate-500 border border-dashed border-slate-700 rounded-lg">
+                                        <div class="text-sm">无修正</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 选择指示器 -->
+                            <div class="text-center pt-3 border-t border-slate-700">
+                                <div v-if="selectedAbilityIndex === index" class="text-green-400 font-bold text-sm">
+                                    <i class="fas fa-check-circle mr-1"></i>已选择
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 确定按钮 -->
+                <div class="mt-10 pt-8 border-t border-slate-700 text-center">
+                    <button @click="createCharacter" 
+                            :disabled="selectedBodyIndex === null || selectedAbilityIndex === null"
+                            :class="[
+                                'px-10 py-4 rounded-xl font-bold text-xl transition-all',
+                                selectedBodyIndex !== null && selectedAbilityIndex !== null
+                                ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 hover:scale-[1.05]' 
+                                : 'bg-slate-800 text-slate-500'
+                            ]">
+                        <i class="fas fa-check-circle mr-3"></i>确定创建角色
+                    </button>
+                    <div v-if="selectedBodyIndex === null || selectedAbilityIndex === null" 
+                         class="mt-3 text-sm text-red-400">
+                        请先选择躯体和修正
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 角色视图 -->
+            <div v-else class="card-glass p-6 md:p-8 mb-8">
+                <div class="character-view p-8 rounded-2xl">
+                    <!-- 角色标题 -->
+                    <div class="flex flex-col md:flex-row justify-between items-center mb-10">
+                        <div>
+                            <h2 class="text-4xl font-bold">{{ character.body.gender }} · {{ character.body.age }}岁</h2>
+                            <div class="flex items-center mt-3">
+                                <span class="text-slate-400">寿命 {{ character.body.lifespan }}年 | 属性总和 {{ character.body.totalAttributes }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 属性展示 -->
+                    <div class="mb-10">
+                        <h3 class="text-2xl font-bold mb-6">属性</h3>
+                        <div class="grid grid-cols-3 md:grid-cols-9 gap-4">
+                            <div v-for="(attr, index) in character.body.attributes" :key="index"
+                                 class="p-4 bg-slate-800/70 rounded-xl text-center">
+                                <div class="text-sm text-slate-400 mb-2">{{ attributeNames[index] }}</div>
+                                <div class="text-3xl font-bold mb-2" :class="getAttributeClass(attr.value)">
+                                    {{ attr.value }}
+                                </div>
+                                <div class="text-xs" :class="getAttributeRatingClass(attr.value)">
+                                    {{ getAttributeRating(attr.value) }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 修正展示 -->
+                    <div class="mb-10">
+                        <h3 class="text-2xl font-bold mb-6">修正</h3>
+                        
+                        <!-- 属性修正 -->
+                        <div class="mb-8">
+                            <h4 class="text-xl font-bold text-blue-300 mb-4">属性修正</h4>
+                            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                                <div v-for="(extra, index) in character.abilities.extraStats" :key="index"
+                                     :class="[
+                                         'p-4 rounded-xl text-center',
+                                         extra.name === 'SPd' && extra.value < 0 ? 'extra-stat-negative' : 'extra-stat'
+                                     ]">
+                                    <div class="text-sm text-slate-400 mb-1">{{ getExtraStatChineseName(extra.name) }}</div>
+                                    <div class="text-xl font-bold" 
+                                         :class="extra.name === 'SPd' && extra.value < 0 ? 'text-red-300' : 'text-blue-300'">
+                                        {{ extra.value }}{{ extra.unit }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 优势与劣势修正混合显示 -->
+                        <div>
+                            <h4 class="text-xl font-bold mb-4">能力修正</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- 优势修正 -->
+                                <div v-for="(adv, index) in character.abilities.advantages" :key="'adv-' + index"
+                                     class="p-4 advantage rounded-xl">
+                                    <div class="flex justify-between items-center">
+                                        <div class="font-bold text-green-300">{{ adv.name }}</div>
+                                        <div class="text-lg font-bold text-green-300">{{ formatAbilityValue(adv.value, adv.unit) }}</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 劣势修正 -->
+                                <div v-for="(dis, index) in character.abilities.disadvantages" :key="'dis-' + index"
+                                     class="p-4 disadvantage rounded-xl">
+                                    <div class="flex justify-between items-center">
+                                        <div class="font-bold text-red-300">{{ dis.name }}</div>
+                                        <div class="text-lg font-bold text-red-300">{{ formatAbilityValue(dis.value, dis.unit) }}</div>
+                                    </div>
+                                </div>
+                                
+                                <div v-if="character.abilities.advantages.length === 0 && character.abilities.disadvantages.length === 0" 
+                                     class="md:col-span-2 p-6 text-center border-2 border-dashed border-slate-700 rounded-xl">
+                                    <div class="text-slate-500">无能力修正</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 操作按钮 -->
+                    <div class="flex flex-wrap justify-center gap-4 pt-8 border-t border-slate-700">
+                        <button @click="downloadCharacter" 
+                                class="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 rounded-xl font-bold text-lg transition-all hover:scale-[1.05]">
+                            <i class="fas fa-download mr-2"></i>下载角色信息
+                        </button>
+                        
+                        <!-- 添加创建新角色按钮 -->
+                        <button @click="startNewCharacter" 
+                                class="px-8 py-4 bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-500 hover:to-teal-500 rounded-xl font-bold text-lg transition-all hover:scale-[1.05]">
+                            <i class="fas fa-plus mr-2"></i>创建新角色
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, reactive, computed, onMounted } = Vue;
+        
+        // CSV格式的修正数据，包含新的-类型
+        const ABILITIES_CSV = `id,name,type,number
+1,MP存储,%,20
+2,速度,%,20
+3,物理护甲,0,1
+4,物理抵抗,%,10
+5,法术护甲,0,1
+6,法术抵抗,%,10
+7,精神护甲,0,1
+8,精神抵抗,%,10
+9,体格,0,1
+10,威能,0,1
+11,理智,0,1
+12,寿命,%,25
+13,属性修正,0,6
+14,属性成长,%,100
+15,负重,%,25
+16,阻挡,0,5
+17,收入,%,20
+18,支出,%,20
+19,物理对抗威力,0,1
+20,法术对抗威力,0,1
+21,精神对抗威力,0,1
+22,物理伤害,%,25
+23,法术伤害,%,25
+24,精神伤害,%,25
+25,命中率,%,20
+26,会心伤害,%,50
+27,暴击率,%,20
+28,暴击伤害,%,50
+29,闪避率,%,20
+30,反击伤害,%,50
+31,受效果强度,0,1
+32,受效果持续,0,2
+33,施效率,%,20
+34,施效果强度,0,1
+35,施效果持续,0,2
+36,抗性修正,0,6
+37,抗性成长,%,100
+38,豁免,0,10
+39,扭曲,0,5
+40,失常倾向（善良/中立/敌对）,%,10
+41,失常修正（善良/中立/敌对）,0,6
+42,失常成长,%,100
+43,扭曲恢复,%,100
+44,技巧回转,%,100
+45,技能点修正,%,25
+46,特质点修正,%,25
+47,等级,0,2
+48,经验成长,%,100
+49,天赋点（战斗/交涉/技术）,0,1
+50,通用天赋点,0,1
+51,物品浪费,%,100
+52,装备损耗,%,100
+53,神秘亵渎,%,20
+54,知识污染,%,20
+55,轮回能力,%,20
+56,基因变异,%,20
+57,神秘等级,0,1
+58,因果律,%,10
+59,穿越者,/,0
+60,其他血统,/,0
+61,负面效果,-,5`;
+        
+        createApp({
+            setup() {
+                // 属性名称
+                const attributeNames = ["力量", "体质", "耐性", "速度", "魅力", "智慧", "灵感", "决心", "幸运"];
+                
+                // 解析CSV数据
+                const abilitiesData = ref([]);
+                const parseCSV = (csvText) => {
+                    const lines = csvText.split('\n');
+                    const headers = lines[0].split(',');
+                    
+                    for (let i = 1; i < lines.length; i++) {
+                        const line = lines[i].trim();
+                        if (!line) continue;
+                        
+                        const values = line.split(',');
+                        const ability = {
+                            id: parseInt(values[0]),
+                            name: values[1],
+                            type: values[2],
+                            number: parseInt(values[3])
+                        };
+                        abilitiesData.value.push(ability);
+                    }
+                };
+                
+                // 躯体选项
+                const bodyOptions = ref([]);
+                const selectedBodyIndex = ref(null);
+                
+                // 修正选项
+                const abilityOptions = ref([]);
+                const selectedAbilityIndex = ref(null);
+                
+                // 角色数据
+                const character = ref(null);
+                
+                // 计算属性
+                const characterCreated = computed(() => {
+                    return character.value !== null;
+                });
+                
+                // 生成单个躯体
+                const generateBody = () => {
+                    const gender = Math.random() > 0.5 ? "男" : "女";
+                    const age = Math.floor(Math.random() * 31) + 10; // 10-40岁
+                    const isYouth = age <= 16; // 少年包含16岁，但不显示
+                    const lifespan = Math.floor(Math.random() * 21) + 50; // 50-70年
+                    
+                    const attributes = [];
+                    let total = 0;
+                    
+                    // 生成九大属性
+                    for (let i = 0; i < 9; i++) {
+                        let a = Math.floor(Math.random() * 44); // 0-43
+                        
+                        // 根据原Python代码逻辑
+                        if (a === 43) {
+                            a = 48;
+                        } else if (a >= 41) {
+                            a = 44;
+                        }
+                        
+                        a = Math.floor(a / 4);
+                        total += a;
+                        
+                        attributes.push({
+                            name: attributeNames[i],
+                            value: a
+                        });
+                    }
+                    
+                    return {
+                        gender,
+                        age,
+                        isYouth,
+                        lifespan,
+                        attributes,
+                        totalAttributes: total
+                    };
+                };
+                
+                // 生成三个躯体选项
+                const generateBodyOptions = () => {
+                    bodyOptions.value = [];
+                    for (let i = 0; i < 3; i++) {
+                        bodyOptions.value.push(generateBody());
+                    }
+                    selectedBodyIndex.value = null;
+                };
+                
+                // 生成修正随机值（根据CSV格式）
+                const generateAbilityValue = (ability, isAdvantage) => {
+                    if (ability.type === '/') {
+                        return {
+                            value: isAdvantage ? "优势" : "劣势",
+                            unit: ""
+                        };
+                    }
+                    
+                    // 生成随机值
+                    let randomValue;
+                    if (isAdvantage) {
+                        // 优势：生成1到number的正随机数
+                        randomValue = Math.floor(Math.random() * ability.number) + 1;
+                    } else {
+                        // 劣势：生成-number到-1的负随机数
+                        randomValue = Math.floor(Math.random() * ability.number) - ability.number;
+                    }
+                    
+                    // 特殊处理-类型：优势为负，劣势为正
+                    if (ability.type === '-') {
+                        // 对于-类型，优势是负值，劣势是正值
+                        if (isAdvantage) {
+                            randomValue = Math.floor(Math.random() * ability.number) - ability.number; // 负值
+                        } else {
+                            randomValue = Math.floor(Math.random() * ability.number) + 1; // 正值
+                        }
+                    }
+                    
+                    // 根据type决定单位
+                    let unit = '';
+                    if (ability.type === '%' || ability.type === '-') {
+                        unit = '%';
+                    }
+                    
+                    return {
+                        value: randomValue,
+                        unit: unit
+                    };
+                };
+                
+                // 生成单个修正集合
+                const generateAbilities = () => {
+                    const advantages = [];
+                    const disadvantages = [];
+                    
+                    // 优势修正数量：3个randint(0,1)相加
+                    const advantageCount = Math.floor(Math.random() * 2) + 
+                                          Math.floor(Math.random() * 2) + 
+                                          Math.floor(Math.random() * 2);
+                    
+                    // 劣势修正数量：3个randint(0,1)相加
+                    const disadvantageCount = Math.floor(Math.random() * 2) + 
+                                             Math.floor(Math.random() * 2) + 
+                                             Math.floor(Math.random() * 2);
+                    
+                    // 生成优势修正
+                    const usedAdvantageIds = new Set();
+                    for (let i = 0; i < advantageCount; i++) {
+                        // 随机选择修正，确保不重复
+                        let ability;
+                        let attempts = 0;
+                        do {
+                            ability = abilitiesData.value[Math.floor(Math.random() * abilitiesData.value.length)];
+                            attempts++;
+                        } while (usedAdvantageIds.has(ability.id) && attempts < 10);
+                        
+                        usedAdvantageIds.add(ability.id);
+                        
+                        const abilityValue = generateAbilityValue(ability, true);
+                        advantages.push({
+                            name: ability.name,
+                            value: abilityValue.value,
+                            unit: abilityValue.unit
+                        });
+                    }
+                    
+                    // 生成劣势修正
+                    const usedDisadvantageIds = new Set();
+                    for (let i = 0; i < disadvantageCount; i++) {
+                        // 随机选择修正，确保不重复
+                        let ability;
+                        let attempts = 0;
+                        do {
+                            ability = abilitiesData.value[Math.floor(Math.random() * abilitiesData.value.length)];
+                            attempts++;
+                        } while (usedDisadvantageIds.has(ability.id) && attempts < 10);
+                        
+                        usedDisadvantageIds.add(ability.id);
+                        
+                        const abilityValue = generateAbilityValue(ability, false);
+                        disadvantages.push({
+                            name: ability.name,
+                            value: abilityValue.value,
+                            unit: abilityValue.unit
+                        });
+                    }
+                    
+                    // 生成额外属性修正
+                    const extraStats = generateExtraStats();
+                    
+                    return {
+                        advantages,
+                        disadvantages,
+                        extraStats
+                    };
+                };
+                
+                // 生成额外属性修正
+                const generateExtraStats = () => {
+                    const stats = [
+                        { name: "HP", chineseName: "体力", unit: "%" },
+                        { name: "HPr", chineseName: "体力恢复", unit: "%" },
+                        { name: "MP", chineseName: "魔力", unit: "%" },
+                        { name: "MPr", chineseName: "魔力恢复", unit: "%" },
+                        { name: "SP", chineseName: "清醒", unit: "%" },
+                        { name: "SPd", chineseName: "清醒阈值", unit: "%" }
+                    ];
+                    
+                    return stats.map((stat, index) => {
+                        let value;
+                        if (index < 5) {
+                            // 前五个：randint(70,130)%
+                            value = Math.floor(Math.random() * 61) + 70; // 70-130
+                        } else {
+                            // 最后一个：randint(-10,10)%
+                            value = Math.floor(Math.random() * 21) - 10; // -10到10
+                        }
+                        
+                        return {
+                            name: stat.name,
+                            chineseName: stat.chineseName,
+                            value: value,
+                            unit: stat.unit
+                        };
+                    });
+                };
+                
+                // 生成三个修正选项
+                const generateAbilityOptions = () => {
+                    abilityOptions.value = [];
+                    for (let i = 0; i < 3; i++) {
+                        abilityOptions.value.push(generateAbilities());
+                    }
+                    selectedAbilityIndex.value = null;
+                };
+                
+                // 选择躯体选项
+                const selectBodyOption = (index) => {
+                    selectedBodyIndex.value = index;
+                };
+                
+                // 选择修正选项
+                const selectAbilityOption = (index) => {
+                    selectedAbilityIndex.value = index;
+                };
+                
+                // 创建角色
+                const createCharacter = () => {
+                    if (selectedBodyIndex.value === null || selectedAbilityIndex.value === null) {
+                        alert("请先选择躯体和修正");
+                        return;
+                    }
+                    
+                    // 保存角色数据
+                    character.value = {
+                        metadata: {
+                            createdDate: new Date().toISOString(),
+                            version: "v1.1.0"
+                        },
+                        body: bodyOptions.value[selectedBodyIndex.value],
+                        abilities: abilityOptions.value[selectedAbilityIndex.value]
+                    };
+                    
+                    // 保存到localStorage
+                    saveToLocalStorage();
+                };
+                
+                // 创建新角色
+                const startNewCharacter = () => {
+                    // 重置状态
+                    character.value = null;
+                    selectedBodyIndex.value = null;
+                    selectedAbilityIndex.value = null;
+                    
+                    // 生成新的选项
+                    generateBodyOptions();
+                    generateAbilityOptions();
+                };
+                
+                // 格式化修正值显示
+                const formatAbilityValue = (value, unit) => {
+                    if (typeof value === 'string') {
+                        return value;
+                    }
+                    
+                    const sign = value > 0 ? '+' : '';
+                    return `${sign}${value}${unit}`;
+                };
+                
+                // 获取额外属性中文名称
+                const getExtraStatChineseName = (name) => {
+                    const nameMap = {
+                        "HP": "体力",
+                        "HPr": "体力恢复",
+                        "MP": "魔力",
+                        "MPr": "魔力恢复",
+                        "SP": "清醒",
+                        "SPd": "清醒阈值"
+                    };
+                    return nameMap[name] || name;
+                };
+                
+                // 下载角色信息
+                const downloadCharacter = () => {
+                    if (!character.value) return;
+                    
+                    let content = "《神秘回响》角色信息\n";
+                    content += "=".repeat(40) + "\n\n";
+                    
+                    // 基本信息
+                    content += "基本信息:\n";
+                    content += `性别: ${character.value.body.gender}\n`;
+                    content += `年龄: ${character.value.body.age}岁\n`;
+                    content += `寿命: ${character.value.body.lifespan}年\n`;
+                    content += `创建时间: ${new Date(character.value.metadata.createdDate).toLocaleString()}\n\n`;
+                    
+                    // 属性
+                    content += "属性:\n";
+                    character.value.body.attributes.forEach((attr, index) => {
+                        const rating = getAttributeRating(attr.value);
+                        content += `${attributeNames[index]}: ${attr.value} (${rating})\n`;
+                    });
+                    content += `属性总和: ${character.value.body.totalAttributes}\n\n`;
+                    
+                    // 优势修正
+                    content += "优势修正:\n";
+                    if (character.value.abilities.advantages.length === 0) {
+                        content += "  无\n";
+                    } else {
+                        character.value.abilities.advantages.forEach(adv => {
+                            content += `  ${adv.name}: ${formatAbilityValue(adv.value, adv.unit)}\n`;
+                        });
+                    }
+                    content += "\n";
+                    
+                    // 劣势修正
+                    content += "劣势修正:\n";
+                    if (character.value.abilities.disadvantages.length === 0) {
+                        content += "  无\n";
+                    } else {
+                        character.value.abilities.disadvantages.forEach(dis => {
+                            content += `  ${dis.name}: ${formatAbilityValue(dis.value, dis.unit)}\n`;
+                        });
+                    }
+                    content += "\n";
+                    
+                    // 属性修正
+                    content += "属性修正:\n";
+                    character.value.abilities.extraStats.forEach(stat => {
+                        const chineseName = getExtraStatChineseName(stat.name);
+                        content += `  ${chineseName}: ${stat.value}${stat.unit}\n`;
+                    });
+                    
+                    // 创建文件
+                    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `神秘回响角色_${new Date().toISOString().slice(0,10)}.txt`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                };
+                
+                // 获取属性分类
+                const getAttributeClass = (value) => {
+                    if (value <= 3) return 'text-red-400';
+                    if (value <= 6) return 'text-green-400';
+                    if (value <= 10) return 'text-blue-400';
+                    return 'text-yellow-400';
+                };
+                
+                // 获取属性评级
+                const getAttributeRating = (value) => {
+                    if (value <= 3) return '孱弱';
+                    if (value <= 6) return '凡人';
+                    if (value <= 10) return '突出';
+                    return '天才';
+                };
+                
+                // 获取属性评级颜色
+                const getAttributeRatingClass = (value) => {
+                    if (value <= 3) return 'text-red-400';
+                    if (value <= 6) return 'text-green-400';
+                    if (value <= 10) return 'text-blue-400';
+                    return 'text-yellow-400';
+                };
+                
+                // 保存到localStorage
+                const saveToLocalStorage = () => {
+                    const data = {
+                        character: character.value
+                    };
+                    localStorage.setItem('eom_character_generator', JSON.stringify(data));
+                };
+                
+                // 从localStorage加载
+                const loadFromLocalStorage = () => {
+                    const data = localStorage.getItem('eom_character_generator');
+                    if (data) {
+                        try {
+                            const parsed = JSON.parse(data);
+                            character.value = parsed.character || null;
+                        } catch (e) {
+                            console.error('加载localStorage数据失败:', e);
+                        }
+                    }
+                };
+                
+                // 初始化
+                const init = () => {
+                    // 解析CSV数据
+                    parseCSV(ABILITIES_CSV);
+                    
+                    loadFromLocalStorage();
+                    
+                    // 如果没有角色数据，生成选项
+                    if (!character.value) {
+                        generateBodyOptions();
+                        generateAbilityOptions();
+                    }
+                };
+                
+                // 页面加载时初始化
+                onMounted(() => {
+                    init();
+                });
+                
+                return {
+                    attributeNames,
+                    bodyOptions,
+                    selectedBodyIndex,
+                    abilityOptions,
+                    selectedAbilityIndex,
+                    character,
+                    characterCreated,
+                    selectBodyOption,
+                    selectAbilityOption,
+                    createCharacter,
+                    startNewCharacter,
+                    downloadCharacter,
+                    getAttributeClass,
+                    getAttributeRating,
+                    getAttributeRatingClass,
+                    formatAbilityValue,
+                    getExtraStatChineseName
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
