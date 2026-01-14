@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>《神秘回响》角色生成器</title>
+    
+    <!-- 外部依赖 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- 本地文件 -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <div class="container mx-auto px-4 py-8 max-w-6xl">
+            <!-- 标题 -->
+            <header class="text-center mb-10">
+                <h1 class="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-purple-500 via-blue-500 to-cyan-400 bg-clip-text text-transparent">
+                    《神秘回响》角色生成器
+                </h1>
+                
+                <!-- 角色创建状态 -->
+                <div class="mt-4 inline-block px-4 py-2 rounded-full" 
+                     :class="canCreateNewCharacter ? 'bg-green-900/30 border border-green-700' : 'bg-amber-900/30 border border-amber-700'">
+                    <span v-if="canCreateNewCharacter" class="font-bold text-green-300">
+                        <i class="fas fa-check-circle mr-2"></i>本周可创建新角色
+                    </span>
+                    <span v-else class="font-bold text-amber-300">
+                        <i class="fas fa-clock mr-2"></i>本周已创建角色
+                    </span>
+                </div>
+            </header>
+            
+            <!-- 角色生成区域 -->
+            <div v-if="!characterCreated" class="card-glass p-6 md:p-8 mb-8">
+                <div class="text-center mb-10">
+                    <h2 class="text-3xl font-bold mb-4">创建你的角色</h2>
+                </div>
+                
+                <!-- 躯体选择 -->
+                <div class="mb-12">
+                    <h3 class="text-2xl font-bold mb-6">第一步：选择躯体</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                        <div v-for="(body, index) in bodyOptions" :key="index"
+                             @click="selectBodyOption(index)"
+                             :class="[
+                                 'p-6 rounded-xl border-2 transition-all duration-300 cursor-pointer hover:scale-[1.02]',
+                                 selectedBodyIndex === index ? 'selected border-blue-500 bg-blue-900/20' : 'border-slate-700 bg-slate-800/50'
+                             ]">
+                            
+                            <!-- 基本属性 -->
+                            <div class="mb-6">
+                                <div class="flex justify-between items-center mb-4">
+                                    <div>
+                                        <div class="text-xl font-bold">{{ body.gender }} · {{ body.age }}岁</div>
+                                        <div v-if="body.isYouth" class="mt-1">
+                                            <span class="youth-tag text-xs px-2 py-1 rounded-full">少年</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-sm px-3 py-1 rounded-full bg-slate-700 font-bold">
+                                        寿命 {{ body.lifespan }}年
+                                    </div>
+                                </div>
+                                
+                                <!-- 属性总和 -->
+                                <div class="mb-4 p-3 bg-slate-900/50 rounded-lg">
+                                    <div class="flex justify-between items-center">
+                                        <div class="text-sm text-slate-400">属性总和</div>
+                                        <div class="font-bold text-lg">{{ body.totalAttributesWithoutLuck }} / {{ body.totalAttributes }}</div>
+                                    </div>
+                                    <div class="text-xs text-slate-500 mt-1">(不含幸运 / 含幸运)</div>
+                                </div>
+                                
+                                <!-- 九大属性 -->
+                                <div class="grid grid-cols-3 gap-2">
+                                    <div v-for="(attr, attrIndex) in body.attributes" :key="attrIndex"
+                                         class="text-center p-2 bg-slate-900/70 rounded">
+                                        <div class="text-xs text-slate-400 mb-1">{{ attributeNames[attrIndex] }}</div>
+                                        <div class="text-lg font-bold" :class="getAttributeClass(attr.value)">
+                                            {{ attr.value }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 选择指示器 -->
+                            <div class="text-center pt-4 border-t border-slate-700">
+                                <div v-if="selectedBodyIndex === index" class="text-blue-400 font-bold">
+                                    <i class="fas fa-check-circle mr-2"></i>已选择
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 修正选择 -->
+                <div>
+                    <h3 class="text-2xl font-bold mb-6">第二步：选择修正</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                        <div v-for="(ability, index) in abilityOptions" :key="index"
+                             @click="selectAbilityOption(index)"
+                             :class="[
+                                 'p-6 rounded-xl border-2 transition-all duration-300 cursor-pointer hover:scale-[1.02]',
+                                 selectedAbilityIndex === index ? 'selected border-green-500 bg-green-900/20' : 'border-slate-700 bg-slate-800/50'
+                             ]">
+                            
+                            <!-- 修正概览 -->
+                            <div class="mb-6">
+                                <div class="flex justify-between items-center mb-4">
+                                    <div>
+                                        <div class="text-xl font-bold">修正组合 {{ index + 1 }}</div>
+                                        <!-- 属性修正摘要 -->
+                                        <div class="text-xs text-slate-400 mt-1">
+                                            属性修正: 
+                                            <span v-for="(stat, statIndex) in ability.extraStats" :key="statIndex" 
+                                                  class="ml-1" :class="stat.value >= 0 ? 'text-blue-300' : 'text-red-300'">
+                                                {{ stat.value >= 0 && stat.name !== 'SPd' ? '' : '' }}{{ stat.value }}{{ stat.unit }}
+                                                <span v-if="statIndex < ability.extraStats.length - 1">,</span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="text-sm px-3 py-1 rounded-full bg-slate-700 font-bold">
+                                        {{ ability.advantages.length }}+ / {{ ability.disadvantages.length }}-
+                                    </div>
+                                </div>
+                                
+                                <!-- 优势修正 -->
+                                <div class="mb-4">
+                                    <div class="flex items-center mb-3">
+                                        <div class="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center mr-2">
+                                            <i class="fas fa-plus text-sm"></i>
+                                        </div>
+                                        <h3 class="font-bold text-green-300">优势修正</h3>
+                                    </div>
+                                    
+                                    <div class="space-y-2 max-h-32 overflow-y-auto pr-2">
+                                        <div v-for="(adv, advIndex) in ability.advantages.slice(0, 3)" :key="advIndex"
+                                             class="p-2 rounded-lg advantage text-xs">
+                                            <div class="font-bold">{{ adv.name }}</div>
+                                            <div class="text-green-300">{{ formatAbilityValue(adv.value, adv.unit) }}</div>
+                                        </div>
+                                        
+                                        <div v-if="ability.advantages.length === 0" 
+                                             class="p-3 text-center text-slate-500 border border-dashed border-slate-700 rounded-lg">
+                                            <div class="text-sm">无优势修正</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 劣势修正 -->
+                                <div class="mb-4">
+                                    <div class="flex items-center mb-3">
+                                        <div class="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center mr-2">
+                                            <i class="fas fa-minus text-sm"></i>
+                                        </div>
+                                        <h3 class="font-bold text-red-300">劣势修正</h3>
+                                    </div>
+                                    
+                                    <div class="space-y-2 max-h-32 overflow-y-auto pr-2">
+                                        <div v-for="(dis, disIndex) in ability.disadvantages.slice(0, 3)" :key="disIndex"
+                                             class="p-2 rounded-lg disadvantage text-xs">
+                                            <div class="font-bold">{{ dis.name }}</div>
+                                            <div class="text-red-300">{{ formatAbilityValue(dis.value, dis.unit) }}</div>
+                                        </div>
+                                        
+                                        <div v-if="ability.disadvantages.length === 0" 
+                                             class="p-3 text-center text-slate-500 border border-dashed border-slate-700 rounded-lg">
+                                            <div class="text-sm">无劣势修正</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 属性修正详细 -->
+                                <div>
+                                    <div class="grid grid-cols-2 gap-2 mt-3">
+                                        <div v-for="(stat, statIndex) in ability.extraStats" :key="statIndex"
+                                             :class="[
+                                                 'p-2 rounded-lg text-xs',
+                                                 stat.name === 'SPd' && stat.value < 0 ? 'extra-stat-negative' : 'extra-stat'
+                                             ]">
+                                            <div class="font-bold">{{ getExtraStatChineseName(stat.name) }}</div>
+                                            <div class="text-blue-300" 
+                                                 :class="stat.name === 'SPd' && stat.value < 0 ? 'text-red-300' : 'text-blue-300'">
+                                                {{ stat.name === 'SPd' && stat.value < 0 ? '' : '' }}{{ stat.value }}{{ stat.unit }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 选择指示器 -->
+                            <div class="text-center pt-4 border-t border-slate-700">
+                                <div v-if="selectedAbilityIndex === index" class="text-green-400 font-bold">
+                                    <i class="fas fa-check-circle mr-2"></i>已选择
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 确定按钮 -->
+                <div class="mt-10 pt-8 border-t border-slate-700 text-center">
+                    <button @click="createCharacter" 
+                            :disabled="selectedBodyIndex === null || selectedAbilityIndex === null"
+                            :class="[
+                                'px-10 py-4 rounded-xl font-bold text-xl transition-all',
+                                selectedBodyIndex !== null && selectedAbilityIndex !== null
+                                ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 hover:scale-[1.05]' 
+                                : 'bg-slate-800 text-slate-500'
+                            ]">
+                        <i class="fas fa-check-circle mr-3"></i>确定创建角色
+                    </button>
+                    <div v-if="selectedBodyIndex === null || selectedAbilityIndex === null" 
+                         class="mt-3 text-sm text-red-400">
+                        请先选择躯体和修正
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 角色视图 -->
+            <div v-else class="card-glass p-6 md:p-8 mb-8">
+                <div class="character-view p-8 rounded-2xl">
+                    <!-- 角色标题 -->
+                    <div class="flex flex-col md:flex-row justify-between items-center mb-10">
+                        <div>
+                            <h2 class="text-4xl font-bold">{{ character.body.gender }} · {{ character.body.age }}岁</h2>
+                            <div class="flex items-center mt-3">
+                                <span v-if="character.body.isYouth" class="youth-tag text-sm px-3 py-1 rounded-full mr-3">少年</span>
+                                <span class="text-slate-400">寿命 {{ character.body.lifespan }}年 | 属性总和 {{ character.body.totalAttributesWithoutLuck }} / {{ character.body.totalAttributes }}</span>
+                            </div>
+                        </div>
+                        <div class="mt-4 md:mt-0">
+                            <div class="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-3 rounded-xl mb-2">
+                                角色已创建
+                            </div>
+                            <div v-if="canCreateNewCharacter" 
+                                 class="text-sm bg-gradient-to-r from-green-600 to-teal-600 px-4 py-2 rounded-lg">
+                                本周可创建新角色
+                            </div>
+                            <div v-else 
+                                 class="text-sm bg-gradient-to-r from-amber-600 to-orange-600 px-4 py-2 rounded-lg">
+                                本周已创建角色
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 属性展示 -->
+                    <div class="mb-10">
+                        <h3 class="text-2xl font-bold mb-6">属性</h3>
+                        <div class="grid grid-cols-3 md:grid-cols-9 gap-4">
+                            <div v-for="(attr, index) in character.body.attributes" :key="index"
+                                 class="p-4 bg-slate-800/70 rounded-xl text-center">
+                                <div class="text-sm text-slate-400 mb-2">{{ attributeNames[index] }}</div>
+                                <div class="text-3xl font-bold mb-2" :class="getAttributeClass(attr.value)">
+                                    {{ attr.value }}
+                                </div>
+                                <div class="text-xs" :class="getAttributeRatingClass(attr.value)">
+                                    {{ getAttributeRating(attr.value) }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 修正展示 -->
+                    <div class="mb-10">
+                        <h3 class="text-2xl font-bold mb-6">修正</h3>
+                        
+                        <!-- 优势修正 -->
+                        <div class="mb-8">
+                            <div class="flex items-center mb-4">
+                                <div class="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center mr-3">
+                                    <i class="fas fa-plus text-lg"></i>
+                                </div>
+                                <h4 class="text-xl font-bold text-green-300">优势修正</h4>
+                                <div class="ml-auto text-lg font-bold bg-green-900/50 px-4 py-2 rounded-full">
+                                    {{ character.abilities.advantages.length }} 个
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <div v-for="(adv, index) in character.abilities.advantages" :key="index"
+                                     class="p-4 advantage rounded-xl">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <div class="font-bold">{{ adv.name }}</div>
+                                        <div class="text-lg font-bold text-green-300">{{ formatAbilityValue(adv.value, adv.unit) }}</div>
+                                    </div>
+                                </div>
+                                
+                                <div v-if="character.abilities.advantages.length === 0" 
+                                     class="md:col-span-3 p-6 text-center border-2 border-dashed border-slate-700 rounded-xl">
+                                    <div class="text-slate-500">无优势修正</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 劣势修正 -->
+                        <div class="mb-8">
+                            <div class="flex items-center mb-4">
+                                <div class="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center mr-3">
+                                    <i class="fas fa-minus text-lg"></i>
+                                </div>
+                                <h4 class="text-xl font-bold text-red-300">劣势修正</h4>
+                                <div class="ml-auto text-lg font-bold bg-red-900/50 px-4 py-2 rounded-full">
+                                    {{ character.abilities.disadvantages.length }} 个
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <div v-for="(dis, index) in character.abilities.disadvantages" :key="index"
+                                     class="p-4 disadvantage rounded-xl">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <div class="font-bold">{{ dis.name }}</div>
+                                        <div class="text-lg font-bold text-red-300">{{ formatAbilityValue(dis.value, dis.unit) }}</div>
+                                    </div>
+                                </div>
+                                
+                                <div v-if="character.abilities.disadvantages.length === 0" 
+                                     class="md:col-span-3 p-6 text-center border-2 border-dashed border-slate-700 rounded-xl">
+                                    <div class="text-slate-500">无劣势修正</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 属性修正 -->
+                        <div>
+                            <div class="flex items-center mb-4">
+                                <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center mr-3">
+                                    <i class="fas fa-heart text-lg"></i>
+                                </div>
+                                <h4 class="text-xl font-bold text-blue-300">属性修正</h4>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                                <div v-for="(extra, index) in character.abilities.extraStats" :key="index"
+                                     :class="[
+                                         'p-4 rounded-xl text-center',
+                                         extra.name === 'SPd' && extra.value < 0 ? 'extra-stat-negative' : 'extra-stat'
+                                     ]">
+                                    <div class="text-sm text-slate-400 mb-1">{{ getExtraStatChineseName(extra.name) }}</div>
+                                    <div class="text-xl font-bold" 
+                                         :class="extra.name === 'SPd' && extra.value < 0 ? 'text-red-300' : 'text-blue-300'">
+                                        {{ extra.value }}{{ extra.unit }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 操作按钮 -->
+                    <div class="flex flex-wrap justify-center gap-4 pt-8 border-t border-slate-700">
+                        <button @click="downloadCharacter" 
+                                class="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 rounded-xl font-bold text-lg transition-all hover:scale-[1.05]">
+                            <i class="fas fa-download mr-2"></i>下载角色信息
+                        </button>
+                        
+                        <!-- 添加创建新角色按钮 -->
+                        <button @click="startNewCharacter" 
+                                :disabled="!canCreateNewCharacter"
+                                :class="[
+                                    'px-8 py-4 rounded-xl font-bold text-lg transition-all',
+                                    canCreateNewCharacter 
+                                    ? 'bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-500 hover:to-teal-500 hover:scale-[1.05]' 
+                                    : 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                                ]">
+                            <i class="fas fa-plus mr-2"></i>创建新角色
+                        </button>
+                        
+                        <!-- 添加返回查看按钮 -->
+                        <button @click="backToCreation" 
+                                class="px-8 py-4 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 rounded-xl font-bold text-lg transition-all hover:scale-[1.05]">
+                            <i class="fas fa-redo mr-2"></i>重新选择
+                        </button>
+                    </div>
+                    
+                    <!-- 状态提示 -->
+                    <div v-if="!canCreateNewCharacter" class="mt-4 text-center">
+                        <div class="inline-block px-4 py-2 rounded-full bg-amber-900/30 border border-amber-700">
+                            <span class="font-bold text-amber-300">
+                                <i class="fas fa-clock mr-2"></i>本周已创建角色，请等待新的一周
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 开发者调试区域 -->
+            <div v-if="showDeveloperTools" class="card-glass p-6 mt-8">
+                <div class="flex items-center mb-4">
+                    <i class="fas fa-tools text-blue-400 mr-2"></i>
+                    <h3 class="text-xl font-bold">开发者调试工具</h3>
+                    <button @click="toggleDeveloperTools" 
+                            class="ml-auto text-sm px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded">
+                        隐藏
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <button @click="forceNewWeek" 
+                            class="p-3 bg-blue-700 hover:bg-blue-600 rounded-lg">
+                        模拟新周
+                    </button>
+                    <button @click="clearLocalStorage" 
+                            class="p-3 bg-red-700 hover:bg-red-600 rounded-lg">
+                        清除本地存储
+                    </button>
+                    <button @click="generateDebugCharacter" 
+                            class="p-3 bg-green-700 hover:bg-green-600 rounded-lg">
+                        生成测试角色
+                    </button>
+                </div>
+                
+                <div class="p-3 bg-slate-800/50 rounded-lg text-xs font-mono">
+                    <div>当前周数: {{ currentWeek }}</div>
+                    <div>最后创建周数: {{ lastCreatedWeek }}</div>
+                    <div>可创建新角色: {{ canCreateNewCharacter }}</div>
+                    <div>角色已创建: {{ characterCreated }}</div>
+                </div>
+            </div>
+            
+            <!-- 显示/隐藏开发者工具 -->
+            <div class="text-center mt-6">
+                <button @click="showPasswordPrompt" 
+                        class="text-sm px-3 py-1 bg-slate-800 hover:bg-slate-700 rounded">
+                    <i class="fas fa-cog mr-1"></i>
+                    {{ showDeveloperTools ? '隐藏' : '显示' }}开发者工具
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 本地JS文件 -->
+    <script src="data.js"></script>
+    <script src="utils.js"></script>
+    <script src="storage.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
