@@ -41,39 +41,9 @@
             border: 1px solid rgba(239, 68, 68, 0.3);
         }
         
-        .youth-tag {
-            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-            color: white;
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.7; }
-            100% { opacity: 1; }
-        }
-        
         .character-view {
             background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        }
-        
-        .stat-item {
-            background: rgba(30, 41, 59, 0.5);
-            border-left: 4px solid #3b82f6;
-        }
-        
-        .stat-item-negative {
-            border-left-color: #ef4444;
-        }
-        
-        .stat-item-positive {
-            border-left-color: #10b981;
-        }
-        
-        .new-week-indicator {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            animation: pulse 2s infinite;
         }
         
         .extra-stat {
@@ -85,6 +55,23 @@
             background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(185, 28, 28, 0.2) 100%);
             border: 1px solid rgba(239, 68, 68, 0.3);
         }
+        
+        .small-card {
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .small-card .text-xl {
+            font-size: 1.125rem;
+        }
+        
+        .small-card .text-lg {
+            font-size: 1rem;
+        }
+        
+        .small-card .text-sm {
+            font-size: 0.75rem;
+        }
     </style>
 </head>
 <body>
@@ -95,17 +82,6 @@
                 <h1 class="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-purple-500 via-blue-500 to-cyan-400 bg-clip-text text-transparent">
                     《神秘回响》角色生成器
                 </h1>
-                
-                <!-- 角色创建状态 -->
-                <div class="mt-4 inline-block px-4 py-2 rounded-full" 
-                     :class="canCreateNewCharacter ? 'bg-green-900/30 border border-green-700' : 'bg-amber-900/30 border border-amber-700'">
-                    <span v-if="canCreateNewCharacter" class="font-bold text-green-300">
-                        <i class="fas fa-check-circle mr-2"></i>本周可创建新角色
-                    </span>
-                    <span v-else class="font-bold text-amber-300">
-                        <i class="fas fa-clock mr-2"></i>本周已创建角色
-                    </span>
-                </div>
             </header>
             
             <!-- 角色生成区域 -->
@@ -122,18 +98,15 @@
                         <div v-for="(body, index) in bodyOptions" :key="index"
                              @click="selectBodyOption(index)"
                              :class="[
-                                 'p-6 rounded-xl border-2 transition-all duration-300 cursor-pointer hover:scale-[1.02]',
+                                 'p-4 rounded-xl border-2 transition-all duration-300 cursor-pointer hover:scale-[1.02] small-card',
                                  selectedBodyIndex === index ? 'selected border-blue-500 bg-blue-900/20' : 'border-slate-700 bg-slate-800/50'
                              ]">
                             
                             <!-- 基本属性 -->
-                            <div class="mb-6">
-                                <div class="flex justify-between items-center mb-4">
+                            <div class="mb-4">
+                                <div class="flex justify-between items-center mb-3">
                                     <div>
                                         <div class="text-xl font-bold">{{ body.gender }} · {{ body.age }}岁</div>
-                                        <div v-if="body.isYouth" class="mt-1">
-                                            <span class="youth-tag text-xs px-2 py-1 rounded-full">少年</span>
-                                        </div>
                                     </div>
                                     <div class="text-sm px-3 py-1 rounded-full bg-slate-700 font-bold">
                                         寿命 {{ body.lifespan }}年
@@ -141,12 +114,11 @@
                                 </div>
                                 
                                 <!-- 属性总和 -->
-                                <div class="mb-4 p-3 bg-slate-900/50 rounded-lg">
+                                <div class="mb-4 p-2 bg-slate-900/50 rounded-lg">
                                     <div class="flex justify-between items-center">
                                         <div class="text-sm text-slate-400">属性总和</div>
-                                        <div class="font-bold text-lg">{{ body.totalAttributesWithoutLuck }} / {{ body.totalAttributes }}</div>
+                                        <div class="font-bold text-lg">{{ body.totalAttributes }}</div>
                                     </div>
-                                    <div class="text-xs text-slate-500 mt-1">(不含幸运 / 含幸运)</div>
                                 </div>
                                 
                                 <!-- 九大属性 -->
@@ -162,9 +134,9 @@
                             </div>
                             
                             <!-- 选择指示器 -->
-                            <div class="text-center pt-4 border-t border-slate-700">
-                                <div v-if="selectedBodyIndex === index" class="text-blue-400 font-bold">
-                                    <i class="fas fa-check-circle mr-2"></i>已选择
+                            <div class="text-center pt-3 border-t border-slate-700">
+                                <div v-if="selectedBodyIndex === index" class="text-blue-400 font-bold text-sm">
+                                    <i class="fas fa-check-circle mr-1"></i>已选择
                                 </div>
                             </div>
                         </div>
@@ -179,79 +151,19 @@
                         <div v-for="(ability, index) in abilityOptions" :key="index"
                              @click="selectAbilityOption(index)"
                              :class="[
-                                 'p-6 rounded-xl border-2 transition-all duration-300 cursor-pointer hover:scale-[1.02]',
+                                 'p-4 rounded-xl border-2 transition-all duration-300 cursor-pointer hover:scale-[1.02] small-card',
                                  selectedAbilityIndex === index ? 'selected border-green-500 bg-green-900/20' : 'border-slate-700 bg-slate-800/50'
                              ]">
                             
                             <!-- 修正概览 -->
-                            <div class="mb-6">
-                                <div class="flex justify-between items-center mb-4">
-                                    <div>
-                                        <div class="text-xl font-bold">修正组合 {{ index + 1 }}</div>
-                                        <!-- 属性修正摘要 -->
-                                        <div class="text-xs text-slate-400 mt-1">
-                                            属性修正: 
-                                            <span v-for="(stat, statIndex) in ability.extraStats" :key="statIndex" 
-                                                  class="ml-1" :class="stat.value >= 0 ? 'text-blue-300' : 'text-red-300'">
-                                                {{ stat.value >= 0 && stat.name !== 'SPd' ? '' : '' }}{{ stat.value }}{{ stat.unit }}
-                                                <span v-if="statIndex < ability.extraStats.length - 1">,</span>
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div class="text-sm px-3 py-1 rounded-full bg-slate-700 font-bold">
-                                        {{ ability.advantages.length }}+ / {{ ability.disadvantages.length }}-
-                                    </div>
-                                </div>
-                                
-                                <!-- 优势修正 -->
-                                <div class="mb-4">
-                                    <div class="flex items-center mb-3">
-                                        <div class="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center mr-2">
-                                            <i class="fas fa-plus text-sm"></i>
-                                        </div>
-                                        <h3 class="font-bold text-green-300">优势修正</h3>
-                                    </div>
-                                    
-                                    <div class="space-y-2 max-h-32 overflow-y-auto pr-2">
-                                        <div v-for="(adv, advIndex) in ability.advantages.slice(0, 3)" :key="advIndex"
-                                             class="p-2 rounded-lg advantage text-xs">
-                                            <div class="font-bold">{{ adv.name }}</div>
-                                            <div class="text-green-300">{{ formatAbilityValue(adv.value, adv.unit) }}</div>
-                                        </div>
-                                        
-                                        <div v-if="ability.advantages.length === 0" 
-                                             class="p-3 text-center text-slate-500 border border-dashed border-slate-700 rounded-lg">
-                                            <div class="text-sm">无优势修正</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- 劣势修正 -->
-                                <div class="mb-4">
-                                    <div class="flex items-center mb-3">
-                                        <div class="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center mr-2">
-                                            <i class="fas fa-minus text-sm"></i>
-                                        </div>
-                                        <h3 class="font-bold text-red-300">劣势修正</h3>
-                                    </div>
-                                    
-                                    <div class="space-y-2 max-h-32 overflow-y-auto pr-2">
-                                        <div v-for="(dis, disIndex) in ability.disadvantages.slice(0, 3)" :key="disIndex"
-                                             class="p-2 rounded-lg disadvantage text-xs">
-                                            <div class="font-bold">{{ dis.name }}</div>
-                                            <div class="text-red-300">{{ formatAbilityValue(dis.value, dis.unit) }}</div>
-                                        </div>
-                                        
-                                        <div v-if="ability.disadvantages.length === 0" 
-                                             class="p-3 text-center text-slate-500 border border-dashed border-slate-700 rounded-lg">
-                                            <div class="text-sm">无劣势修正</div>
-                                        </div>
-                                    </div>
+                            <div class="mb-4">
+                                <div class="flex justify-between items-center mb-3">
+                                    <div class="text-xl font-bold">修正组合 {{ index + 1 }}</div>
                                 </div>
                                 
                                 <!-- 属性修正详细 -->
-                                <div>
-                                    <div class="grid grid-cols-2 gap-2 mt-3">
+                                <div class="mb-3">
+                                    <div class="grid grid-cols-2 gap-2">
                                         <div v-for="(stat, statIndex) in ability.extraStats" :key="statIndex"
                                              :class="[
                                                  'p-2 rounded-lg text-xs',
@@ -265,12 +177,38 @@
                                         </div>
                                     </div>
                                 </div>
+                                
+                                <!-- 优势与劣势修正混合显示 -->
+                                <div class="space-y-2">
+                                    <!-- 优势修正 -->
+                                    <div v-for="(adv, advIndex) in ability.advantages" :key="'adv-' + advIndex"
+                                         class="p-2 rounded-lg advantage text-xs">
+                                        <div class="flex justify-between items-center">
+                                            <div class="font-bold text-green-300">{{ adv.name }}</div>
+                                            <div class="text-green-300">{{ formatAbilityValue(adv.value, adv.unit) }}</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- 劣势修正 -->
+                                    <div v-for="(dis, disIndex) in ability.disadvantages" :key="'dis-' + disIndex"
+                                         class="p-2 rounded-lg disadvantage text-xs">
+                                        <div class="flex justify-between items-center">
+                                            <div class="font-bold text-red-300">{{ dis.name }}</div>
+                                            <div class="text-red-300">{{ formatAbilityValue(dis.value, dis.unit) }}</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div v-if="ability.advantages.length === 0 && ability.disadvantages.length === 0" 
+                                         class="p-2 text-center text-slate-500 border border-dashed border-slate-700 rounded-lg">
+                                        <div class="text-sm">无修正</div>
+                                    </div>
+                                </div>
                             </div>
                             
                             <!-- 选择指示器 -->
-                            <div class="text-center pt-4 border-t border-slate-700">
-                                <div v-if="selectedAbilityIndex === index" class="text-green-400 font-bold">
-                                    <i class="fas fa-check-circle mr-2"></i>已选择
+                            <div class="text-center pt-3 border-t border-slate-700">
+                                <div v-if="selectedAbilityIndex === index" class="text-green-400 font-bold text-sm">
+                                    <i class="fas fa-check-circle mr-1"></i>已选择
                                 </div>
                             </div>
                         </div>
@@ -304,21 +242,7 @@
                         <div>
                             <h2 class="text-4xl font-bold">{{ character.body.gender }} · {{ character.body.age }}岁</h2>
                             <div class="flex items-center mt-3">
-                                <span v-if="character.body.isYouth" class="youth-tag text-sm px-3 py-1 rounded-full mr-3">少年</span>
-                                <span class="text-slate-400">寿命 {{ character.body.lifespan }}年 | 属性总和 {{ character.body.totalAttributesWithoutLuck }} / {{ character.body.totalAttributes }}</span>
-                            </div>
-                        </div>
-                        <div class="mt-4 md:mt-0">
-                            <div class="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-3 rounded-xl mb-2">
-                                角色已创建
-                            </div>
-                            <div v-if="canCreateNewCharacter" 
-                                 class="text-sm bg-gradient-to-r from-green-600 to-teal-600 px-4 py-2 rounded-lg">
-                                本周可创建新角色
-                            </div>
-                            <div v-else 
-                                 class="text-sm bg-gradient-to-r from-amber-600 to-orange-600 px-4 py-2 rounded-lg">
-                                本周已创建角色
+                                <span class="text-slate-400">寿命 {{ character.body.lifespan }}年 | 属性总和 {{ character.body.totalAttributes }}</span>
                             </div>
                         </div>
                     </div>
@@ -344,71 +268,9 @@
                     <div class="mb-10">
                         <h3 class="text-2xl font-bold mb-6">修正</h3>
                         
-                        <!-- 优势修正 -->
-                        <div class="mb-8">
-                            <div class="flex items-center mb-4">
-                                <div class="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center mr-3">
-                                    <i class="fas fa-plus text-lg"></i>
-                                </div>
-                                <h4 class="text-xl font-bold text-green-300">优势修正</h4>
-                                <div class="ml-auto text-lg font-bold bg-green-900/50 px-4 py-2 rounded-full">
-                                    {{ character.abilities.advantages.length }} 个
-                                </div>
-                            </div>
-                            
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                <div v-for="(adv, index) in character.abilities.advantages" :key="index"
-                                     class="p-4 advantage rounded-xl">
-                                    <div class="flex justify-between items-center mb-2">
-                                        <div class="font-bold">{{ adv.name }}</div>
-                                        <div class="text-lg font-bold text-green-300">{{ formatAbilityValue(adv.value, adv.unit) }}</div>
-                                    </div>
-                                </div>
-                                
-                                <div v-if="character.abilities.advantages.length === 0" 
-                                     class="md:col-span-3 p-6 text-center border-2 border-dashed border-slate-700 rounded-xl">
-                                    <div class="text-slate-500">无优势修正</div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- 劣势修正 -->
-                        <div class="mb-8">
-                            <div class="flex items-center mb-4">
-                                <div class="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center mr-3">
-                                    <i class="fas fa-minus text-lg"></i>
-                                </div>
-                                <h4 class="text-xl font-bold text-red-300">劣势修正</h4>
-                                <div class="ml-auto text-lg font-bold bg-red-900/50 px-4 py-2 rounded-full">
-                                    {{ character.abilities.disadvantages.length }} 个
-                                </div>
-                            </div>
-                            
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                <div v-for="(dis, index) in character.abilities.disadvantages" :key="index"
-                                     class="p-4 disadvantage rounded-xl">
-                                    <div class="flex justify-between items-center mb-2">
-                                        <div class="font-bold">{{ dis.name }}</div>
-                                        <div class="text-lg font-bold text-red-300">{{ formatAbilityValue(dis.value, dis.unit) }}</div>
-                                    </div>
-                                </div>
-                                
-                                <div v-if="character.abilities.disadvantages.length === 0" 
-                                     class="md:col-span-3 p-6 text-center border-2 border-dashed border-slate-700 rounded-xl">
-                                    <div class="text-slate-500">无劣势修正</div>
-                                </div>
-                            </div>
-                        </div>
-                        
                         <!-- 属性修正 -->
-                        <div>
-                            <div class="flex items-center mb-4">
-                                <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center mr-3">
-                                    <i class="fas fa-heart text-lg"></i>
-                                </div>
-                                <h4 class="text-xl font-bold text-blue-300">属性修正</h4>
-                            </div>
-                            
+                        <div class="mb-8">
+                            <h4 class="text-xl font-bold text-blue-300 mb-4">属性修正</h4>
                             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                                 <div v-for="(extra, index) in character.abilities.extraStats" :key="index"
                                      :class="[
@@ -423,6 +285,35 @@
                                 </div>
                             </div>
                         </div>
+                        
+                        <!-- 优势与劣势修正混合显示 -->
+                        <div>
+                            <h4 class="text-xl font-bold mb-4">能力修正</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- 优势修正 -->
+                                <div v-for="(adv, index) in character.abilities.advantages" :key="'adv-' + index"
+                                     class="p-4 advantage rounded-xl">
+                                    <div class="flex justify-between items-center">
+                                        <div class="font-bold text-green-300">{{ adv.name }}</div>
+                                        <div class="text-lg font-bold text-green-300">{{ formatAbilityValue(adv.value, adv.unit) }}</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 劣势修正 -->
+                                <div v-for="(dis, index) in character.abilities.disadvantages" :key="'dis-' + index"
+                                     class="p-4 disadvantage rounded-xl">
+                                    <div class="flex justify-between items-center">
+                                        <div class="font-bold text-red-300">{{ dis.name }}</div>
+                                        <div class="text-lg font-bold text-red-300">{{ formatAbilityValue(dis.value, dis.unit) }}</div>
+                                    </div>
+                                </div>
+                                
+                                <div v-if="character.abilities.advantages.length === 0 && character.abilities.disadvantages.length === 0" 
+                                     class="md:col-span-2 p-6 text-center border-2 border-dashed border-slate-700 rounded-xl">
+                                    <div class="text-slate-500">无能力修正</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     
                     <!-- 操作按钮 -->
@@ -434,75 +325,11 @@
                         
                         <!-- 添加创建新角色按钮 -->
                         <button @click="startNewCharacter" 
-                                :disabled="!canCreateNewCharacter"
-                                :class="[
-                                    'px-8 py-4 rounded-xl font-bold text-lg transition-all',
-                                    canCreateNewCharacter 
-                                    ? 'bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-500 hover:to-teal-500 hover:scale-[1.05]' 
-                                    : 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                                ]">
+                                class="px-8 py-4 bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-500 hover:to-teal-500 rounded-xl font-bold text-lg transition-all hover:scale-[1.05]">
                             <i class="fas fa-plus mr-2"></i>创建新角色
                         </button>
-                        
-                        <!-- 添加返回查看按钮 -->
-                        <button @click="backToCreation" 
-                                class="px-8 py-4 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 rounded-xl font-bold text-lg transition-all hover:scale-[1.05]">
-                            <i class="fas fa-redo mr-2"></i>重新选择
-                        </button>
-                    </div>
-                    
-                    <!-- 状态提示 -->
-                    <div v-if="!canCreateNewCharacter" class="mt-4 text-center">
-                        <div class="inline-block px-4 py-2 rounded-full bg-amber-900/30 border border-amber-700">
-                            <span class="font-bold text-amber-300">
-                                <i class="fas fa-clock mr-2"></i>本周已创建角色，请等待新的一周
-                            </span>
-                        </div>
                     </div>
                 </div>
-            </div>
-            
-            <!-- 开发者调试区域 -->
-            <div v-if="showDeveloperTools" class="card-glass p-6 mt-8">
-                <div class="flex items-center mb-4">
-                    <i class="fas fa-tools text-blue-400 mr-2"></i>
-                    <h3 class="text-xl font-bold">开发者调试工具</h3>
-                    <button @click="toggleDeveloperTools" 
-                            class="ml-auto text-sm px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded">
-                        隐藏
-                    </button>
-                </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                    <button @click="forceNewWeek" 
-                            class="p-3 bg-blue-700 hover:bg-blue-600 rounded-lg">
-                        模拟新周
-                    </button>
-                    <button @click="clearLocalStorage" 
-                            class="p-3 bg-red-700 hover:bg-red-600 rounded-lg">
-                        清除本地存储
-                    </button>
-                    <button @click="generateDebugCharacter" 
-                            class="p-3 bg-green-700 hover:bg-green-600 rounded-lg">
-                        生成测试角色
-                    </button>
-                </div>
-                
-                <div class="p-3 bg-slate-800/50 rounded-lg text-xs font-mono">
-                    <div>当前周数: {{ currentWeek }}</div>
-                    <div>最后创建周数: {{ lastCreatedWeek }}</div>
-                    <div>可创建新角色: {{ canCreateNewCharacter }}</div>
-                    <div>角色已创建: {{ characterCreated }}</div>
-                </div>
-            </div>
-            
-            <!-- 显示/隐藏开发者工具 -->
-            <div class="text-center mt-6">
-                <button @click="showPasswordPrompt" 
-                        class="text-sm px-3 py-1 bg-slate-800 hover:bg-slate-700 rounded">
-                    <i class="fas fa-cog mr-1"></i>
-                    {{ showDeveloperTools ? '隐藏' : '显示' }}开发者工具
-                </button>
             </div>
         </div>
     </div>
@@ -510,7 +337,7 @@
     <script>
         const { createApp, ref, reactive, computed, onMounted } = Vue;
         
-        // CSV格式的修正数据
+        // CSV格式的修正数据，包含新的-类型
         const ABILITIES_CSV = `id,name,type,number
 1,MP存储,%,20
 2,速度,%,20
@@ -571,7 +398,8 @@
 57,神秘等级,0,1
 58,因果律,%,10
 59,穿越者,/,0
-60,其他血统,/,0`;
+60,其他血统,/,0
+61,负面效果,-,5`;
         
         createApp({
             setup() {
@@ -599,12 +427,6 @@
                     }
                 };
                 
-                // 当前周数
-                const currentWeek = ref(1);
-                
-                // 最后创建角色的周数
-                const lastCreatedWeek = ref(0);
-                
                 // 躯体选项
                 const bodyOptions = ref([]);
                 const selectedBodyIndex = ref(null);
@@ -616,28 +438,20 @@
                 // 角色数据
                 const character = ref(null);
                 
-                // 显示开发者工具
-                const showDeveloperTools = ref(false);
-                
                 // 计算属性
                 const characterCreated = computed(() => {
                     return character.value !== null;
-                });
-                
-                const canCreateNewCharacter = computed(() => {
-                    return currentWeek.value > lastCreatedWeek.value;
                 });
                 
                 // 生成单个躯体
                 const generateBody = () => {
                     const gender = Math.random() > 0.5 ? "男" : "女";
                     const age = Math.floor(Math.random() * 31) + 10; // 10-40岁
-                    const isYouth = age <= 16; // 少年包含16岁
+                    const isYouth = age <= 16; // 少年包含16岁，但不显示
                     const lifespan = Math.floor(Math.random() * 21) + 50; // 50-70年
                     
                     const attributes = [];
                     let total = 0;
-                    let totalWithoutLuck = 0;
                     
                     // 生成九大属性
                     for (let i = 0; i < 9; i++) {
@@ -653,11 +467,6 @@
                         a = Math.floor(a / 4);
                         total += a;
                         
-                        // 计算不含幸运的总和
-                        if (i !== 8) { // 幸运是第9个属性，索引为8
-                            totalWithoutLuck += a;
-                        }
-                        
                         attributes.push({
                             name: attributeNames[i],
                             value: a
@@ -670,8 +479,7 @@
                         isYouth,
                         lifespan,
                         attributes,
-                        totalAttributes: total,
-                        totalAttributesWithoutLuck: totalWithoutLuck
+                        totalAttributes: total
                     };
                 };
                 
@@ -703,9 +511,19 @@
                         randomValue = Math.floor(Math.random() * ability.number) - ability.number;
                     }
                     
+                    // 特殊处理-类型：优势为负，劣势为正
+                    if (ability.type === '-') {
+                        // 对于-类型，优势是负值，劣势是正值
+                        if (isAdvantage) {
+                            randomValue = Math.floor(Math.random() * ability.number) - ability.number; // 负值
+                        } else {
+                            randomValue = Math.floor(Math.random() * ability.number) + 1; // 正值
+                        }
+                    }
+                    
                     // 根据type决定单位
                     let unit = '';
-                    if (ability.type === '%') {
+                    if (ability.type === '%' || ability.type === '-') {
                         unit = '%';
                     }
                     
@@ -838,37 +656,22 @@
                         return;
                     }
                     
-                    // 检查是否可以创建新角色
-                    if (!canCreateNewCharacter.value) {
-                        alert("本周已创建过角色，无法再次创建");
-                        return;
-                    }
-                    
                     // 保存角色数据
                     character.value = {
                         metadata: {
-                            weekCreated: currentWeek.value,
                             createdDate: new Date().toISOString(),
-                            version: "v1.0.0"
+                            version: "v1.1.0"
                         },
                         body: bodyOptions.value[selectedBodyIndex.value],
                         abilities: abilityOptions.value[selectedAbilityIndex.value]
                     };
                     
-                    // 更新最后创建周数
-                    lastCreatedWeek.value = currentWeek.value;
-                    
                     // 保存到localStorage
                     saveToLocalStorage();
                 };
                 
-                // 创建新角色（如果满足条件）
+                // 创建新角色
                 const startNewCharacter = () => {
-                    if (!canCreateNewCharacter.value) {
-                        alert("本周已创建过角色，无法再次创建。请等待新的一周。");
-                        return;
-                    }
-                    
                     // 重置状态
                     character.value = null;
                     selectedBodyIndex.value = null;
@@ -877,14 +680,6 @@
                     // 生成新的选项
                     generateBodyOptions();
                     generateAbilityOptions();
-                };
-                
-                // 返回创建页面（不检查周数限制）
-                const backToCreation = () => {
-                    // 重置选择但不生成新选项（用户可以重新选择已生成的选项）
-                    selectedBodyIndex.value = null;
-                    selectedAbilityIndex.value = null;
-                    character.value = null;
                 };
                 
                 // 格式化修正值显示
@@ -921,11 +716,8 @@
                     content += "基本信息:\n";
                     content += `性别: ${character.value.body.gender}\n`;
                     content += `年龄: ${character.value.body.age}岁\n`;
-                    if (character.value.body.isYouth) {
-                        content += "标签: 少年\n";
-                    }
                     content += `寿命: ${character.value.body.lifespan}年\n`;
-                    content += `创建周数: ${character.value.metadata.weekCreated}\n\n`;
+                    content += `创建时间: ${new Date(character.value.metadata.createdDate).toLocaleString()}\n\n`;
                     
                     // 属性
                     content += "属性:\n";
@@ -933,7 +725,7 @@
                         const rating = getAttributeRating(attr.value);
                         content += `${attributeNames[index]}: ${attr.value} (${rating})\n`;
                     });
-                    content += `属性总和: ${character.value.body.totalAttributesWithoutLuck} / ${character.value.body.totalAttributes} (不含幸运/含幸运)\n\n`;
+                    content += `属性总和: ${character.value.body.totalAttributes}\n\n`;
                     
                     // 优势修正
                     content += "优势修正:\n";
@@ -969,7 +761,7 @@
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = `神秘回响角色_周${character.value.metadata.weekCreated}.txt`;
+                    a.download = `神秘回响角色_${new Date().toISOString().slice(0,10)}.txt`;
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);
@@ -1003,8 +795,6 @@
                 // 保存到localStorage
                 const saveToLocalStorage = () => {
                     const data = {
-                        currentWeek: currentWeek.value,
-                        lastCreatedWeek: lastCreatedWeek.value,
                         character: character.value
                     };
                     localStorage.setItem('eom_character_generator', JSON.stringify(data));
@@ -1016,69 +806,11 @@
                     if (data) {
                         try {
                             const parsed = JSON.parse(data);
-                            currentWeek.value = parsed.currentWeek || 1;
-                            lastCreatedWeek.value = parsed.lastCreatedWeek || 0;
                             character.value = parsed.character || null;
                         } catch (e) {
                             console.error('加载localStorage数据失败:', e);
                         }
                     }
-                };
-                
-                // 模拟新周
-                const forceNewWeek = () => {
-                    currentWeek.value += 1;
-                    saveToLocalStorage();
-                    alert(`已模拟到周${currentWeek.value}`);
-                };
-                
-                // 清除localStorage
-                const clearLocalStorage = () => {
-                    localStorage.removeItem('eom_character_generator');
-                    currentWeek.value = 1;
-                    lastCreatedWeek.value = 0;
-                    character.value = null;
-                    generateBodyOptions();
-                    generateAbilityOptions();
-                    alert('已清除本地存储');
-                };
-                
-                // 生成测试角色
-                const generateDebugCharacter = () => {
-                    // 直接创建一个角色（绕过周数限制）
-                    character.value = {
-                        metadata: {
-                            weekCreated: currentWeek.value,
-                            createdDate: new Date().toISOString(),
-                            version: "v1.0.0"
-                        },
-                        body: generateBody(),
-                        abilities: generateAbilities()
-                    };
-                    
-                    lastCreatedWeek.value = currentWeek.value;
-                    saveToLocalStorage();
-                    alert('测试角色已生成');
-                };
-                
-                // 显示密码提示
-                const showPasswordPrompt = () => {
-                    if (showDeveloperTools.value) {
-                        showDeveloperTools.value = false;
-                        return;
-                    }
-                    
-                    const password = prompt("请输入开发者工具密码:");
-                    if (password === "Midtime") {
-                        showDeveloperTools.value = true;
-                    } else if (password !== null) {
-                        alert("密码错误！");
-                    }
-                };
-                
-                // 切换开发者工具显示
-                const toggleDeveloperTools = () => {
-                    showDeveloperTools.value = !showDeveloperTools.value;
                 };
                 
                 // 初始化
@@ -1102,32 +834,22 @@
                 
                 return {
                     attributeNames,
-                    currentWeek,
-                    lastCreatedWeek,
                     bodyOptions,
                     selectedBodyIndex,
                     abilityOptions,
                     selectedAbilityIndex,
                     character,
-                    showDeveloperTools,
                     characterCreated,
-                    canCreateNewCharacter,
                     selectBodyOption,
                     selectAbilityOption,
                     createCharacter,
                     startNewCharacter,
-                    backToCreation,
                     downloadCharacter,
                     getAttributeClass,
                     getAttributeRating,
                     getAttributeRatingClass,
                     formatAbilityValue,
-                    getExtraStatChineseName,
-                    forceNewWeek,
-                    clearLocalStorage,
-                    generateDebugCharacter,
-                    showPasswordPrompt,
-                    toggleDeveloperTools
+                    getExtraStatChineseName
                 };
             }
         }).mount('#app');
