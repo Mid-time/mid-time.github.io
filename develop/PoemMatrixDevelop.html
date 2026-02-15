@@ -162,7 +162,6 @@
             box-shadow: inset 0 2px 5px #2f2f2f;
         }
 
-        /* Debug 信息面板 */
         .debug-panel {
             background: #3d3d3d;
             border: 2px solid #7a7a7a;
@@ -500,7 +499,7 @@
         let totalAttempts = 0;
         let currentStdAnswer = '';
         let currentConfusions = [];
-        let currentMissingChars = []; // 每个混淆答案缺失的字符
+        let currentMissingChars = [];
         let currentMatrix = [];
         let selectedIndices = [];
         let gridCells = [];
@@ -590,7 +589,6 @@
             return { std: allAnswers[0], confusions: allAnswers.slice(1,9) };
         }
 
-        // 生成矩阵，保证标准答案全在，且每个混淆答案至少缺一字，并记录缺失字符
         function generateMatrixWithConstraints(std, confusions, maxAttempts = 30) {
             const stdChars = std.split('');
             const allChars = [std, ...confusions].reduce((acc, ans) => acc.concat(ans.split('')), []);
@@ -598,7 +596,6 @@
             let bestMissing = [];
 
             for (let attempt = 0; attempt < maxAttempts; attempt++) {
-                // 随机选每个混淆答案要缺失的字符（优先选不在标准答案中的）
                 const missingChars = [];
                 for (let conf of confusions) {
                     const confChars = conf.split('');
@@ -629,7 +626,6 @@
                 let matrix = stdChars.concat(extra);
                 matrix = shuffleArray(matrix);
 
-                // 检查是否每个混淆答案都缺失至少一字
                 let ok = true;
                 for (let i = 0; i < confusions.length; i++) {
                     const conf = confusions[i];
@@ -656,9 +652,7 @@
                 }
             }
             if (!bestMatrix) {
-                // 保底
                 bestMatrix = generateMatrixFallback(std, confusions);
-                // 保底时不保证缺失记录准确，但我们可以计算一个缺失
                 bestMissing = confusions.map(() => '?');
             }
             return { matrix: bestMatrix, missing: bestMissing };
@@ -679,9 +673,8 @@
             return shuffleArray(matrix);
         }
 
-        // 更新 Debug 面板内容
         function updateDebugPanel() {
-            if (!debugMode || !gameActive) {
+            if (!debugMode || !gameActive || !currentConfusions) {
                 debugPanel.classList.add('hidden-view');
                 return;
             }
@@ -804,7 +797,6 @@
             setTimeout(() => toast.remove(), 2200);
         }
 
-        // 判定两个字符串的字符频次是否相等（顺序无关）
         function isMultisetEqual(str1, str2) {
             if (str1.length !== str2.length) return false;
             const count = {};
@@ -822,7 +814,6 @@
 
             const userChars = selectedIndices.map(idx => currentMatrix[idx]);
             const userAnswer = userChars.join('');
-            // 使用多集相等判定
             const isCorrect = isMultisetEqual(userAnswer, currentStdAnswer);
             totalAttempts++;
 
@@ -889,4 +880,9 @@
             const accuracy = totalAttempts > 0 ? ((correctCount / totalAttempts) * 100).toFixed(1) : 0;
 
             if (currentMode === 'time') {
-                resultTitle.innerText = '⏳ 计时
+                resultTitle.innerText = '⏳ 计时结束';
+                resultDetail.innerText = `完成 ${correctCount} 题 · 正确率 ${accuracy}%`;
+                if (!debugMode && correctCount > highScoreTime) {
+                    highScoreTime = correctCount;
+                    localStorage.setItem('poem_highScore_time', highScoreTime);
+             
