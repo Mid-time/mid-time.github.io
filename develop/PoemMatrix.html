@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>诗阵 · 七言迷阵</title>
+    <title>诗阵</title>
     <style>
         * {
             box-sizing: border-box;
@@ -29,9 +29,10 @@
             padding: 24px;
             box-shadow: 0 20px 30px rgba(0,0,0,0.5);
             border: 1px solid #5a5a5a;
+            position: relative;
         }
 
-        /* 历史记录区域 */
+        /* 历史记录面板 (仅欢迎视图可见) */
         .history-panel {
             background: #4f4f4f;
             border-radius: 24px;
@@ -121,7 +122,7 @@
             margin-bottom: 12px;
         }
 
-        /* 模式选择按钮组 (动态出现) */
+        /* 模式选择按钮组 */
         .mode-selector {
             display: flex;
             gap: 16px;
@@ -151,6 +152,7 @@
         /* 游戏界面 */
         .game-play-area {
             text-align: center;
+            position: relative;
         }
 
         .stats-bar {
@@ -179,7 +181,7 @@
         .cell {
             aspect-ratio: 1 / 1;
             background: #616161;
-            border-radius: 16px;
+            border-radius: 0; /* 方形按钮 */
             display: flex;
             align-items: center;
             justify-content: center;
@@ -232,28 +234,84 @@
             box-shadow: 0 4px 0 #3b3b3b;
         }
 
-        .feedback-banner {
-            background: #5a5a5a;
-            border-left: 8px solid #b1b1b1;
-            padding: 14px 18px;
-            border-radius: 30px;
-            margin: 15px 0;
-            font-size: 1.3rem;
-            font-weight: 500;
-            color: #f2f2f2;
-            text-align: center;
-            transform: translateY(0);
-            transition: all 0.3s ease-out;
-            border: 1px solid #8f8f8f;
+        /* 右侧滑入横幅容器 */
+        .toast-container {
+            position: relative;
+            width: 100%;
+            height: 0;
+            display: flex;
+            justify-content: center;
+            pointer-events: none;
+            z-index: 100;
         }
 
-        .wrong-answer-hint {
-            background: #4d4d4d;
-            color: #ffbaba;
-            padding: 12px;
-            border-radius: 24px;
-            font-size: 1.3rem;
-            word-break: break-all;
+        .toast-message {
+            position: absolute;
+            top: 0;
+            width: 90%;
+            max-width: 500px;
+            background: #4e4e4e;
+            border-radius: 40px;
+            padding: 18px 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            text-align: center;
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: white;
+            border-left: 8px solid transparent;
+            transform: translateX(100%);
+            opacity: 0;
+            animation: slideInOut 2.2s ease-in-out forwards;
+            pointer-events: none;
+        }
+
+        .toast-message.correct {
+            border-left-color: #6ab04c;
+            background: #3e6b3e;
+        }
+
+        .toast-message.wrong {
+            border-left-color: #eb4d4b;
+            background: #6b3f3f;
+        }
+
+        .toast-sub {
+            font-size: 1.2rem;
+            font-weight: 300;
+            color: #dddddd;
+            margin-top: 6px;
+            letter-spacing: 1px;
+        }
+
+        @keyframes slideInOut {
+            0% { transform: translateX(100%); opacity: 0; }
+            15% { transform: translateX(0); opacity: 1; }
+            85% { transform: translateX(0); opacity: 1; }
+            100% { transform: translateX(-100%); opacity: 0; }
+        }
+
+        /* 底部联系 */
+        .contact-area {
+            margin-top: 25px;
+            text-align: center;
+            color: #8f8f8f;
+            font-size: 1rem;
+        }
+
+        .contact-trigger {
+            text-decoration: underline dotted;
+            cursor: pointer;
+            color: #b3b3b3;
+        }
+
+        .email-show {
+            background: #404040;
+            padding: 8px 18px;
+            border-radius: 30px;
+            display: inline-block;
+            margin-top: 8px;
+            color: #cfcfcf;
+            border: 1px solid #6f6f6f;
         }
 
         /* 成绩弹窗 */
@@ -304,48 +362,22 @@
             cursor: pointer;
             width: 100%;
         }
-
-        /* 底部联系 */
-        .contact-area {
-            margin-top: 25px;
-            text-align: center;
-            color: #8f8f8f;
-            font-size: 1rem;
-        }
-
-        .contact-trigger {
-            text-decoration: underline dotted;
-            cursor: pointer;
-            color: #b3b3b3;
-        }
-
-        .email-show {
-            background: #404040;
-            padding: 8px 18px;
-            border-radius: 30px;
-            display: inline-block;
-            margin-top: 8px;
-            color: #cfcfcf;
-            border: 1px solid #6f6f6f;
-        }
     </style>
 </head>
 <body>
 <div class="game-container" id="gameContainer">
-    <!-- 历史记录始终显示在最上 -->
-    <div class="history-panel">
-        <div class="record-item">
-            <div class="record-label">⏱️ 计时最高得分</div>
-            <div class="record-value" id="highScoreDisplay">0</div>
-        </div>
-        <div class="record-item">
-            <div class="record-label">⚡ 计数最快时间</div>
-            <div class="record-value" id="bestTimeDisplay">--</div>
-        </div>
-    </div>
-
-    <!-- 初始视图 (欢迎界面) -->
+    <!-- 欢迎视图 (包含历史记录) -->
     <div id="welcomeView" class="welcome-area view">
+        <div class="history-panel">
+            <div class="record-item">
+                <div class="record-label">⏱️ 计时最高得分</div>
+                <div class="record-value" id="highScoreDisplay">0</div>
+            </div>
+            <div class="record-item">
+                <div class="record-label">⚡ 计数最快时间</div>
+                <div class="record-value" id="bestTimeDisplay">--</div>
+            </div>
+        </div>
         <button class="big-btn" id="startBtn">▶ 开始游戏</button>
         <div class="rule-box" id="ruleBox">
             <div class="title">📜 规则说明</div>
@@ -354,16 +386,16 @@
             <p>✦ 计时模式：10分钟内答尽可能多；计数模式：最快完成20题。</p>
             <p>✦ 只有答对才会减少剩余题数（计数模式）。</p>
         </div>
-        <!-- 模式选择区 (开始后替换规则) 初始隐藏 -->
+        <!-- 模式选择区 (开始后替换规则) -->
         <div id="modeSelector" class="mode-selector hidden-view">
             <button class="mode-btn" id="modeTime">⏳ 计时 (10分钟)</button>
             <button class="mode-btn" id="modeCount">🔢 计数 (20题)</button>
         </div>
     </div>
 
-    <!-- 游戏视图 (初始隐藏) -->
+    <!-- 游戏视图 (无历史记录，无联系显示，只有统计和网格) -->
     <div id="gameView" class="game-play-area view hidden-view">
-        <div class="stats-bar" id="gameStatDisplay">剩余 10:00</div>
+        <div class="stats-bar" id="gameStatDisplay">剩余 10:00 · 得分 0</div>
 
         <!-- 7x7 网格 -->
         <div class="grid-7x7" id="gridContainer"></div>
@@ -371,21 +403,18 @@
         <!-- 提交按钮 -->
         <button class="submit-btn disabled-btn" id="submitGameBtn">提交答案</button>
 
-        <!-- 反馈横幅区域 -->
-        <div id="feedbackArea" style="min-height: 70px;"></div>
-
-        <!-- 隐藏的正确答案显示(错误时使用) -->
-        <div id="wrongAnswerDisplay" class="wrong-answer-hint" style="display: none;"></div>
+        <!-- 用于承载右侧滑入横幅的容器（绝对定位相对游戏区域） -->
+        <div class="toast-container" id="toastContainer"></div>
     </div>
 
-    <!-- 底部联系 -->
+    <!-- 底部联系 (全局可见) -->
     <div class="contact-area">
         <span class="contact-trigger" id="contactLink">📧 联系我</span>
-        <div id="emailDisplay" class="email-show" style="display: none;">poem.matrix@7x7.me</div>
+        <div id="emailDisplay" class="email-show" style="display: none;">3310764938@qq.com</div>
     </div>
 </div>
 
-<!-- 成绩弹窗 (隐藏) -->
+<!-- 成绩弹窗 -->
 <div id="resultOverlay" class="overlay" style="display: none;">
     <div class="result-card">
         <h2 id="resultTitle">⏰ 时间到</h2>
@@ -398,37 +427,24 @@
     (function() {
         // ---------- 全局变量 ----------
         let allAnswers = [];                // 从answer.txt加载的所有诗句
-        // 默认后备诗句 (七言)
-        const fallbackAnswers = [
-            "床前明月光疑是地上霜", "两个黄鹂鸣翠柳一行白鹭上青天",
-            "窗含西岭千秋雪门泊东吴万里船", "春眠不觉晓处处闻啼鸟",
-            "白日依山尽黄河入海流", "清明时节雨纷纷路上行人欲断魂",
-            "独在异乡为异客每逢佳节倍思亲", "故人西辞黄鹤楼烟花三月下扬州",
-            "海内存知己天涯若比邻", "相见时难别亦难东风无力百花残",
-            "烟笼寒水月笼沙夜泊秦淮近酒家", "昨夜星辰昨夜风画楼西畔桂堂东",
-            "身无彩凤双飞翼心有灵犀一点通", "君问归期未有期巴山夜雨涨秋池",
-            "何当共剪西窗烛却话巴山夜雨时", "沧海月明珠有泪蓝田日暖玉生烟",
-            "此情可待成追忆只是当时已惘然", "锦瑟无端五十弦一弦一柱思华年",
-            "庄生晓梦迷蝴蝶望帝春心托杜鹃", "大漠孤烟直长河落日圆",
-        ].filter(s => s.length === 7);  // 仅保留恰好7字 (部分可能不对,手动修正一下)
-        // 手动保证都是7字(用于演示)
+        // 后备诗库 (确保都是7字)
         const demoPoems = [
             "两个黄鹂鸣翠柳", "一行白鹭上青天", "窗含西岭千秋雪", "门泊东吴万里船",
             "春眠不觉晓处处", "处处闻啼鸟夜来", "夜来风雨声花落", "白日依山尽黄河",
             "黄河入海流欲穷", "欲穷千里目更上", "更上一层楼清明", "清明时节雨纷纷",
             "路上行人欲断魂", "借问酒家何处有", "牧童遥指杏花村", "独在异乡为异客",
             "每逢佳节倍思亲", "遥知兄弟登高处", "遍插茱萸少一人", "故人西辞黄鹤楼"
-        ]; // 正好20个七言
+        ];
 
         // 游戏状态
         let currentMode = null;              // 'time' 或 'count'
-        let timerInterval = null;
+        let timerInterval = null;            // 通用计时器，用于更新UI (每秒)
         let gameActive = false;
-        let timeLeft = 600;                  // 计时模式剩余秒数 (10分钟=600秒)
+        let timeLeft = 600;                  // 计时模式剩余秒数
         let countLeft = 20;                   // 计数模式剩余题数
         let startTimestamp = null;            // 模式开始时间戳(毫秒)
         let correctCount = 0;                 // 本次答对题数
-        totalAttempts = 0;                    // 本次总提交次数(用于正确率)
+        let totalAttempts = 0;                 // 本次总提交次数(用于正确率)
         let currentStdAnswer = '';            // 当前正确答案
         let currentMatrix = [];                // 49个汉字一维数组
         let selectedIndices = [];              // 按点击顺序记录选中的索引 (最多7)
@@ -450,8 +466,7 @@
         const gameStatDisplay = document.getElementById('gameStatDisplay');
         const gridContainer = document.getElementById('gridContainer');
         const submitBtn = document.getElementById('submitGameBtn');
-        const feedbackArea = document.getElementById('feedbackArea');
-        const wrongAnswerDisplay = document.getElementById('wrongAnswerDisplay');
+        const toastContainer = document.getElementById('toastContainer');
         const highScoreDisplay = document.getElementById('highScoreDisplay');
         const bestTimeDisplay = document.getElementById('bestTimeDisplay');
         const contactLink = document.getElementById('contactLink');
@@ -461,7 +476,7 @@
         const resultDetail = document.getElementById('resultDetail');
         const confirmResult = document.getElementById('confirmResult');
 
-        // 初始化更新显示
+        // 初始化更新历史显示
         function updateHistoryUI() {
             highScoreDisplay.textContent = highScoreTime;
             if (bestTimeCount === Infinity) {
@@ -504,7 +519,6 @@
         // 选择标准答案和8个混淆答案 (满足混淆至少缺一个标准字)
         function selectStdAndConfusions() {
             if (allAnswers.length < 9) {
-                // 如果不足9个，重复使用 (但尽量不，演示库够)
                 console.warn('诗库不足9,可能重复');
             }
             const shuffled = shuffleArray([...allAnswers]);
@@ -512,13 +526,12 @@
                 const std = shuffled[Math.floor(Math.random() * shuffled.length)];
                 const stdCharsSet = new Set(std);
                 const others = shuffled.filter(a => a !== std);
-                if (others.length < 8) continue; // 不够则重选
+                if (others.length < 8) continue;
                 const confusions = [];
                 const shuffledOthers = shuffleArray([...others]);
                 for (let cand of shuffledOthers) {
                     if (confusions.length >= 8) break;
                     const candSet = new Set(cand);
-                    // 检查是否至少缺一个标准字的字符
                     const missing = [...stdCharsSet].some(ch => !candSet.has(ch));
                     if (missing) confusions.push(cand);
                 }
@@ -526,7 +539,7 @@
                     return { std, confusions };
                 }
             }
-            // 保底：随便选8个，忽略条件
+            // 保底
             const std = allAnswers[0];
             const confusions = allAnswers.slice(1,9);
             return { std, confusions };
@@ -534,7 +547,6 @@
 
         // 生成矩阵: 根据标准+8混淆构造字池 -> 随机选49字
         function generateMatrixFromAnswers(std, confusions) {
-            // 所有9个答案拼成字符数组 (保留每个字的出现次数)
             let charPool = [];
             const allAnswersArr = [std, ...confusions];
             for (let ans of allAnswersArr) {
@@ -542,11 +554,8 @@
                     charPool.push(ch);
                 }
             }
-            // 随机打乱池子
             charPool = shuffleArray(charPool);
-            // 取前49个作为矩阵 (如果池子不足49，但总有63)
-            const matrixChars = charPool.slice(0, 49);
-            return matrixChars;
+            return charPool.slice(0, 49);
         }
 
         // 刷新网格UI
@@ -575,22 +584,18 @@
             if (!gameActive || !canInteract) return;
             const index = parseInt(e.currentTarget.dataset.index);
             if (selectedIndices.includes(index)) {
-                // 取消选中
                 selectedIndices = selectedIndices.filter(i => i !== index);
                 e.currentTarget.classList.remove('selected');
             } else {
-                if (selectedIndices.length >= 7) return; // 最多7
+                if (selectedIndices.length >= 7) return;
                 selectedIndices.push(index);
                 e.currentTarget.classList.add('selected');
             }
-
-            // 更新其他格子的禁用状态 & 提交按钮状态
             updateCellsDisabledState();
         }
 
         function updateCellsDisabledState() {
             const exactlySeven = selectedIndices.length === 7;
-            // 灰化所有未被选中的格子
             gridCells.forEach(cell => {
                 const idx = parseInt(cell.dataset.index);
                 if (!selectedIndices.includes(idx)) {
@@ -600,10 +605,9 @@
                         cell.classList.remove('disabled');
                     }
                 } else {
-                    cell.classList.remove('disabled'); // 选中的保持可点击(可以取消)
+                    cell.classList.remove('disabled');
                 }
             });
-            // 提交按钮可用性
             if (exactlySeven) {
                 submitBtn.classList.remove('disabled-btn');
             } else {
@@ -611,7 +615,6 @@
             }
         }
 
-        // 重置高亮 & 启用格子
         function clearSelectedAndEnable() {
             selectedIndices = [];
             gridCells.forEach(cell => {
@@ -620,7 +623,7 @@
             submitBtn.classList.add('disabled-btn');
         }
 
-        // 生成新题目 (重新选择答案并渲染矩阵)
+        // 生成新题目
         function loadNextQuestion() {
             if (!gameActive) return;
             const { std, confusions } = selectStdAndConfusions();
@@ -629,50 +632,48 @@
             currentMatrix = matrix;
             renderGrid(matrix);
             clearSelectedAndEnable();
-            // 隐藏之前的错误答案显示
-            wrongAnswerDisplay.style.display = 'none';
-            feedbackArea.innerHTML = ''; // 清空横幅
             canInteract = true;
+        }
+
+        // 显示右侧滑入横幅
+        function showToast(isCorrect, answerText = '') {
+            const toast = document.createElement('div');
+            toast.className = `toast-message ${isCorrect ? 'correct' : 'wrong'}`;
+            toast.innerHTML = isCorrect ? '✅ 答案正确' : '❌ 答案错误';
+            if (!isCorrect && answerText) {
+                toast.innerHTML += `<div class="toast-sub">答案：${answerText}</div>`;
+            }
+            toastContainer.appendChild(toast);
+            // 动画结束后移除元素
+            setTimeout(() => {
+                if (toast.parentNode) toast.remove();
+            }, 2200); // 与动画时长匹配
         }
 
         // 提交答案逻辑
         function handleSubmit() {
             if (!gameActive || selectedIndices.length !== 7 || !canInteract) return;
-            canInteract = false;  // 防止重复提交
+            canInteract = false;
 
-            // 获取用户组成的诗句 (按照点击顺序)
             const userChars = selectedIndices.map(idx => currentMatrix[idx]);
             const userAnswer = userChars.join('');
-
             const isCorrect = (userAnswer === currentStdAnswer);
             totalAttempts++;
 
-            // 显示反馈横幅
-            const banner = document.createElement('div');
-            banner.className = 'feedback-banner';
+            // 显示右侧滑入横幅
+            showToast(isCorrect, isCorrect ? '' : currentStdAnswer);
+
             if (isCorrect) {
-                banner.style.borderLeftColor = '#a3d8a3';
-                banner.innerHTML = '✅ 答案正确';
                 correctCount++;
-                // 计数模式：答对才减
                 if (currentMode === 'count') {
                     countLeft--;
                 }
-            } else {
-                banner.style.borderLeftColor = '#f0a3a3';
-                banner.innerHTML = '❌ 答案错误';
-                // 显示正确答案
-                wrongAnswerDisplay.style.display = 'block';
-                wrongAnswerDisplay.textContent = `正确答案：${currentStdAnswer}`;
             }
 
-            feedbackArea.innerHTML = '';
-            feedbackArea.appendChild(banner);
-
-            // 更新剩余题数/时间显示
+            // 更新统计显示
             updateStatDisplay();
 
-            // 检查游戏是否结束 (时间耗尽 或 计数为0)
+            // 检查游戏是否结束
             let gameEnded = false;
             if (currentMode === 'time') {
                 if (timeLeft <= 0) gameEnded = true;
@@ -681,12 +682,11 @@
             }
 
             if (gameEnded) {
-                // 游戏结束，展示成绩
                 finishGame();
                 return;
             }
 
-            // 未结束：1.5秒后加载下一题
+            // 1.5秒后加载下一题
             setTimeout(() => {
                 if (gameActive) {
                     loadNextQuestion();
@@ -694,41 +694,47 @@
             }, 1500);
         }
 
-        // 更新顶部统计
+        // 更新顶部统计 (根据模式)
         function updateStatDisplay() {
+            if (!gameActive) return;
             if (currentMode === 'time') {
                 const mins = Math.floor(timeLeft / 60);
                 const secs = timeLeft % 60;
-                gameStatDisplay.textContent = `剩余 ${mins}:${secs.toString().padStart(2,'0')}`;
+                gameStatDisplay.textContent = `剩余 ${mins}:${secs.toString().padStart(2,'0')} · 得分 ${correctCount}`;
             } else {
-                gameStatDisplay.textContent = `剩余 ${countLeft} 题`;
+                // 计数模式：显示已用时间 和 正确数/20
+                const elapsed = startTimestamp ? Math.floor((Date.now() - startTimestamp) / 1000) : 0;
+                const mins = Math.floor(elapsed / 60);
+                const secs = elapsed % 60;
+                gameStatDisplay.textContent = `用时 ${mins}:${secs.toString().padStart(2,'0')} · ${correctCount}/20`;
             }
         }
 
-        // 开始计时器 (仅计时模式)
-        function startTimer() {
+        // 启动UI更新定时器 (每秒)
+        function startUIUpdater() {
             if (timerInterval) clearInterval(timerInterval);
             timerInterval = setInterval(() => {
                 if (!gameActive) return;
                 if (currentMode === 'time') {
                     timeLeft--;
+                    if (timeLeft < 0) timeLeft = 0;
                     updateStatDisplay();
                     if (timeLeft <= 0) {
-                        timeLeft = 0;
-                        updateStatDisplay();
                         finishGame();
                     }
+                } else {
+                    // 计数模式只需要更新时间显示
+                    updateStatDisplay();
                 }
             }, 1000);
         }
 
-        // 结束游戏，弹出成绩
+        // 结束游戏
         function finishGame() {
             gameActive = false;
             canInteract = false;
             if (timerInterval) clearInterval(timerInterval);
 
-            // 计算用时 (秒)
             let elapsedSeconds = 0;
             if (startTimestamp) {
                 elapsedSeconds = Math.floor((Date.now() - startTimestamp) / 1000);
@@ -736,11 +742,9 @@
 
             const accuracy = totalAttempts > 0 ? ((correctCount / totalAttempts) * 100).toFixed(1) : 0;
 
-            // 根据模式设置标题与更新记录
             if (currentMode === 'time') {
                 resultTitle.innerText = '⏳ 计时结束';
                 resultDetail.innerText = `完成 ${correctCount} 题 · 正确率 ${accuracy}%`;
-                // 更新最高得分
                 if (correctCount > highScoreTime) {
                     highScoreTime = correctCount;
                     localStorage.setItem('poem_highScore_time', highScoreTime);
@@ -748,77 +752,55 @@
             } else {
                 resultTitle.innerText = '🎯 完成20题';
                 resultDetail.innerText = `用时 ${Math.floor(elapsedSeconds/60)}:${(elapsedSeconds%60).toString().padStart(2,'0')} · 正确率 ${accuracy}%`;
-                // 更新最快时间
                 if (elapsedSeconds < bestTimeCount) {
                     bestTimeCount = elapsedSeconds;
                     localStorage.setItem('poem_bestTime_count', bestTimeCount);
                 }
             }
             updateHistoryUI();
-
-            // 显示弹窗
             resultOverlay.style.display = 'flex';
         }
 
         // 确认成绩，返回主界面
         function confirmAndBack() {
             resultOverlay.style.display = 'none';
-            // 切回欢迎界面
             gameView.classList.add('hidden-view');
             welcomeView.classList.remove('hidden-view');
-            // 重置游戏相关变量
             gameActive = false;
             clearInterval(timerInterval);
-            // 清理选中
             selectedIndices = [];
-            // 显示规则，隐藏模式选择 (重置开始状态)
             ruleBox.classList.remove('hidden-view');
             modeSelector.classList.add('hidden-view');
             startBtn.classList.remove('hidden-view');
         }
 
-        // 开始游戏 (由模式按钮触发)
+        // 开始游戏
         function startGame(mode) {
             currentMode = mode;
             gameActive = true;
             canInteract = true;
-            // 重置统计数据
             correctCount = 0;
             totalAttempts = 0;
             if (mode === 'time') {
                 timeLeft = 600;
-                countLeft = 20; // 无用
             } else {
                 countLeft = 20;
-                timeLeft = 600; // 无用
             }
             startTimestamp = Date.now();
 
-            // 界面切换
             welcomeView.classList.add('hidden-view');
             gameView.classList.remove('hidden-view');
-            ruleBox.classList.remove('hidden-view'); // 确保以后回来不变
+            ruleBox.classList.remove('hidden-view');
             modeSelector.classList.add('hidden-view');
             startBtn.classList.remove('hidden-view');
 
-            // 显示正确统计
             updateStatDisplay();
-
-            // 生成第一个题目
             loadNextQuestion();
-
-            // 启动计时器 (如果计时模式)
-            if (mode === 'time') {
-                startTimer();
-            } else {
-                // 计数模式不需要定时器，但需要计时开始时间 (已在上面记录)
-                if (timerInterval) clearInterval(timerInterval);
-            }
+            startUIUpdater();
         }
 
         // ---------- 事件绑定 ----------
         startBtn.addEventListener('click', () => {
-            // 点击开始：隐藏规则，显示模式选择
             ruleBox.classList.add('hidden-view');
             modeSelector.classList.remove('hidden-view');
             startBtn.classList.add('hidden-view');
@@ -831,23 +813,14 @@
 
         confirmResult.addEventListener('click', confirmAndBack);
 
-        // 联系我
         contactLink.addEventListener('click', () => {
-            if (emailDisplay.style.display === 'none') {
-                emailDisplay.style.display = 'inline-block';
-            } else {
-                emailDisplay.style.display = 'none';
-            }
+            emailDisplay.style.display = emailDisplay.style.display === 'none' ? 'inline-block' : 'none';
         });
 
-        // 初始化加载诗库
-        loadAnswers().then(() => {
-            // 可以预先测试一下
-            console.log('诗库加载完成, 共', allAnswers.length, '句');
-        });
+        // 加载诗库
+        loadAnswers();
 
-        // 额外：处理页面卸载时清除计时器
-        window.addEventListener('beforeunload', function() {
+        window.addEventListener('beforeunload', () => {
             if (timerInterval) clearInterval(timerInterval);
         });
     })();
