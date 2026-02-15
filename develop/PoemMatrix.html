@@ -438,7 +438,7 @@
 
         // 游戏状态
         let currentMode = null;              // 'time' 或 'count'
-        let timerInterval = null;            // 通用计时器，用于更新UI (每秒)
+        let timerInterval = null;
         let gameActive = false;
         let timeLeft = 600;                  // 计时模式剩余秒数
         let countLeft = 20;                   // 计数模式剩余题数
@@ -448,12 +448,12 @@
         let currentStdAnswer = '';            // 当前正确答案
         let currentMatrix = [];                // 49个汉字一维数组
         let selectedIndices = [];              // 按点击顺序记录选中的索引 (最多7)
-        let gridCells = [];                    // 用于快速访问格子DOM
+        let gridCells = [];                    
         let canInteract = true;                 // 防止提交后连点
 
         // 历史记录 (localStorage)
-        let highScoreTime = parseInt(localStorage.getItem('poem_highScore_time')) || 0;   // 计时最高得分(题数)
-        let bestTimeCount = parseFloat(localStorage.getItem('poem_bestTime_count')) || Infinity;  // 计数最快完成秒数
+        let highScoreTime = parseInt(localStorage.getItem('poem_highScore_time')) || 0;   
+        let bestTimeCount = parseFloat(localStorage.getItem('poem_bestTime_count')) || Infinity; 
 
         // DOM 元素
         const welcomeView = document.getElementById('welcomeView');
@@ -507,7 +507,7 @@
             }
         }
 
-        // 辅助: 洗牌
+        // 洗牌
         function shuffleArray(arr) {
             for (let i = arr.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -516,7 +516,7 @@
             return arr;
         }
 
-        // 选择标准答案和8个混淆答案 (满足混淆至少缺一个标准字)
+        // 选择标准答案和8个混淆答案 (保证混淆至少缺一个标准字)
         function selectStdAndConfusions() {
             if (allAnswers.length < 9) {
                 console.warn('诗库不足9,可能重复');
@@ -545,17 +545,45 @@
             return { std, confusions };
         }
 
-        // 生成矩阵: 根据标准+8混淆构造字池 -> 随机选49字
-        function generateMatrixFromAnswers(std, confusions) {
-            let charPool = [];
+        // ---------- 核心修复：保证标准答案的所有字符都在矩阵中 ----------
+        function generateMatrixWithStdGuaranteed(std, confusions) {
+            // 1. 收集所有字符 (包含重复)
+            const allChars = [];
             const allAnswersArr = [std, ...confusions];
             for (let ans of allAnswersArr) {
                 for (let ch of ans) {
-                    charPool.push(ch);
+                    allChars.push(ch);
+                }
+            } // 此时 allChars 长度为 9*7 = 63
+
+            // 2. 必须包含的标准答案字符 (按顺序，保留重复)
+            const mustHave = std.split(''); // 例如 ['床','前','明','月','光'] 如果有重复也保留
+
+            // 3. 从 allChars 中移除 mustHave 中的每个字符 (移除第一个匹配的实例)
+            // 复制一份 allChars 用于操作
+            const remainingChars = [...allChars];
+            const guaranteed = [];
+            for (let ch of mustHave) {
+                const index = remainingChars.indexOf(ch);
+                if (index !== -1) {
+                    guaranteed.push(ch);
+                    remainingChars.splice(index, 1);
+                } else {
+                    // 理论上不会发生，因为 std 本身就在 allChars 中，但以防万一
+                    console.warn('字符缺失，使用备用', ch);
+                    guaranteed.push(ch); // 但仍加入，虽然可能破坏计数，但极少见
                 }
             }
-            charPool = shuffleArray(charPool);
-            return charPool.slice(0, 49);
+
+            // 4. 从 remainingChars 中随机抽取 42 个 (49-7) 补充
+            shuffleArray(remainingChars);
+            const needed = 49 - guaranteed.length; // 应为42
+            const extra = remainingChars.slice(0, needed);
+
+            // 5. 合并并打乱最终矩阵
+            let matrixChars = guaranteed.concat(extra);
+            matrixChars = shuffleArray(matrixChars);
+            return matrixChars;
         }
 
         // 刷新网格UI
@@ -623,12 +651,12 @@
             submitBtn.classList.add('disabled-btn');
         }
 
-        // 生成新题目
+        // 生成新题目 (使用修复后的矩阵生成)
         function loadNextQuestion() {
             if (!gameActive) return;
             const { std, confusions } = selectStdAndConfusions();
             currentStdAnswer = std;
-            const matrix = generateMatrixFromAnswers(std, confusions);
+            const matrix = generateMatrixWithStdGuaranteed(std, confusions);
             currentMatrix = matrix;
             renderGrid(matrix);
             clearSelectedAndEnable();
@@ -644,13 +672,12 @@
                 toast.innerHTML += `<div class="toast-sub">答案：${answerText}</div>`;
             }
             toastContainer.appendChild(toast);
-            // 动画结束后移除元素
             setTimeout(() => {
                 if (toast.parentNode) toast.remove();
-            }, 2200); // 与动画时长匹配
+            }, 2200);
         }
 
-        // 提交答案逻辑
+        // 提交答案
         function handleSubmit() {
             if (!gameActive || selectedIndices.length !== 7 || !canInteract) return;
             canInteract = false;
@@ -660,7 +687,6 @@
             const isCorrect = (userAnswer === currentStdAnswer);
             totalAttempts++;
 
-            // 显示右侧滑入横幅
             showToast(isCorrect, isCorrect ? '' : currentStdAnswer);
 
             if (isCorrect) {
@@ -670,10 +696,8 @@
                 }
             }
 
-            // 更新统计显示
             updateStatDisplay();
 
-            // 检查游戏是否结束
             let gameEnded = false;
             if (currentMode === 'time') {
                 if (timeLeft <= 0) gameEnded = true;
@@ -686,7 +710,6 @@
                 return;
             }
 
-            // 1.5秒后加载下一题
             setTimeout(() => {
                 if (gameActive) {
                     loadNextQuestion();
@@ -694,7 +717,7 @@
             }, 1500);
         }
 
-        // 更新顶部统计 (根据模式)
+        // 更新顶部统计
         function updateStatDisplay() {
             if (!gameActive) return;
             if (currentMode === 'time') {
@@ -702,7 +725,6 @@
                 const secs = timeLeft % 60;
                 gameStatDisplay.textContent = `剩余 ${mins}:${secs.toString().padStart(2,'0')} · 得分 ${correctCount}`;
             } else {
-                // 计数模式：显示已用时间 和 正确数/20
                 const elapsed = startTimestamp ? Math.floor((Date.now() - startTimestamp) / 1000) : 0;
                 const mins = Math.floor(elapsed / 60);
                 const secs = elapsed % 60;
@@ -710,7 +732,7 @@
             }
         }
 
-        // 启动UI更新定时器 (每秒)
+        // 启动UI更新定时器
         function startUIUpdater() {
             if (timerInterval) clearInterval(timerInterval);
             timerInterval = setInterval(() => {
@@ -723,7 +745,6 @@
                         finishGame();
                     }
                 } else {
-                    // 计数模式只需要更新时间显示
                     updateStatDisplay();
                 }
             }, 1000);
@@ -799,7 +820,7 @@
             startUIUpdater();
         }
 
-        // ---------- 事件绑定 ----------
+        // 事件绑定
         startBtn.addEventListener('click', () => {
             ruleBox.classList.add('hidden-view');
             modeSelector.classList.remove('hidden-view');
@@ -817,7 +838,6 @@
             emailDisplay.style.display = emailDisplay.style.display === 'none' ? 'inline-block' : 'none';
         });
 
-        // 加载诗库
         loadAnswers();
 
         window.addEventListener('beforeunload', () => {
