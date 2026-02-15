@@ -154,51 +154,12 @@
             background: #4a4a4a;
             padding: 14px 20px;
             border-radius: 40px;
-            margin-bottom: 10px;
+            margin-bottom: 25px;
             font-size: 1.8rem;
             font-weight: 600;
             color: #e2e2e2;
             border: 1px solid #717171;
             box-shadow: inset 0 2px 5px #2f2f2f;
-        }
-
-        .debug-panel {
-            background: #3d3d3d;
-            border: 2px solid #7a7a7a;
-            border-radius: 24px;
-            padding: 12px 15px;
-            margin-bottom: 15px;
-            color: #d0d0d0;
-            font-size: 0.9rem;
-            text-align: left;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-
-        .debug-panel h4 {
-            color: #b0b0b0;
-            margin-bottom: 8px;
-            border-bottom: 1px dashed #777;
-            padding-bottom: 4px;
-        }
-
-        .debug-panel ul {
-            list-style: none;
-            padding-left: 5px;
-        }
-
-        .debug-panel li {
-            margin: 4px 0;
-            font-family: monospace;
-        }
-
-        .debug-panel .std-ans {
-            color: #a5d6a5;
-            font-weight: bold;
-        }
-
-        .debug-panel .conf-item {
-            color: #f0b3b3;
         }
 
         .grid-7x7 {
@@ -242,6 +203,7 @@
             box-shadow: 0 2px 0 #3a3a3a;
         }
 
+        /* 正确答案绿色高亮（覆盖disabled效果） */
         .cell.highlight-green {
             background: #2e7d32 !important;
             opacity: 1 !important;
@@ -336,24 +298,15 @@
             text-align: center;
             color: #8f8f8f;
             font-size: 1rem;
-            position: relative;
         }
 
         .contact-trigger {
             text-decoration: underline dotted;
             cursor: pointer;
             color: #b3b3b3;
-            margin-right: 15px;
         }
 
-        .debug-trigger {
-            text-decoration: underline dotted;
-            cursor: pointer;
-            color: #b3b3b3;
-            margin-left: 15px;
-        }
-
-        .email-show, .debug-status {
+        .email-show {
             background: #404040;
             padding: 8px 18px;
             border-radius: 30px;
@@ -410,12 +363,6 @@
             cursor: pointer;
             width: 100%;
         }
-
-        .debug-note {
-            font-size: 0.9rem;
-            color: #ffb86c;
-            margin-top: 5px;
-        }
     </style>
 </head>
 <body>
@@ -450,19 +397,15 @@
     <!-- 游戏视图 -->
     <div id="gameView" class="game-play-area view hidden-view">
         <div class="stats-bar" id="gameStatDisplay">剩余 10:00 · 得分 0</div>
-        <!-- Debug 信息面板 (初始隐藏) -->
-        <div id="debugPanel" class="debug-panel hidden-view"></div>
         <div class="grid-7x7" id="gridContainer"></div>
         <button class="submit-btn disabled-btn" id="submitGameBtn">提交答案</button>
         <div class="toast-container" id="toastContainer"></div>
     </div>
 
-    <!-- 底部联系 + Debug 入口 -->
+    <!-- 底部联系 -->
     <div class="contact-area">
         <span class="contact-trigger" id="contactLink">📧 联系我</span>
-        <span class="debug-trigger" id="debugLink">⚙️ Debug</span>
         <div id="emailDisplay" class="email-show" style="display: none;">3310764938@qq.com</div>
-        <div id="debugStatus" class="debug-status" style="display: none;">🔧 Debug模式开启</div>
     </div>
 </div>
 
@@ -471,7 +414,6 @@
     <div class="result-card">
         <h2 id="resultTitle">⏰ 时间到</h2>
         <div class="result-stat" id="resultDetail">完成 0 题 · 正确率 0%</div>
-        <div id="debugResultNote" class="debug-note" style="display: none;">(Debug模式 · 不计入记录)</div>
         <button class="confirm-btn" id="confirmResult">确 认</button>
     </div>
 </div>
@@ -498,17 +440,11 @@
         let correctCount = 0;
         let totalAttempts = 0;
         let currentStdAnswer = '';
-        let currentConfusions = [];
-        let currentMissingChars = [];
         let currentMatrix = [];
         let selectedIndices = [];
         let gridCells = [];
         let canInteract = true;
 
-        // Debug 模式标志
-        let debugMode = false;
-
-        // 历史记录 (localStorage)
         let highScoreTime = parseInt(localStorage.getItem('poem_highScore_time')) || 0;
         let bestTimeCount = parseFloat(localStorage.getItem('poem_bestTime_count')) || Infinity;
 
@@ -527,15 +463,11 @@
         const highScoreDisplay = document.getElementById('highScoreDisplay');
         const bestTimeDisplay = document.getElementById('bestTimeDisplay');
         const contactLink = document.getElementById('contactLink');
-        const debugLink = document.getElementById('debugLink');
         const emailDisplay = document.getElementById('emailDisplay');
-        const debugStatus = document.getElementById('debugStatus');
         const resultOverlay = document.getElementById('resultOverlay');
         const resultTitle = document.getElementById('resultTitle');
         const resultDetail = document.getElementById('resultDetail');
-        const debugResultNote = document.getElementById('debugResultNote');
         const confirmResult = document.getElementById('confirmResult');
-        const debugPanel = document.getElementById('debugPanel');
 
         function updateHistoryUI() {
             highScoreDisplay.textContent = highScoreTime;
@@ -589,16 +521,18 @@
             return { std: allAnswers[0], confusions: allAnswers.slice(1,9) };
         }
 
+        // 生成矩阵，保证标准答案全在，且每个混淆答案至少缺一字
         function generateMatrixWithConstraints(std, confusions, maxAttempts = 30) {
             const stdChars = std.split('');
+            // 所有答案字符池（含重复）
             const allChars = [std, ...confusions].reduce((acc, ans) => acc.concat(ans.split('')), []);
-            let bestMatrix = null;
-            let bestMissing = [];
 
             for (let attempt = 0; attempt < maxAttempts; attempt++) {
+                // 随机选每个混淆答案要缺失的字符（优先选不在标准答案中的）
                 const missingChars = [];
                 for (let conf of confusions) {
                     const confChars = conf.split('');
+                    // 找出不在标准答案中的字符
                     const diff = confChars.filter(ch => !stdChars.includes(ch));
                     let miss;
                     if (diff.length > 0) {
@@ -609,6 +543,8 @@
                     missingChars.push(miss);
                 }
 
+                // 构建可用池：从 allChars 中移除 stdChars 每个字符一次（保留 std 用 mustKeep 单独加入）
+                // 同时移除 missingChars 中的每个字符一次（确保它们缺失）
                 let available = [...allChars];
                 for (let ch of stdChars) {
                     const idx = available.indexOf(ch);
@@ -626,9 +562,9 @@
                 let matrix = stdChars.concat(extra);
                 matrix = shuffleArray(matrix);
 
+                // 检查是否每个混淆答案都缺失至少一字
                 let ok = true;
-                for (let i = 0; i < confusions.length; i++) {
-                    const conf = confusions[i];
+                for (let conf of confusions) {
                     const need = conf.split('');
                     const countMap = {};
                     for (let ch of matrix) countMap[ch] = (countMap[ch] || 0) + 1;
@@ -645,17 +581,10 @@
                         break;
                     }
                 }
-                if (ok) {
-                    bestMatrix = matrix;
-                    bestMissing = missingChars;
-                    break;
-                }
+                if (ok) return matrix;
             }
-            if (!bestMatrix) {
-                bestMatrix = generateMatrixFallback(std, confusions);
-                bestMissing = confusions.map(() => '?');
-            }
-            return { matrix: bestMatrix, missing: bestMissing };
+            // 保底方案
+            return generateMatrixFallback(std, confusions);
         }
 
         function generateMatrixFallback(std, confusions) {
@@ -673,24 +602,7 @@
             return shuffleArray(matrix);
         }
 
-        function updateDebugPanel() {
-            if (!debugMode || !gameActive || !currentConfusions) {
-                debugPanel.classList.add('hidden-view');
-                return;
-            }
-            debugPanel.classList.remove('hidden-view');
-            let html = '<h4>🔍 Debug 信息</h4>';
-            html += `<p><span class="std-ans">✅ 标准答案：</span> ${currentStdAnswer}</p>`;
-            html += '<ul>';
-            for (let i = 0; i < currentConfusions.length; i++) {
-                const conf = currentConfusions[i];
-                const miss = currentMissingChars[i] || '?';
-                html += `<li class="conf-item">❌ 混淆 ${i+1}: ${conf}  (缺失: <strong>${miss}</strong>)</li>`;
-            }
-            html += '</ul>';
-            debugPanel.innerHTML = html;
-        }
-
+        // 渲染网格
         function renderGrid(matrixChars) {
             gridContainer.innerHTML = '';
             for (let i = 0; i < 49; i++) {
@@ -744,6 +656,7 @@
             submitBtn.classList.add('disabled-btn');
         }
 
+        // 高亮正确答案的七个字（绿色）
         function highlightCorrectAnswer() {
             const answerChars = currentStdAnswer.split('');
             const matrix = currentMatrix;
@@ -760,11 +673,13 @@
                 }
             }
 
+            // 移除所有选中样式，添加disabled类
             gridCells.forEach(cell => {
                 cell.classList.remove('selected');
                 cell.classList.add('disabled');
             });
 
+            // 为正确答案格子添加绿色高亮
             highlightIndices.forEach(idx => {
                 if (gridCells[idx]) {
                     gridCells[idx].classList.add('highlight-green');
@@ -776,14 +691,11 @@
             if (!gameActive) return;
             const { std, confusions } = selectStdAndConfusions();
             currentStdAnswer = std;
-            currentConfusions = confusions;
-            const { matrix, missing } = generateMatrixWithConstraints(std, confusions);
+            const matrix = generateMatrixWithConstraints(std, confusions);
             currentMatrix = matrix;
-            currentMissingChars = missing;
             renderGrid(matrix);
             clearSelectedAndEnable();
             canInteract = true;
-            if (debugMode) updateDebugPanel();
         }
 
         function showToast(isCorrect, answerText = '') {
@@ -797,13 +709,15 @@
             setTimeout(() => toast.remove(), 2200);
         }
 
-        function isMultisetEqual(str1, str2) {
-            if (str1.length !== str2.length) return false;
-            const count = {};
-            for (let ch of str1) count[ch] = (count[ch] || 0) + 1;
-            for (let ch of str2) {
-                if (!count[ch]) return false;
-                count[ch]--;
+        // 修正后的判定：比较字符集合（忽略顺序）
+        function isAnswerCorrect(userChars, stdAnswer) {
+            if (userChars.length !== stdAnswer.length) return false;
+            const stdCount = {};
+            for (let ch of stdAnswer) stdCount[ch] = (stdCount[ch] || 0) + 1;
+            const userCount = {};
+            for (let ch of userChars) userCount[ch] = (userCount[ch] || 0) + 1;
+            for (let ch in stdCount) {
+                if (userCount[ch] !== stdCount[ch]) return false;
             }
             return true;
         }
@@ -813,12 +727,16 @@
             canInteract = false;
 
             const userChars = selectedIndices.map(idx => currentMatrix[idx]);
-            const userAnswer = userChars.join('');
-            const isCorrect = isMultisetEqual(userAnswer, currentStdAnswer);
+            const isCorrect = isAnswerCorrect(userChars, currentStdAnswer);
             totalAttempts++;
 
+            // 显示右侧滑入横幅
             showToast(isCorrect, isCorrect ? '' : currentStdAnswer);
+
+            // 高亮正确答案（绿色）
             highlightCorrectAnswer();
+
+            // 确保提交按钮变为禁用
             submitBtn.classList.add('disabled-btn');
 
             if (isCorrect) {
@@ -837,6 +755,7 @@
                 return;
             }
 
+            // 1.5秒后加载下一题（高亮将随重新渲染消失）
             setTimeout(() => {
                 if (gameActive) loadNextQuestion();
             }, 1500);
@@ -882,7 +801,75 @@
             if (currentMode === 'time') {
                 resultTitle.innerText = '⏳ 计时结束';
                 resultDetail.innerText = `完成 ${correctCount} 题 · 正确率 ${accuracy}%`;
-                if (!debugMode && correctCount > highScoreTime) {
+                if (correctCount > highScoreTime) {
                     highScoreTime = correctCount;
                     localStorage.setItem('poem_highScore_time', highScoreTime);
-             
+                }
+            } else {
+                resultTitle.innerText = '🎯 完成20题';
+                resultDetail.innerText = `用时 ${Math.floor(elapsedSeconds/60)}:${(elapsedSeconds%60).toString().padStart(2,'0')} · 正确率 ${accuracy}%`;
+                if (elapsedSeconds < bestTimeCount) {
+                    bestTimeCount = elapsedSeconds;
+                    localStorage.setItem('poem_bestTime_count', bestTimeCount);
+                }
+            }
+            updateHistoryUI();
+            resultOverlay.style.display = 'flex';
+        }
+
+        function confirmAndBack() {
+            resultOverlay.style.display = 'none';
+            gameView.classList.add('hidden-view');
+            welcomeView.classList.remove('hidden-view');
+            gameActive = false;
+            clearInterval(timerInterval);
+            selectedIndices = [];
+            ruleBox.classList.remove('hidden-view');
+            modeSelector.classList.add('hidden-view');
+            startBtn.classList.remove('hidden-view');
+        }
+
+        function startGame(mode) {
+            currentMode = mode;
+            gameActive = true;
+            canInteract = true;
+            correctCount = 0;
+            totalAttempts = 0;
+            if (mode === 'time') timeLeft = 600;
+            else countLeft = 20;
+            startTimestamp = Date.now();
+
+            welcomeView.classList.add('hidden-view');
+            gameView.classList.remove('hidden-view');
+            ruleBox.classList.remove('hidden-view');
+            modeSelector.classList.add('hidden-view');
+            startBtn.classList.remove('hidden-view');
+
+            updateStatDisplay();
+            loadNextQuestion();
+            startUIUpdater();
+        }
+
+        // 事件绑定
+        startBtn.addEventListener('click', () => {
+            ruleBox.classList.add('hidden-view');
+            modeSelector.classList.remove('hidden-view');
+            startBtn.classList.add('hidden-view');
+        });
+
+        modeTimeBtn.addEventListener('click', () => startGame('time'));
+        modeCountBtn.addEventListener('click', () => startGame('count'));
+        submitBtn.addEventListener('click', handleSubmit);
+        confirmResult.addEventListener('click', confirmAndBack);
+        contactLink.addEventListener('click', () => {
+            emailDisplay.style.display = emailDisplay.style.display === 'none' ? 'inline-block' : 'none';
+        });
+
+        loadAnswers();
+        window.addEventListener('beforeunload', () => {
+            if (timerInterval) clearInterval(timerInterval);
+        });
+    })();
+</script>
+</body>
+</html>
