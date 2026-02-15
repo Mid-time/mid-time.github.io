@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,7 +11,6 @@
             margin: 0;
             padding: 0;
         }
-
         body {
             background: #2b2b2b;
             min-height: 100vh;
@@ -20,7 +19,6 @@
             align-items: center;
             padding: 16px;
         }
-
         .game-container {
             max-width: 700px;
             width: 100%;
@@ -31,50 +29,32 @@
             border: 1px solid #5a5a5a;
             position: relative;
         }
-
-        .history-panel {
-            background: #4f4f4f;
-            border-radius: 24px;
-            padding: 18px 20px;
-            display: flex;
-            justify-content: space-around;
-            margin-bottom: 28px;
-            border: 1px solid #6e6e6e;
-            box-shadow: inset 0 2px 5px #2e2e2e;
-        }
-
-        .record-item {
-            text-align: center;
-            color: #d6d6d6;
-        }
-
-        .record-label {
-            font-size: 0.9rem;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            color: #a5a5a5;
-            margin-bottom: 6px;
-        }
-
-        .record-value {
-            font-size: 1.8rem;
-            font-weight: 600;
-            color: #f0f0f0;
-            text-shadow: 0 2px 3px #1f1f1f;
-        }
-
         .view {
             transition: opacity 0.2s ease;
         }
-
         .hidden-view {
             display: none !important;
         }
-
         .welcome-area {
             text-align: center;
         }
-
+        .record-btn {
+            background: #5e5e5e;
+            border: none;
+            color: #eaeaea;
+            font-size: 1.2rem;
+            padding: 12px 20px;
+            border-radius: 40px;
+            width: 60%;
+            margin: 0 auto 20px;
+            box-shadow: 0 5px 0 #2d2d2d, 0 8px 10px rgba(0,0,0,0.3);
+            cursor: pointer;
+            transition: all 0.08s linear;
+        }
+        .record-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #2d2d2d, 0 5px 8px rgba(0,0,0,0.3);
+        }
         .big-btn {
             background: #5e5e5e;
             border: none;
@@ -90,12 +70,15 @@
             transition: all 0.08s linear;
             letter-spacing: 2px;
         }
-
         .big-btn:active {
             transform: translateY(6px);
             box-shadow: 0 2px 0 #2d2d2d, 0 8px 12px rgba(0,0,0,0.3);
         }
-
+        .big-btn.disabled-btn {
+            opacity: 0.4;
+            pointer-events: none;
+            box-shadow: 0 4px 0 #2d2d2d;
+        }
         .rule-box {
             background: #4b4b4b;
             padding: 18px;
@@ -105,12 +88,10 @@
             border: 1px solid #6a6a6a;
             margin-bottom: 25px;
         }
-
         .rule-box p {
             margin: 8px 0;
             font-size: 1rem;
         }
-
         .rule-box .title {
             font-weight: 600;
             color: #dbdbdb;
@@ -118,38 +99,49 @@
             padding-bottom: 6px;
             margin-bottom: 12px;
         }
-
-        .mode-selector {
+        .selector-group {
+            margin: 15px 0;
+        }
+        .selector-title {
+            color: #eaeaea;
+            font-size: 1.4rem;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+        .mode-selector, .diff-selector, .time-selector, .count-selector {
             display: flex;
-            gap: 16px;
+            gap: 12px;
             margin-top: 10px;
             margin-bottom: 20px;
+            flex-wrap: wrap;
         }
-
-        .mode-btn {
+        .sel-btn {
             flex: 1;
+            min-width: 80px;
             background: #606060;
             border: none;
             color: #ececec;
-            font-size: 1.3rem;
-            padding: 16px 0;
-            border-radius: 40px;
+            font-size: 1.1rem;
+            padding: 12px 0;
+            border-radius: 30px;
             font-weight: 600;
-            box-shadow: 0 5px 0 #353535;
+            box-shadow: 0 4px 0 #353535;
             cursor: pointer;
             transition: 0.05s linear;
         }
-
-        .mode-btn:active {
-            transform: translateY(4px);
+        .sel-btn:active {
+            transform: translateY(3px);
             box-shadow: 0 1px 0 #353535;
         }
-
+        .sel-btn.active {
+            background: #8a8a8a;
+            box-shadow: 0 0 0 2px #c5c5c5, 0 4px 0 #5a5a5a;
+            color: #1f1f1f;
+        }
         .game-play-area {
             text-align: center;
             position: relative;
         }
-
         .stats-bar {
             background: #4a4a4a;
             padding: 14px 20px;
@@ -161,7 +153,26 @@
             border: 1px solid #717171;
             box-shadow: inset 0 2px 5px #2f2f2f;
         }
-
+        .grid-5x5 {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            background: #505050;
+            padding: 18px;
+            border-radius: 36px;
+            border: 2px solid #6b6b6b;
+            margin-bottom: 20px;
+        }
+        .grid-6x6 {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
+            background: #505050;
+            padding: 18px;
+            border-radius: 36px;
+            border: 2px solid #6b6b6b;
+            margin-bottom: 20px;
+        }
         .grid-7x7 {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
@@ -172,11 +183,10 @@
             border: 2px solid #6b6b6b;
             margin-bottom: 20px;
         }
-
         .cell {
             aspect-ratio: 1 / 1;
             background: #616161;
-            border-radius: 0;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -188,7 +198,6 @@
             transition: all 0.07s;
             user-select: none;
         }
-
         .cell.selected {
             background: #9e9e9e;
             box-shadow: 0 0 0 3px #c5c5c5, 0 4px 0 #5a5a5a;
@@ -196,14 +205,11 @@
             font-weight: 700;
             transform: scale(1.02);
         }
-
         .cell.disabled {
             opacity: 0.3;
             pointer-events: none;
             box-shadow: 0 2px 0 #3a3a3a;
         }
-
-        /* 正确答案绿色高亮（覆盖disabled效果） */
         .cell.highlight-green {
             background: #2e7d32 !important;
             opacity: 1 !important;
@@ -211,7 +217,6 @@
             box-shadow: 0 0 0 3px #a5d6a5, 0 4px 0 #1b5e20 !important;
             font-weight: 700;
         }
-
         .submit-btn {
             background: #6b6b6b;
             border: none;
@@ -226,18 +231,15 @@
             transition: 0.05s linear;
             margin: 16px 0 12px;
         }
-
         .submit-btn:active {
             transform: translateY(4px);
             box-shadow: 0 2px 0 #3b3b3b;
         }
-
         .submit-btn.disabled-btn {
             opacity: 0.4;
             pointer-events: none;
             box-shadow: 0 4px 0 #3b3b3b;
         }
-
         .toast-container {
             position: relative;
             width: 100%;
@@ -247,7 +249,6 @@
             pointer-events: none;
             z-index: 100;
         }
-
         .toast-message {
             position: absolute;
             top: 0;
@@ -267,17 +268,14 @@
             animation: slideInOut 2.2s ease-in-out forwards;
             pointer-events: none;
         }
-
         .toast-message.correct {
             border-left-color: #6ab04c;
             background: #3e6b3e;
         }
-
         .toast-message.wrong {
             border-left-color: #eb4d4b;
             background: #6b3f3f;
         }
-
         .toast-sub {
             font-size: 1.2rem;
             font-weight: 300;
@@ -285,27 +283,23 @@
             margin-top: 6px;
             letter-spacing: 1px;
         }
-
         @keyframes slideInOut {
             0% { transform: translateX(100%); opacity: 0; }
             15% { transform: translateX(0); opacity: 1; }
             85% { transform: translateX(0); opacity: 1; }
             100% { transform: translateX(-100%); opacity: 0; }
         }
-
         .contact-area {
             margin-top: 25px;
             text-align: center;
             color: #8f8f8f;
             font-size: 1rem;
         }
-
         .contact-trigger {
             text-decoration: underline dotted;
             cursor: pointer;
             color: #b3b3b3;
         }
-
         .email-show {
             background: #404040;
             padding: 8px 18px;
@@ -315,34 +309,73 @@
             color: #cfcfcf;
             border: 1px solid #6f6f6f;
         }
-
         .overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(20,20,20,0.8);
+            background: rgba(20,20,20,0.85);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 1000;
+            padding: 20px;
         }
-
-        .result-card {
+        .result-card, .record-card {
             background: #4e4e4e;
-            max-width: 380px;
-            width: 90%;
+            max-width: 420px;
+            width: 100%;
             padding: 30px 20px;
             border-radius: 48px;
             border: 3px solid #8a8a8a;
             text-align: center;
             color: #efefef;
         }
-
-        .result-card h2 {
+        .record-card {
+            overflow: hidden;
+            position: relative;
+        }
+        .record-swipe-wrap {
+            display: flex;
+            width: 200%;
+            transition: transform 0.3s ease;
+        }
+        .record-page {
+            width: 50%;
+            padding: 0 10px;
+        }
+        .record-swipe-wrap.swipe-right {
+            transform: translateX(-50%);
+        }
+        .swipe-tip {
+            color: #a5a5a5;
+            font-size: 0.9rem;
+            margin: 10px 0 20px;
+        }
+        .record-item {
+            background: #3f3f3f;
+            border-radius: 20px;
+            padding: 12px 15px;
+            margin: 10px 0;
+            text-align: left;
+        }
+        .record-item-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+        .record-item-value {
+            color: #c5c5c5;
+            font-size: 1rem;
+        }
+        .record-empty {
+            color: #a5a5a5;
+            margin: 30px 0;
+            font-size: 1.1rem;
+        }
+        .result-card h2, .record-card h2 {
             font-size: 2rem;
             margin-bottom: 16px;
             font-weight: 400;
         }
-
         .result-stat {
             font-size: 1.4rem;
             background: #3f3f3f;
@@ -350,8 +383,7 @@
             padding: 12px;
             border-radius: 40px;
         }
-
-        .confirm-btn {
+        .confirm-btn, .close-record-btn {
             background: #707070;
             border: none;
             color: white;
@@ -363,52 +395,90 @@
             cursor: pointer;
             width: 100%;
         }
+        .close-record-btn {
+            font-size: 1.4rem;
+            padding: 10px 20px;
+        }
+        @media (max-width: 480px) {
+            .cell {
+                font-size: 1.2rem;
+            }
+            .stats-bar {
+                font-size: 1.4rem;
+            }
+            .sel-btn {
+                font-size: 0.9rem;
+                min-width: 70px;
+                padding: 10px 0;
+            }
+        }
     </style>
 </head>
 <body>
 <div class="game-container" id="gameContainer">
-    <!-- 欢迎视图 (包含历史记录) -->
+    <!-- 欢迎视图 -->
     <div id="welcomeView" class="welcome-area view">
-        <div class="history-panel">
-            <div class="record-item">
-                <div class="record-label">⏱️ 计时最高得分</div>
-                <div class="record-value" id="highScoreDisplay">0</div>
-            </div>
-            <div class="record-item">
-                <div class="record-label">⚡ 计数最快时间</div>
-                <div class="record-value" id="bestTimeDisplay">--</div>
-            </div>
-        </div>
+        <button class="record-btn" id="recordBtn">📊 游戏记录</button>
         <button class="big-btn" id="startBtn">▶ 开始游戏</button>
         <div class="rule-box" id="ruleBox">
             <div class="title">📜 规则说明</div>
             <p>✦ 点击格子选中汉字，每次最多选7个，凑成一句七言诗。</p>
             <p>✦ 选满7字后提交，正确得分，错误显示正确答案。</p>
-            <p>✦ 计时模式：10分钟内答尽可能多；计数模式：最快完成20题。</p>
+            <p>✦ 计时模式：限定时间内答尽可能多；计数模式：最快完成指定题数。</p>
             <p>✦ 只有答对才会减少剩余题数（计数模式）。</p>
         </div>
-        <!-- 模式选择区 (开始后替换规则) -->
-        <div id="modeSelector" class="mode-selector hidden-view">
-            <button class="mode-btn" id="modeTime">⏳ 计时 (10分钟)</button>
-            <button class="mode-btn" id="modeCount">🔢 计数 (20题)</button>
+        <!-- 模式/难度选择区 -->
+        <div id="settingSelector" class="hidden-view">
+            <div class="selector-group">
+                <div class="selector-title">🎮 选择游戏模式</div>
+                <div class="mode-selector" id="modeSelector">
+                    <button class="sel-btn" data-mode="time">⏳ 计时</button>
+                    <button class="sel-btn" data-mode="count">🔢 计数</button>
+                </div>
+            </div>
+            <div class="selector-group">
+                <div class="selector-title">⚡ 选择难度（网格）</div>
+                <div class="diff-selector" id="diffSelector">
+                    <button class="sel-btn" data-diff="5">简单 5x5</button>
+                    <button class="sel-btn" data-diff="6">普通 6x6</button>
+                    <button class="sel-btn" data-diff="7">困难 7x7</button>
+                </div>
+            </div>
+            <!-- 计时模式时长选择 -->
+            <div class="selector-group hidden-view" id="timeSubSelector">
+                <div class="selector-title">⏱️ 计时时长</div>
+                <div class="time-selector" id="timeSelector">
+                    <button class="sel-btn" data-time="120">2分钟</button>
+                    <button class="sel-btn" data-time="300">5分钟</button>
+                    <button class="sel-btn" data-time="600">10分钟</button>
+                </div>
+            </div>
+            <!-- 计数模式题数选择 -->
+            <div class="selector-group hidden-view" id="countSubSelector">
+                <div class="selector-title">📝 目标题数</div>
+                <div class="count-selector" id="countSelector">
+                    <button class="sel-btn" data-count="5">5题</button>
+                    <button class="sel-btn" data-count="10">10题</button>
+                    <button class="sel-btn" data-count="20">20题</button>
+                </div>
+            </div>
+            <!-- 最终开始按钮 -->
+            <button class="big-btn disabled-btn" id="finalStartBtn">🚀 开始游戏</button>
         </div>
     </div>
-
     <!-- 游戏视图 -->
     <div id="gameView" class="game-play-area view hidden-view">
-        <div class="stats-bar" id="gameStatDisplay">剩余 10:00 · 得分 0</div>
-        <div class="grid-7x7" id="gridContainer"></div>
+        <div class="stats-bar" id="gameStatDisplay">剩余 02:00 · 得分 0</div>
+        <div id="gridContainer" class="grid-7x7"></div>
         <button class="submit-btn disabled-btn" id="submitGameBtn">提交答案</button>
         <div class="toast-container" id="toastContainer"></div>
     </div>
-
     <!-- 底部联系 -->
     <div class="contact-area">
         <span class="contact-trigger" id="contactLink">📧 联系我</span>
         <div id="emailDisplay" class="email-show" style="display: none;">3310764938@qq.com</div>
     </div>
 </div>
-
 <!-- 成绩弹窗 -->
 <div id="resultOverlay" class="overlay" style="display: none;">
     <div class="result-card">
@@ -417,12 +487,38 @@
         <button class="confirm-btn" id="confirmResult">确 认</button>
     </div>
 </div>
+<!-- 记录弹窗 -->
+<div id="recordOverlay" class="overlay" style="display: none;">
+    <div class="record-card">
+        <h2>📊 游戏记录</h2>
+        <div class="swipe-tip">← 左右滑动切换页面 →</div>
+        <div class="record-swipe-wrap" id="recordSwipeWrap">
+            <!-- 记录第一页：最优记录 -->
+            <div class="record-page" id="bestRecordPage">
+                <div class="record-item">
+                    <div class="record-item-title">计时模式-最优得分</div>
+                    <div class="record-item-value" id="bestTimeScore">0 题（正确率 0%）</div>
+                </div>
+                <div class="record-item">
+                    <div class="record-item-title">计数模式-最快用时</div>
+                    <div class="record-item-value" id="bestCountTime">--（正确率 0%）</div>
+                </div>
+            </div>
+            <!-- 记录第二页：最近10局 -->
+            <div class="record-page" id="recentRecordPage">
+                <div id="recentRecordList">
+                    <div class="record-empty">暂无游戏记录</div>
+                </div>
+            </div>
+        </div>
+        <button class="close-record-btn" id="closeRecordBtn">关 闭</button>
+    </div>
+</div>
 
 <script>
     (function() {
-        // ---------- 全局变量 ----------
+        // 全局变量
         let allAnswers = [];
-        // 后备诗库
         const demoPoems = [
             "两个黄鹂鸣翠柳", "一行白鹭上青天", "窗含西岭千秋雪", "门泊东吴万里船",
             "春眠不觉晓处处", "处处闻啼鸟夜来", "夜来风雨声花落", "白日依山尽黄河",
@@ -430,8 +526,10 @@
             "路上行人欲断魂", "借问酒家何处有", "牧童遥指杏花村", "独在异乡为异客",
             "每逢佳节倍思亲", "遥知兄弟登高处", "遍插茱萸少一人", "故人西辞黄鹤楼"
         ];
-
-        let currentMode = null;
+        let currentMode = null; // time/count
+        let currentDiff = null; // 5/6/7
+        let currentTime = 600; // 计时时长(秒)
+        let currentCount = 20; // 计数题数
         let timerInterval = null;
         let gameActive = false;
         let timeLeft = 600;
@@ -445,42 +543,51 @@
         let gridCells = [];
         let canInteract = true;
 
-        let highScoreTime = parseInt(localStorage.getItem('poem_highScore_time')) || 0;
-        let bestTimeCount = parseFloat(localStorage.getItem('poem_bestTime_count')) || Infinity;
+        // 本地存储key
+        const KEY_BEST_TIME = 'poem_best_time'; // 计时最优 {score:0, accuracy:0}
+        const KEY_BEST_COUNT = 'poem_best_count'; // 计数最优 {time:Infinity, accuracy:0}
+        const KEY_RECENT_RECORDS = 'poem_recent_records'; // 最近10局 [{mode, type, value, accuracy, time}]
 
-        // DOM 元素
+        // DOM元素
         const welcomeView = document.getElementById('welcomeView');
         const gameView = document.getElementById('gameView');
         const startBtn = document.getElementById('startBtn');
         const ruleBox = document.getElementById('ruleBox');
+        const settingSelector = document.getElementById('settingSelector');
         const modeSelector = document.getElementById('modeSelector');
-        const modeTimeBtn = document.getElementById('modeTime');
-        const modeCountBtn = document.getElementById('modeCount');
+        const diffSelector = document.getElementById('diffSelector');
+        const timeSubSelector = document.getElementById('timeSubSelector');
+        const timeSelector = document.getElementById('timeSelector');
+        const countSubSelector = document.getElementById('countSubSelector');
+        const countSelector = document.getElementById('countSelector');
+        const finalStartBtn = document.getElementById('finalStartBtn');
         const gameStatDisplay = document.getElementById('gameStatDisplay');
         const gridContainer = document.getElementById('gridContainer');
         const submitBtn = document.getElementById('submitGameBtn');
         const toastContainer = document.getElementById('toastContainer');
-        const highScoreDisplay = document.getElementById('highScoreDisplay');
-        const bestTimeDisplay = document.getElementById('bestTimeDisplay');
         const contactLink = document.getElementById('contactLink');
         const emailDisplay = document.getElementById('emailDisplay');
         const resultOverlay = document.getElementById('resultOverlay');
         const resultTitle = document.getElementById('resultTitle');
         const resultDetail = document.getElementById('resultDetail');
         const confirmResult = document.getElementById('confirmResult');
+        const recordBtn = document.getElementById('recordBtn');
+        const recordOverlay = document.getElementById('recordOverlay');
+        const closeRecordBtn = document.getElementById('closeRecordBtn');
+        const recordSwipeWrap = document.getElementById('recordSwipeWrap');
+        const bestTimeScore = document.getElementById('bestTimeScore');
+        const bestCountTime = document.getElementById('bestCountTime');
+        const recentRecordList = document.getElementById('recentRecordList');
 
-        function updateHistoryUI() {
-            highScoreDisplay.textContent = highScoreTime;
-            if (bestTimeCount === Infinity) {
-                bestTimeDisplay.textContent = '--';
-            } else {
-                const mins = Math.floor(bestTimeCount / 60);
-                const secs = Math.floor(bestTimeCount % 60);
-                bestTimeDisplay.textContent = `${mins}:${secs.toString().padStart(2,'0')}`;
-            }
+        // 初始化本地存储
+        function initStorage() {
+            if (!localStorage.getItem(KEY_BEST_TIME)) localStorage.setItem(KEY_BEST_TIME, JSON.stringify({score:0, accuracy:0}));
+            if (!localStorage.getItem(KEY_BEST_COUNT)) localStorage.setItem(KEY_BEST_COUNT, JSON.stringify({time:Infinity, accuracy:0}));
+            if (!localStorage.getItem(KEY_RECENT_RECORDS)) localStorage.setItem(KEY_RECENT_RECORDS, JSON.stringify([]));
         }
-        updateHistoryUI();
+        initStorage();
 
+        // 加载诗词答案
         async function loadAnswers() {
             try {
                 const response = await fetch('answer.txt');
@@ -493,6 +600,7 @@
             }
         }
 
+        // 洗牌算法
         function shuffleArray(arr) {
             for (let i = arr.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -501,6 +609,7 @@
             return arr;
         }
 
+        // 选择标准答案和混淆答案（原算法不变）
         function selectStdAndConfusions() {
             const shuffled = shuffleArray([...allAnswers]);
             for (let attempt = 0; attempt < 50; attempt++) {
@@ -521,30 +630,19 @@
             return { std: allAnswers[0], confusions: allAnswers.slice(1,9) };
         }
 
-        // 生成矩阵，保证标准答案全在，且每个混淆答案至少缺一字
+        // 生成矩阵（原算法不变，适配网格大小）
         function generateMatrixWithConstraints(std, confusions, maxAttempts = 30) {
             const stdChars = std.split('');
-            // 所有答案字符池（含重复）
             const allChars = [std, ...confusions].reduce((acc, ans) => acc.concat(ans.split('')), []);
-
+            const gridSize = currentDiff * currentDiff;
             for (let attempt = 0; attempt < maxAttempts; attempt++) {
-                // 随机选每个混淆答案要缺失的字符（优先选不在标准答案中的）
                 const missingChars = [];
                 for (let conf of confusions) {
                     const confChars = conf.split('');
-                    // 找出不在标准答案中的字符
                     const diff = confChars.filter(ch => !stdChars.includes(ch));
-                    let miss;
-                    if (diff.length > 0) {
-                        miss = diff[Math.floor(Math.random() * diff.length)];
-                    } else {
-                        miss = confChars[0];
-                    }
+                    let miss = diff.length > 0 ? diff[Math.floor(Math.random() * diff.length)] : confChars[0];
                     missingChars.push(miss);
                 }
-
-                // 构建可用池：从 allChars 中移除 stdChars 每个字符一次（保留 std 用 mustKeep 单独加入）
-                // 同时移除 missingChars 中的每个字符一次（确保它们缺失）
                 let available = [...allChars];
                 for (let ch of stdChars) {
                     const idx = available.indexOf(ch);
@@ -554,15 +652,11 @@
                     const idx = available.indexOf(ch);
                     if (idx !== -1) available.splice(idx, 1);
                 }
-
-                if (available.length < 42) continue;
-
+                if (available.length < gridSize - 7) continue;
                 shuffleArray(available);
-                const extra = available.slice(0, 42);
+                const extra = available.slice(0, gridSize - 7);
                 let matrix = stdChars.concat(extra);
                 matrix = shuffleArray(matrix);
-
-                // 检查是否每个混淆答案都缺失至少一字
                 let ok = true;
                 for (let conf of confusions) {
                     const need = conf.split('');
@@ -583,14 +677,15 @@
                 }
                 if (ok) return matrix;
             }
-            // 保底方案
             return generateMatrixFallback(std, confusions);
         }
 
+        // 保底矩阵生成（原算法不变）
         function generateMatrixFallback(std, confusions) {
-            const allChars = [std, ...confusions].reduce((acc, ans) => acc.concat(ans.split('')), []);
-            shuffleArray(allChars);
             const stdChars = std.split('');
+            const allChars = [std, ...confusions].reduce((acc, ans) => acc.concat(ans.split('')), []);
+            const gridSize = currentDiff * currentDiff;
+            shuffleArray(allChars);
             const matrix = [...stdChars];
             let remaining = [...allChars];
             for (let ch of stdChars) {
@@ -598,14 +693,15 @@
                 if (idx !== -1) remaining.splice(idx, 1);
             }
             shuffleArray(remaining);
-            matrix.push(...remaining.slice(0, 42));
+            matrix.push(...remaining.slice(0, gridSize - 7));
             return shuffleArray(matrix);
         }
 
-        // 渲染网格
+        // 渲染网格（适配5x5/6x6/7x7）
         function renderGrid(matrixChars) {
             gridContainer.innerHTML = '';
-            for (let i = 0; i < 49; i++) {
+            gridContainer.className = `grid-${currentDiff}x${currentDiff}`;
+            for (let i = 0; i < matrixChars.length; i++) {
                 const cell = document.createElement('div');
                 cell.className = 'cell';
                 cell.dataset.index = i;
@@ -616,13 +712,13 @@
             attachCellListeners();
         }
 
+        // 格子点击事件
         function attachCellListeners() {
             gridCells.forEach(cell => {
                 cell.removeEventListener('click', cellClickHandler);
                 cell.addEventListener('click', cellClickHandler);
             });
         }
-
         function cellClickHandler(e) {
             if (!gameActive || !canInteract) return;
             const index = parseInt(e.currentTarget.dataset.index);
@@ -637,6 +733,7 @@
             updateCellsDisabledState();
         }
 
+        // 更新格子禁用状态
         function updateCellsDisabledState() {
             const exactlySeven = selectedIndices.length === 7;
             gridCells.forEach(cell => {
@@ -650,19 +747,19 @@
             submitBtn.classList.toggle('disabled-btn', !exactlySeven);
         }
 
+        // 清空选中状态
         function clearSelectedAndEnable() {
             selectedIndices = [];
             gridCells.forEach(cell => cell.classList.remove('selected', 'disabled', 'highlight-green'));
             submitBtn.classList.add('disabled-btn');
         }
 
-        // 高亮正确答案的七个字（绿色）
+        // 高亮正确答案
         function highlightCorrectAnswer() {
             const answerChars = currentStdAnswer.split('');
             const matrix = currentMatrix;
             const usedIndices = new Set();
             const highlightIndices = [];
-
             for (let ch of answerChars) {
                 for (let i = 0; i < matrix.length; i++) {
                     if (matrix[i] === ch && !usedIndices.has(i)) {
@@ -672,21 +769,16 @@
                     }
                 }
             }
-
-            // 移除所有选中样式，添加disabled类
             gridCells.forEach(cell => {
                 cell.classList.remove('selected');
                 cell.classList.add('disabled');
             });
-
-            // 为正确答案格子添加绿色高亮
             highlightIndices.forEach(idx => {
-                if (gridCells[idx]) {
-                    gridCells[idx].classList.add('highlight-green');
-                }
+                if (gridCells[idx]) gridCells[idx].classList.add('highlight-green');
             });
         }
 
+        // 加载下一题
         function loadNextQuestion() {
             if (!gameActive) return;
             const { std, confusions } = selectStdAndConfusions();
@@ -698,6 +790,7 @@
             canInteract = true;
         }
 
+        // 显示提示弹窗
         function showToast(isCorrect, answerText = '') {
             const toast = document.createElement('div');
             toast.className = `toast-message ${isCorrect ? 'correct' : 'wrong'}`;
@@ -709,7 +802,7 @@
             setTimeout(() => toast.remove(), 2200);
         }
 
-        // 修正后的判定：比较字符集合（忽略顺序）
+        // 答案校验（原算法不变）
         function isAnswerCorrect(userChars, stdAnswer) {
             if (userChars.length !== stdAnswer.length) return false;
             const stdCount = {};
@@ -722,59 +815,49 @@
             return true;
         }
 
+        // 提交答案处理
         function handleSubmit() {
             if (!gameActive || selectedIndices.length !== 7 || !canInteract) return;
             canInteract = false;
-
             const userChars = selectedIndices.map(idx => currentMatrix[idx]);
             const isCorrect = isAnswerCorrect(userChars, currentStdAnswer);
             totalAttempts++;
-
-            // 显示右侧滑入横幅
             showToast(isCorrect, isCorrect ? '' : currentStdAnswer);
-
-            // 高亮正确答案（绿色）
             highlightCorrectAnswer();
-
-            // 确保提交按钮变为禁用
             submitBtn.classList.add('disabled-btn');
-
             if (isCorrect) {
                 correctCount++;
                 if (currentMode === 'count') countLeft--;
             }
-
             updateStatDisplay();
-
             let gameEnded = false;
             if (currentMode === 'time') gameEnded = (timeLeft <= 0);
             else gameEnded = (countLeft <= 0);
-
             if (gameEnded) {
                 finishGame();
                 return;
             }
-
-            // 1.5秒后加载下一题（高亮将随重新渲染消失）
             setTimeout(() => {
                 if (gameActive) loadNextQuestion();
             }, 1500);
         }
 
+        // 更新游戏状态显示
         function updateStatDisplay() {
             if (!gameActive) return;
             if (currentMode === 'time') {
                 const mins = Math.floor(timeLeft / 60);
                 const secs = timeLeft % 60;
-                gameStatDisplay.textContent = `剩余 ${mins}:${secs.toString().padStart(2,'0')} · 得分 ${correctCount}`;
+                gameStatDisplay.textContent = `剩余 ${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')} · 得分 ${correctCount}`;
             } else {
                 const elapsed = startTimestamp ? Math.floor((Date.now() - startTimestamp) / 1000) : 0;
                 const mins = Math.floor(elapsed / 60);
                 const secs = elapsed % 60;
-                gameStatDisplay.textContent = `用时 ${mins}:${secs.toString().padStart(2,'0')} · ${correctCount}/20`;
+                gameStatDisplay.textContent = `用时 ${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')} · ${correctCount}/${currentCount}`;
             }
         }
 
+        // 开始状态更新定时器
         function startUIUpdater() {
             if (timerInterval) clearInterval(timerInterval);
             timerInterval = setInterval(() => {
@@ -790,82 +873,249 @@
             }, 1000);
         }
 
+        // 保存游戏记录
+        function saveGameRecord() {
+            const accuracy = totalAttempts > 0 ? ((correctCount / totalAttempts) * 100).toFixed(1) : 0;
+            const now = new Date().toLocaleString('zh-CN');
+            // 保存最优记录
+            if (currentMode === 'time') {
+                const bestTime = JSON.parse(localStorage.getItem(KEY_BEST_TIME));
+                if (correctCount > bestTime.score || (correctCount === bestTime.score && accuracy > bestTime.accuracy)) {
+                    localStorage.setItem(KEY_BEST_TIME, JSON.stringify({score: correctCount, accuracy: accuracy}));
+                }
+            } else {
+                const elapsed = Math.floor((Date.now() - startTimestamp) / 1000);
+                const bestCount = JSON.parse(localStorage.getItem(KEY_BEST_COUNT));
+                if (elapsed < bestCount.time || (elapsed === bestCount.time && accuracy > bestCount.accuracy)) {
+                    localStorage.setItem(KEY_BEST_COUNT, JSON.stringify({time: elapsed, accuracy: accuracy}));
+                }
+            }
+            // 保存最近10局记录
+            const recent = JSON.parse(localStorage.getItem(KEY_RECENT_RECORDS));
+            const record = {
+                mode: currentMode,
+                type: currentMode === 'time' ? '时长' : '题数',
+                value: currentMode === 'time' ? `${currentTime/60}分钟` : `${currentCount}题`,
+                result: currentMode === 'time' ? `完成${correctCount}题` : `用时${formatTime(Math.floor((Date.now() - startTimestamp)/1000))}`,
+                accuracy: `${accuracy}%`,
+                time: now
+            };
+            recent.unshift(record);
+            if (recent.length > 10) recent.pop();
+            localStorage.setItem(KEY_RECENT_RECORDS, JSON.stringify(recent));
+        }
+
+        // 格式化时间（秒转分:秒）
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
+        }
+
+        // 结束游戏
         function finishGame() {
             gameActive = false;
             canInteract = false;
             if (timerInterval) clearInterval(timerInterval);
-
-            let elapsedSeconds = startTimestamp ? Math.floor((Date.now() - startTimestamp) / 1000) : 0;
+            const elapsedSeconds = startTimestamp ? Math.floor((Date.now() - startTimestamp) / 1000) : 0;
             const accuracy = totalAttempts > 0 ? ((correctCount / totalAttempts) * 100).toFixed(1) : 0;
-
+            // 保存记录
+            saveGameRecord();
+            // 显示结果
             if (currentMode === 'time') {
                 resultTitle.innerText = '⏳ 计时结束';
                 resultDetail.innerText = `完成 ${correctCount} 题 · 正确率 ${accuracy}%`;
-                if (correctCount > highScoreTime) {
-                    highScoreTime = correctCount;
-                    localStorage.setItem('poem_highScore_time', highScoreTime);
-                }
             } else {
-                resultTitle.innerText = '🎯 完成20题';
-                resultDetail.innerText = `用时 ${Math.floor(elapsedSeconds/60)}:${(elapsedSeconds%60).toString().padStart(2,'0')} · 正确率 ${accuracy}%`;
-                if (elapsedSeconds < bestTimeCount) {
-                    bestTimeCount = elapsedSeconds;
-                    localStorage.setItem('poem_bestTime_count', bestTimeCount);
-                }
+                resultTitle.innerText = '🎯 完成答题';
+                resultDetail.innerText = `用时 ${formatTime(elapsedSeconds)} · 正确率 ${accuracy}%`;
             }
-            updateHistoryUI();
             resultOverlay.style.display = 'flex';
         }
 
+        // 确认结果返回欢迎页
         function confirmAndBack() {
             resultOverlay.style.display = 'none';
             gameView.classList.add('hidden-view');
             welcomeView.classList.remove('hidden-view');
+            settingSelector.classList.add('hidden-view');
+            ruleBox.classList.remove('hidden-view');
             gameActive = false;
             clearInterval(timerInterval);
-            selectedIndices = [];
-            ruleBox.classList.remove('hidden-view');
-            modeSelector.classList.add('hidden-view');
-            startBtn.classList.remove('hidden-view');
+            // 重置选择状态
+            currentMode = null;
+            currentDiff = null;
+            currentTime = 600;
+            currentCount = 20;
+            document.querySelectorAll('.sel-btn').forEach(btn => btn.classList.remove('active'));
+            finalStartBtn.classList.add('disabled-btn');
+            timeSubSelector.classList.add('hidden-view');
+            countSubSelector.classList.add('hidden-view');
         }
 
-        function startGame(mode) {
-            currentMode = mode;
+        // 开始游戏
+        function startGame() {
             gameActive = true;
             canInteract = true;
             correctCount = 0;
             totalAttempts = 0;
-            if (mode === 'time') timeLeft = 600;
-            else countLeft = 20;
+            timeLeft = currentTime;
+            countLeft = currentCount;
             startTimestamp = Date.now();
-
             welcomeView.classList.add('hidden-view');
             gameView.classList.remove('hidden-view');
-            ruleBox.classList.remove('hidden-view');
-            modeSelector.classList.add('hidden-view');
-            startBtn.classList.remove('hidden-view');
-
             updateStatDisplay();
             loadNextQuestion();
             startUIUpdater();
         }
 
+        // 检查设置是否完成（启用最终开始按钮）
+        function checkSettingComplete() {
+            const hasMode = currentMode !== null;
+            const hasDiff = currentDiff !== null;
+            const hasSub = currentMode === 'time' ? currentTime !== 600 : currentCount !== 20;
+            finalStartBtn.classList.toggle('disabled-btn', !(hasMode && hasDiff && hasSub));
+        }
+
+        // 渲染游戏记录
+        function renderRecord() {
+            // 渲染最优记录
+            const bestTime = JSON.parse(localStorage.getItem(KEY_BEST_TIME));
+            bestTimeScore.textContent = `${bestTime.score} 题（正确率 ${bestTime.accuracy}%）`;
+            const bestCount = JSON.parse(localStorage.getItem(KEY_BEST_COUNT));
+            if (bestCount.time === Infinity) {
+                bestCountTime.textContent = `--（正确率 0%）`;
+            } else {
+                bestCountTime.textContent = `${formatTime(bestCount.time)}（正确率 ${bestCount.accuracy}%）`;
+            }
+            // 渲染最近10局
+            const recent = JSON.parse(localStorage.getItem(KEY_RECENT_RECORDS));
+            if (recent.length === 0) {
+                recentRecordList.innerHTML = '<div class="record-empty">暂无游戏记录</div>';
+                return;
+            }
+            let html = '';
+            recent.forEach((item, idx) => {
+                html += `
+                <div class="record-item">
+                    <div class="record-item-title">第${idx+1}局 · ${item.mode === 'time' ? '计时' : '计数'}(${item.value})</div>
+                    <div class="record-item-value">${item.result} · 正确率${item.accuracy} · ${item.time}</div>
+                </div>
+                `;
+            });
+            recentRecordList.innerHTML = html;
+        }
+
+        // 记录页左右滑动
+        let startX = 0;
+        function initSwipe() {
+            recordSwipeWrap.addEventListener('touchstart', (e) => {
+                startX = e.touches[0].clientX;
+            });
+            recordSwipeWrap.addEventListener('touchend', (e) => {
+                const endX = e.changedTouches[0].clientX;
+                const diffX = startX - endX;
+                if (diffX > 50) {
+                    recordSwipeWrap.classList.add('swipe-right');
+                } else if (diffX < -50) {
+                    recordSwipeWrap.classList.remove('swipe-right');
+                }
+            });
+            // 鼠标模拟滑动
+            recordSwipeWrap.addEventListener('mousedown', (e) => {
+                startX = e.clientX;
+            });
+            recordSwipeWrap.addEventListener('mouseup', (e) => {
+                const endX = e.clientX;
+                const diffX = startX - endX;
+                if (diffX > 50) {
+                    recordSwipeWrap.classList.add('swipe-right');
+                } else if (diffX < -50) {
+                    recordSwipeWrap.classList.remove('swipe-right');
+                }
+            });
+        }
+        initSwipe();
+
         // 事件绑定
+        // 欢迎页开始按钮
         startBtn.addEventListener('click', () => {
             ruleBox.classList.add('hidden-view');
-            modeSelector.classList.remove('hidden-view');
-            startBtn.classList.add('hidden-view');
+            settingSelector.classList.remove('hidden-view');
         });
-
-        modeTimeBtn.addEventListener('click', () => startGame('time'));
-        modeCountBtn.addEventListener('click', () => startGame('count'));
+        // 模式选择
+        modeSelector.querySelectorAll('.sel-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                modeSelector.querySelectorAll('.sel-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentMode = btn.dataset.mode;
+                // 显示子选择器
+                if (currentMode === 'time') {
+                    timeSubSelector.classList.remove('hidden-view');
+                    countSubSelector.classList.add('hidden-view');
+                } else {
+                    countSubSelector.classList.remove('hidden-view');
+                    timeSubSelector.classList.add('hidden-view');
+                }
+                checkSettingComplete();
+            });
+        });
+        // 难度选择
+        diffSelector.querySelectorAll('.sel-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                diffSelector.querySelectorAll('.sel-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentDiff = parseInt(btn.dataset.diff);
+                checkSettingComplete();
+            });
+        });
+        // 计时时长选择
+        timeSelector.querySelectorAll('.sel-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                timeSelector.querySelectorAll('.sel-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentTime = parseInt(btn.dataset.time);
+                checkSettingComplete();
+            });
+        });
+        // 计数题数选择
+        countSelector.querySelectorAll('.sel-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                countSelector.querySelectorAll('.sel-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentCount = parseInt(btn.dataset.count);
+                checkSettingComplete();
+            });
+        });
+        // 最终开始游戏
+        finalStartBtn.addEventListener('click', startGame);
+        // 提交答案
         submitBtn.addEventListener('click', handleSubmit);
+        // 确认结果
         confirmResult.addEventListener('click', confirmAndBack);
+        // 联系我
         contactLink.addEventListener('click', () => {
             emailDisplay.style.display = emailDisplay.style.display === 'none' ? 'inline-block' : 'none';
         });
+        // 游戏记录
+        recordBtn.addEventListener('click', () => {
+            renderRecord();
+            recordOverlay.style.display = 'flex';
+            recordSwipeWrap.classList.remove('swipe-right');
+        });
+        closeRecordBtn.addEventListener('click', () => {
+            recordOverlay.style.display = 'none';
+        });
+        // 点击空白处关闭记录弹窗
+        recordOverlay.addEventListener('click', (e) => {
+            if (e.target === recordOverlay) recordOverlay.style.display = 'none';
+        });
+        resultOverlay.addEventListener('click', (e) => {
+            if (e.target === resultOverlay) resultOverlay.style.display = 'none';
+        });
 
+        // 初始化加载诗词
         loadAnswers();
+        // 页面卸载清除定时器
         window.addEventListener('beforeunload', () => {
             if (timerInterval) clearInterval(timerInterval);
         });
