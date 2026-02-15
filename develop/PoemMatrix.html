@@ -1,138 +1,875 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-  <title>网站维护中 · 灰度提示</title>
-  <!-- Font Awesome 5 (免费版) 用于显示抱歉图标 -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-  <style>
-    /* 极简重置 + 灰色调氛围 */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>诗阵</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
 
-    body {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #e9ecef;  /* 柔和的中性暖灰基底 */
-      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', 'Noto Sans', sans-serif;
-      padding: 1.5rem;
-      line-height: 1.5;
-    }
+        body {
+            background: #2b2b2b;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+        }
 
-    /* 浅灰色卡片 —— 层次微妙，保持整体灰色调 */
-    .maintenance-card {
-      max-width: 32rem;
-      width: 100%;
-      background: #f5f7fa;   /* 比背景稍微亮一点点的灰白 */
-      border-radius: 2.5rem;
-      padding: 3rem 2rem;
-      box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.05),
-                  0 8px 15px -6px rgba(0, 0, 0, 0.02),
-                  inset 0 1px 0 rgba(255, 255, 255, 0.6); /* 极淡内发光增加质感 */
-      text-align: center;
-      border: 1px solid rgba(115, 115, 125, 0.08);
-      transition: all 0.2s ease;
-    }
+        .game-container {
+            max-width: 700px;
+            width: 100%;
+            background: #3a3a3a;
+            border-radius: 32px;
+            padding: 24px;
+            box-shadow: 0 20px 30px rgba(0,0,0,0.5);
+            border: 1px solid #5a5a5a;
+            position: relative;
+        }
 
-    /* 抱歉图标区域：所有灰度层次 */
-    .icon-wrapper {
-      font-size: 6rem;
-      line-height: 1;
-      color: #6b7280;        /* 中灰色，温和不刺眼 */
-      margin-bottom: 1.75rem;
-      text-shadow: 0 2px 5px rgba(95, 95, 105, 0.1);
-      display: flex;
-      justify-content: center;
-    }
+        .history-panel {
+            background: #4f4f4f;
+            border-radius: 24px;
+            padding: 18px 20px;
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 28px;
+            border: 1px solid #6e6e6e;
+            box-shadow: inset 0 2px 5px #2e2e2e;
+        }
 
-    /* 图标本身无须额外修饰，利用父级色彩 */
-    .icon-wrapper i {
-      display: inline-block;
-      transform: scale(1);
-      transition: transform 0.2s cubic-bezier(0.2, 0.9, 0.3, 1.1);
-    }
+        .record-item {
+            text-align: center;
+            color: #d6d6d6;
+        }
 
-    /* 非常微妙的悬停动效（非必须，但增加一点细节），不影响灰度本质 */
-    .icon-wrapper i:hover {
-      transform: scale(1.02);
-      color: #5f6a7a;
-    }
+        .record-label {
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #a5a5a5;
+            margin-bottom: 6px;
+        }
 
-    /* 主信息文字：温和深灰，清晰易读 */
-    .message {
-      font-size: clamp(1.8rem, 5vw, 2.4rem);
-      font-weight: 340;
-      letter-spacing: 0.01em;
-      color: #3d434b;        /* 深灰，保留柔和对比 */
-      line-height: 1.4;
-      max-width: 90%;
-      margin-left: auto;
-      margin-right: auto;
-      word-break: break-word;
-      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.7);
-    }
+        .record-value {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #f0f0f0;
+            text-shadow: 0 2px 3px #1f1f1f;
+        }
 
-    /* 可选微细分割线 —— 非常低调，增加层次但不抢眼 */
-    .card-footer {
-      margin-top: 2rem;
-      border-top: 1px solid rgba(125, 130, 140, 0.12);
-      padding-top: 1.2rem;
-      font-size: 0.85rem;
-      color: #8e96a3;
-      letter-spacing: 0.5px;
-      font-weight: 350;
-    }
+        .view {
+            transition: opacity 0.2s ease;
+        }
 
-    /* 让 footer 里的文字更含蓄 */
-    .card-footer span {
-      opacity: 0.7;
-    }
+        .hidden-view {
+            display: none !important;
+        }
 
-    /* 移动端细微调整 */
-    @media (max-width: 480px) {
-      .maintenance-card {
-        padding: 2.2rem 1.2rem;
-        border-radius: 2rem;
-      }
-      .icon-wrapper {
-        font-size: 5rem;
-        margin-bottom: 1.25rem;
-      }
-      .message {
-        font-size: 1.8rem;
-      }
-    }
+        .welcome-area {
+            text-align: center;
+        }
 
-    /* 对于更小屏幕防止文字溢出 */
-    @media (max-width: 360px) {
-      .message {
-        font-size: 1.6rem;
-      }
-    }
-  </style>
+        .big-btn {
+            background: #5e5e5e;
+            border: none;
+            color: #eaeaea;
+            font-size: 2rem;
+            font-weight: 500;
+            padding: 20px 30px;
+            border-radius: 60px;
+            width: 100%;
+            margin: 20px 0 16px;
+            box-shadow: 0 8px 0 #2d2d2d, 0 10px 15px rgba(0,0,0,0.3);
+            cursor: pointer;
+            transition: all 0.08s linear;
+            letter-spacing: 2px;
+        }
+
+        .big-btn:active {
+            transform: translateY(6px);
+            box-shadow: 0 2px 0 #2d2d2d, 0 8px 12px rgba(0,0,0,0.3);
+        }
+
+        .rule-box {
+            background: #4b4b4b;
+            padding: 18px;
+            border-radius: 28px;
+            color: #c0c0c0;
+            text-align: left;
+            border: 1px solid #6a6a6a;
+            margin-bottom: 25px;
+        }
+
+        .rule-box p {
+            margin: 8px 0;
+            font-size: 1rem;
+        }
+
+        .rule-box .title {
+            font-weight: 600;
+            color: #dbdbdb;
+            border-bottom: 1px dashed #777;
+            padding-bottom: 6px;
+            margin-bottom: 12px;
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 16px;
+            margin-top: 10px;
+            margin-bottom: 20px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            background: #606060;
+            border: none;
+            color: #ececec;
+            font-size: 1.3rem;
+            padding: 16px 0;
+            border-radius: 40px;
+            font-weight: 600;
+            box-shadow: 0 5px 0 #353535;
+            cursor: pointer;
+            transition: 0.05s linear;
+        }
+
+        .mode-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 1px 0 #353535;
+        }
+
+        .game-play-area {
+            text-align: center;
+            position: relative;
+        }
+
+        .stats-bar {
+            background: #4a4a4a;
+            padding: 14px 20px;
+            border-radius: 40px;
+            margin-bottom: 25px;
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #e2e2e2;
+            border: 1px solid #717171;
+            box-shadow: inset 0 2px 5px #2f2f2f;
+        }
+
+        .grid-7x7 {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            background: #505050;
+            padding: 18px;
+            border-radius: 36px;
+            border: 2px solid #6b6b6b;
+            margin-bottom: 20px;
+        }
+
+        .cell {
+            aspect-ratio: 1 / 1;
+            background: #616161;
+            border-radius: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: #eaeaea;
+            box-shadow: 0 4px 0 #383838;
+            cursor: pointer;
+            transition: all 0.07s;
+            user-select: none;
+        }
+
+        .cell.selected {
+            background: #9e9e9e;
+            box-shadow: 0 0 0 3px #c5c5c5, 0 4px 0 #5a5a5a;
+            color: #1f1f1f;
+            font-weight: 700;
+            transform: scale(1.02);
+        }
+
+        .cell.disabled {
+            opacity: 0.3;
+            pointer-events: none;
+            box-shadow: 0 2px 0 #3a3a3a;
+        }
+
+        /* 正确答案绿色高亮（覆盖disabled效果） */
+        .cell.highlight-green {
+            background: #2e7d32 !important;
+            opacity: 1 !important;
+            color: #ffffff !important;
+            box-shadow: 0 0 0 3px #a5d6a5, 0 4px 0 #1b5e20 !important;
+            font-weight: 700;
+        }
+
+        .submit-btn {
+            background: #6b6b6b;
+            border: none;
+            color: #dcdcdc;
+            font-size: 1.8rem;
+            padding: 16px 30px;
+            border-radius: 50px;
+            font-weight: 600;
+            width: 100%;
+            box-shadow: 0 6px 0 #3b3b3b;
+            cursor: pointer;
+            transition: 0.05s linear;
+            margin: 16px 0 12px;
+        }
+
+        .submit-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #3b3b3b;
+        }
+
+        .submit-btn.disabled-btn {
+            opacity: 0.4;
+            pointer-events: none;
+            box-shadow: 0 4px 0 #3b3b3b;
+        }
+
+        .toast-container {
+            position: relative;
+            width: 100%;
+            height: 0;
+            display: flex;
+            justify-content: center;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .toast-message {
+            position: absolute;
+            top: 0;
+            width: 90%;
+            max-width: 500px;
+            background: #4e4e4e;
+            border-radius: 40px;
+            padding: 18px 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            text-align: center;
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: white;
+            border-left: 8px solid transparent;
+            transform: translateX(100%);
+            opacity: 0;
+            animation: slideInOut 2.2s ease-in-out forwards;
+            pointer-events: none;
+        }
+
+        .toast-message.correct {
+            border-left-color: #6ab04c;
+            background: #3e6b3e;
+        }
+
+        .toast-message.wrong {
+            border-left-color: #eb4d4b;
+            background: #6b3f3f;
+        }
+
+        .toast-sub {
+            font-size: 1.2rem;
+            font-weight: 300;
+            color: #dddddd;
+            margin-top: 6px;
+            letter-spacing: 1px;
+        }
+
+        @keyframes slideInOut {
+            0% { transform: translateX(100%); opacity: 0; }
+            15% { transform: translateX(0); opacity: 1; }
+            85% { transform: translateX(0); opacity: 1; }
+            100% { transform: translateX(-100%); opacity: 0; }
+        }
+
+        .contact-area {
+            margin-top: 25px;
+            text-align: center;
+            color: #8f8f8f;
+            font-size: 1rem;
+        }
+
+        .contact-trigger {
+            text-decoration: underline dotted;
+            cursor: pointer;
+            color: #b3b3b3;
+        }
+
+        .email-show {
+            background: #404040;
+            padding: 8px 18px;
+            border-radius: 30px;
+            display: inline-block;
+            margin-top: 8px;
+            color: #cfcfcf;
+            border: 1px solid #6f6f6f;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(20,20,20,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .result-card {
+            background: #4e4e4e;
+            max-width: 380px;
+            width: 90%;
+            padding: 30px 20px;
+            border-radius: 48px;
+            border: 3px solid #8a8a8a;
+            text-align: center;
+            color: #efefef;
+        }
+
+        .result-card h2 {
+            font-size: 2rem;
+            margin-bottom: 16px;
+            font-weight: 400;
+        }
+
+        .result-stat {
+            font-size: 1.4rem;
+            background: #3f3f3f;
+            margin: 16px 0;
+            padding: 12px;
+            border-radius: 40px;
+        }
+
+        .confirm-btn {
+            background: #707070;
+            border: none;
+            color: white;
+            font-size: 1.7rem;
+            padding: 12px 30px;
+            border-radius: 50px;
+            margin-top: 20px;
+            box-shadow: 0 5px 0 #3a3a3a;
+            cursor: pointer;
+            width: 100%;
+        }
+    </style>
 </head>
 <body>
-  <div class="maintenance-card">
-    <!-- 抱歉图标：frown (皱眉) 表达歉意，灰色调完全融合 -->
-    <div class="icon-wrapper">
-      <i class="far fa-frown" aria-hidden="true"></i>
+<div class="game-container" id="gameContainer">
+    <!-- 欢迎视图 (包含历史记录) -->
+    <div id="welcomeView" class="welcome-area view">
+        <div class="history-panel">
+            <div class="record-item">
+                <div class="record-label">⏱️ 计时最高得分</div>
+                <div class="record-value" id="highScoreDisplay">0</div>
+            </div>
+            <div class="record-item">
+                <div class="record-label">⚡ 计数最快时间</div>
+                <div class="record-value" id="bestTimeDisplay">--</div>
+            </div>
+        </div>
+        <button class="big-btn" id="startBtn">▶ 开始游戏</button>
+        <div class="rule-box" id="ruleBox">
+            <div class="title">📜 规则说明</div>
+            <p>✦ 点击格子选中汉字，每次最多选7个，凑成一句七言诗。</p>
+            <p>✦ 选满7字后提交，正确得分，错误显示正确答案。</p>
+            <p>✦ 计时模式：10分钟内答尽可能多；计数模式：最快完成20题。</p>
+            <p>✦ 只有答对才会减少剩余题数（计数模式）。</p>
+        </div>
+        <!-- 模式选择区 (开始后替换规则) -->
+        <div id="modeSelector" class="mode-selector hidden-view">
+            <button class="mode-btn" id="modeTime">⏳ 计时 (10分钟)</button>
+            <button class="mode-btn" id="modeCount">🔢 计数 (20题)</button>
+        </div>
     </div>
 
-    <!-- 核心提示文字：完全符合题目要求 -->
-    <div class="message">
-      因为维护原因，暂时无法访问
+    <!-- 游戏视图 -->
+    <div id="gameView" class="game-play-area view hidden-view">
+        <div class="stats-bar" id="gameStatDisplay">剩余 10:00 · 得分 0</div>
+        <div class="grid-7x7" id="gridContainer"></div>
+        <button class="submit-btn disabled-btn" id="submitGameBtn">提交答案</button>
+        <div class="toast-container" id="toastContainer"></div>
     </div>
 
-    <!-- 极低调的脚注 —— 仅用于丰富层次，不干扰主要信息；完全灰色系，无额外文字 -->
-    <div class="card-footer">
-      <span>⸻</span>
+    <!-- 底部联系 -->
+    <div class="contact-area">
+        <span class="contact-trigger" id="contactLink">📧 联系我</span>
+        <div id="emailDisplay" class="email-show" style="display: none;">3310764938@qq.com</div>
     </div>
-  </div>
+</div>
+
+<!-- 成绩弹窗 -->
+<div id="resultOverlay" class="overlay" style="display: none;">
+    <div class="result-card">
+        <h2 id="resultTitle">⏰ 时间到</h2>
+        <div class="result-stat" id="resultDetail">完成 0 题 · 正确率 0%</div>
+        <button class="confirm-btn" id="confirmResult">确 认</button>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // ---------- 全局变量 ----------
+        let allAnswers = [];
+        // 后备诗库
+        const demoPoems = [
+            "两个黄鹂鸣翠柳", "一行白鹭上青天", "窗含西岭千秋雪", "门泊东吴万里船",
+            "春眠不觉晓处处", "处处闻啼鸟夜来", "夜来风雨声花落", "白日依山尽黄河",
+            "黄河入海流欲穷", "欲穷千里目更上", "更上一层楼清明", "清明时节雨纷纷",
+            "路上行人欲断魂", "借问酒家何处有", "牧童遥指杏花村", "独在异乡为异客",
+            "每逢佳节倍思亲", "遥知兄弟登高处", "遍插茱萸少一人", "故人西辞黄鹤楼"
+        ];
+
+        let currentMode = null;
+        let timerInterval = null;
+        let gameActive = false;
+        let timeLeft = 600;
+        let countLeft = 20;
+        let startTimestamp = null;
+        let correctCount = 0;
+        let totalAttempts = 0;
+        let currentStdAnswer = '';
+        let currentMatrix = [];
+        let selectedIndices = [];
+        let gridCells = [];
+        let canInteract = true;
+
+        let highScoreTime = parseInt(localStorage.getItem('poem_highScore_time')) || 0;
+        let bestTimeCount = parseFloat(localStorage.getItem('poem_bestTime_count')) || Infinity;
+
+        // DOM 元素
+        const welcomeView = document.getElementById('welcomeView');
+        const gameView = document.getElementById('gameView');
+        const startBtn = document.getElementById('startBtn');
+        const ruleBox = document.getElementById('ruleBox');
+        const modeSelector = document.getElementById('modeSelector');
+        const modeTimeBtn = document.getElementById('modeTime');
+        const modeCountBtn = document.getElementById('modeCount');
+        const gameStatDisplay = document.getElementById('gameStatDisplay');
+        const gridContainer = document.getElementById('gridContainer');
+        const submitBtn = document.getElementById('submitGameBtn');
+        const toastContainer = document.getElementById('toastContainer');
+        const highScoreDisplay = document.getElementById('highScoreDisplay');
+        const bestTimeDisplay = document.getElementById('bestTimeDisplay');
+        const contactLink = document.getElementById('contactLink');
+        const emailDisplay = document.getElementById('emailDisplay');
+        const resultOverlay = document.getElementById('resultOverlay');
+        const resultTitle = document.getElementById('resultTitle');
+        const resultDetail = document.getElementById('resultDetail');
+        const confirmResult = document.getElementById('confirmResult');
+
+        function updateHistoryUI() {
+            highScoreDisplay.textContent = highScoreTime;
+            if (bestTimeCount === Infinity) {
+                bestTimeDisplay.textContent = '--';
+            } else {
+                const mins = Math.floor(bestTimeCount / 60);
+                const secs = Math.floor(bestTimeCount % 60);
+                bestTimeDisplay.textContent = `${mins}:${secs.toString().padStart(2,'0')}`;
+            }
+        }
+        updateHistoryUI();
+
+        async function loadAnswers() {
+            try {
+                const response = await fetch('answer.txt');
+                if (!response.ok) throw new Error('网络问题');
+                const text = await response.text();
+                const lines = text.split(/\r?\n/).map(line => line.trim()).filter(line => line.length === 7);
+                allAnswers = lines.length ? lines : [...demoPoems];
+            } catch (e) {
+                allAnswers = [...demoPoems];
+            }
+        }
+
+        function shuffleArray(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function selectStdAndConfusions() {
+            const shuffled = shuffleArray([...allAnswers]);
+            for (let attempt = 0; attempt < 50; attempt++) {
+                const std = shuffled[Math.floor(Math.random() * shuffled.length)];
+                const stdCharsSet = new Set(std);
+                const others = shuffled.filter(a => a !== std);
+                if (others.length < 8) continue;
+                const confusions = [];
+                const shuffledOthers = shuffleArray([...others]);
+                for (let cand of shuffledOthers) {
+                    if (confusions.length >= 8) break;
+                    const candSet = new Set(cand);
+                    const missing = [...stdCharsSet].some(ch => !candSet.has(ch));
+                    if (missing) confusions.push(cand);
+                }
+                if (confusions.length === 8) return { std, confusions };
+            }
+            return { std: allAnswers[0], confusions: allAnswers.slice(1,9) };
+        }
+
+        // 生成矩阵，保证标准答案全在，且每个混淆答案至少缺一字
+        function generateMatrixWithConstraints(std, confusions, maxAttempts = 30) {
+            const stdChars = std.split('');
+            // 所有答案字符池（含重复）
+            const allChars = [std, ...confusions].reduce((acc, ans) => acc.concat(ans.split('')), []);
+
+            for (let attempt = 0; attempt < maxAttempts; attempt++) {
+                // 随机选每个混淆答案要缺失的字符（优先选不在标准答案中的）
+                const missingChars = [];
+                for (let conf of confusions) {
+                    const confChars = conf.split('');
+                    // 找出不在标准答案中的字符
+                    const diff = confChars.filter(ch => !stdChars.includes(ch));
+                    let miss;
+                    if (diff.length > 0) {
+                        miss = diff[Math.floor(Math.random() * diff.length)];
+                    } else {
+                        miss = confChars[0];
+                    }
+                    missingChars.push(miss);
+                }
+
+                // 构建可用池：从 allChars 中移除 stdChars 每个字符一次（保留 std 用 mustKeep 单独加入）
+                // 同时移除 missingChars 中的每个字符一次（确保它们缺失）
+                let available = [...allChars];
+                for (let ch of stdChars) {
+                    const idx = available.indexOf(ch);
+                    if (idx !== -1) available.splice(idx, 1);
+                }
+                for (let ch of missingChars) {
+                    const idx = available.indexOf(ch);
+                    if (idx !== -1) available.splice(idx, 1);
+                }
+
+                if (available.length < 42) continue;
+
+                shuffleArray(available);
+                const extra = available.slice(0, 42);
+                let matrix = stdChars.concat(extra);
+                matrix = shuffleArray(matrix);
+
+                // 检查是否每个混淆答案都缺失至少一字
+                let ok = true;
+                for (let conf of confusions) {
+                    const need = conf.split('');
+                    const countMap = {};
+                    for (let ch of matrix) countMap[ch] = (countMap[ch] || 0) + 1;
+                    let complete = true;
+                    for (let ch of need) {
+                        if ((countMap[ch] || 0) <= 0) {
+                            complete = false;
+                            break;
+                        }
+                        countMap[ch]--;
+                    }
+                    if (complete) {
+                        ok = false;
+                        break;
+                    }
+                }
+                if (ok) return matrix;
+            }
+            // 保底方案
+            return generateMatrixFallback(std, confusions);
+        }
+
+        function generateMatrixFallback(std, confusions) {
+            const allChars = [std, ...confusions].reduce((acc, ans) => acc.concat(ans.split('')), []);
+            shuffleArray(allChars);
+            const stdChars = std.split('');
+            const matrix = [...stdChars];
+            let remaining = [...allChars];
+            for (let ch of stdChars) {
+                const idx = remaining.indexOf(ch);
+                if (idx !== -1) remaining.splice(idx, 1);
+            }
+            shuffleArray(remaining);
+            matrix.push(...remaining.slice(0, 42));
+            return shuffleArray(matrix);
+        }
+
+        // 渲染网格
+        function renderGrid(matrixChars) {
+            gridContainer.innerHTML = '';
+            for (let i = 0; i < 49; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.dataset.index = i;
+                cell.textContent = matrixChars[i];
+                gridContainer.appendChild(cell);
+            }
+            gridCells = document.querySelectorAll('.cell');
+            attachCellListeners();
+        }
+
+        function attachCellListeners() {
+            gridCells.forEach(cell => {
+                cell.removeEventListener('click', cellClickHandler);
+                cell.addEventListener('click', cellClickHandler);
+            });
+        }
+
+        function cellClickHandler(e) {
+            if (!gameActive || !canInteract) return;
+            const index = parseInt(e.currentTarget.dataset.index);
+            if (selectedIndices.includes(index)) {
+                selectedIndices = selectedIndices.filter(i => i !== index);
+                e.currentTarget.classList.remove('selected');
+            } else {
+                if (selectedIndices.length >= 7) return;
+                selectedIndices.push(index);
+                e.currentTarget.classList.add('selected');
+            }
+            updateCellsDisabledState();
+        }
+
+        function updateCellsDisabledState() {
+            const exactlySeven = selectedIndices.length === 7;
+            gridCells.forEach(cell => {
+                const idx = parseInt(cell.dataset.index);
+                if (!selectedIndices.includes(idx)) {
+                    cell.classList.toggle('disabled', exactlySeven);
+                } else {
+                    cell.classList.remove('disabled');
+                }
+            });
+            submitBtn.classList.toggle('disabled-btn', !exactlySeven);
+        }
+
+        function clearSelectedAndEnable() {
+            selectedIndices = [];
+            gridCells.forEach(cell => cell.classList.remove('selected', 'disabled', 'highlight-green'));
+            submitBtn.classList.add('disabled-btn');
+        }
+
+        // 高亮正确答案的七个字（绿色）
+        function highlightCorrectAnswer() {
+            const answerChars = currentStdAnswer.split('');
+            const matrix = currentMatrix;
+            const usedIndices = new Set();
+            const highlightIndices = [];
+
+            for (let ch of answerChars) {
+                for (let i = 0; i < matrix.length; i++) {
+                    if (matrix[i] === ch && !usedIndices.has(i)) {
+                        usedIndices.add(i);
+                        highlightIndices.push(i);
+                        break;
+                    }
+                }
+            }
+
+            // 移除所有选中样式，添加disabled类
+            gridCells.forEach(cell => {
+                cell.classList.remove('selected');
+                cell.classList.add('disabled');
+            });
+
+            // 为正确答案格子添加绿色高亮
+            highlightIndices.forEach(idx => {
+                if (gridCells[idx]) {
+                    gridCells[idx].classList.add('highlight-green');
+                }
+            });
+        }
+
+        function loadNextQuestion() {
+            if (!gameActive) return;
+            const { std, confusions } = selectStdAndConfusions();
+            currentStdAnswer = std;
+            const matrix = generateMatrixWithConstraints(std, confusions);
+            currentMatrix = matrix;
+            renderGrid(matrix);
+            clearSelectedAndEnable();
+            canInteract = true;
+        }
+
+        function showToast(isCorrect, answerText = '') {
+            const toast = document.createElement('div');
+            toast.className = `toast-message ${isCorrect ? 'correct' : 'wrong'}`;
+            toast.innerHTML = isCorrect ? '✅ 答案正确' : '❌ 答案错误';
+            if (!isCorrect && answerText) {
+                toast.innerHTML += `<div class="toast-sub">答案：${answerText}</div>`;
+            }
+            toastContainer.appendChild(toast);
+            setTimeout(() => toast.remove(), 2200);
+        }
+
+        // 修正后的判定：比较字符集合（忽略顺序）
+        function isAnswerCorrect(userChars, stdAnswer) {
+            if (userChars.length !== stdAnswer.length) return false;
+            const stdCount = {};
+            for (let ch of stdAnswer) stdCount[ch] = (stdCount[ch] || 0) + 1;
+            const userCount = {};
+            for (let ch of userChars) userCount[ch] = (userCount[ch] || 0) + 1;
+            for (let ch in stdCount) {
+                if (userCount[ch] !== stdCount[ch]) return false;
+            }
+            return true;
+        }
+
+        function handleSubmit() {
+            if (!gameActive || selectedIndices.length !== 7 || !canInteract) return;
+            canInteract = false;
+
+            const userChars = selectedIndices.map(idx => currentMatrix[idx]);
+            const isCorrect = isAnswerCorrect(userChars, currentStdAnswer);
+            totalAttempts++;
+
+            // 显示右侧滑入横幅
+            showToast(isCorrect, isCorrect ? '' : currentStdAnswer);
+
+            // 高亮正确答案（绿色）
+            highlightCorrectAnswer();
+
+            // 确保提交按钮变为禁用
+            submitBtn.classList.add('disabled-btn');
+
+            if (isCorrect) {
+                correctCount++;
+                if (currentMode === 'count') countLeft--;
+            }
+
+            updateStatDisplay();
+
+            let gameEnded = false;
+            if (currentMode === 'time') gameEnded = (timeLeft <= 0);
+            else gameEnded = (countLeft <= 0);
+
+            if (gameEnded) {
+                finishGame();
+                return;
+            }
+
+            // 1.5秒后加载下一题（高亮将随重新渲染消失）
+            setTimeout(() => {
+                if (gameActive) loadNextQuestion();
+            }, 1500);
+        }
+
+        function updateStatDisplay() {
+            if (!gameActive) return;
+            if (currentMode === 'time') {
+                const mins = Math.floor(timeLeft / 60);
+                const secs = timeLeft % 60;
+                gameStatDisplay.textContent = `剩余 ${mins}:${secs.toString().padStart(2,'0')} · 得分 ${correctCount}`;
+            } else {
+                const elapsed = startTimestamp ? Math.floor((Date.now() - startTimestamp) / 1000) : 0;
+                const mins = Math.floor(elapsed / 60);
+                const secs = elapsed % 60;
+                gameStatDisplay.textContent = `用时 ${mins}:${secs.toString().padStart(2,'0')} · ${correctCount}/20`;
+            }
+        }
+
+        function startUIUpdater() {
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if (!gameActive) return;
+                if (currentMode === 'time') {
+                    timeLeft--;
+                    if (timeLeft < 0) timeLeft = 0;
+                    updateStatDisplay();
+                    if (timeLeft <= 0) finishGame();
+                } else {
+                    updateStatDisplay();
+                }
+            }, 1000);
+        }
+
+        function finishGame() {
+            gameActive = false;
+            canInteract = false;
+            if (timerInterval) clearInterval(timerInterval);
+
+            let elapsedSeconds = startTimestamp ? Math.floor((Date.now() - startTimestamp) / 1000) : 0;
+            const accuracy = totalAttempts > 0 ? ((correctCount / totalAttempts) * 100).toFixed(1) : 0;
+
+            if (currentMode === 'time') {
+                resultTitle.innerText = '⏳ 计时结束';
+                resultDetail.innerText = `完成 ${correctCount} 题 · 正确率 ${accuracy}%`;
+                if (correctCount > highScoreTime) {
+                    highScoreTime = correctCount;
+                    localStorage.setItem('poem_highScore_time', highScoreTime);
+                }
+            } else {
+                resultTitle.innerText = '🎯 完成20题';
+                resultDetail.innerText = `用时 ${Math.floor(elapsedSeconds/60)}:${(elapsedSeconds%60).toString().padStart(2,'0')} · 正确率 ${accuracy}%`;
+                if (elapsedSeconds < bestTimeCount) {
+                    bestTimeCount = elapsedSeconds;
+                    localStorage.setItem('poem_bestTime_count', bestTimeCount);
+                }
+            }
+            updateHistoryUI();
+            resultOverlay.style.display = 'flex';
+        }
+
+        function confirmAndBack() {
+            resultOverlay.style.display = 'none';
+            gameView.classList.add('hidden-view');
+            welcomeView.classList.remove('hidden-view');
+            gameActive = false;
+            clearInterval(timerInterval);
+            selectedIndices = [];
+            ruleBox.classList.remove('hidden-view');
+            modeSelector.classList.add('hidden-view');
+            startBtn.classList.remove('hidden-view');
+        }
+
+        function startGame(mode) {
+            currentMode = mode;
+            gameActive = true;
+            canInteract = true;
+            correctCount = 0;
+            totalAttempts = 0;
+            if (mode === 'time') timeLeft = 600;
+            else countLeft = 20;
+            startTimestamp = Date.now();
+
+            welcomeView.classList.add('hidden-view');
+            gameView.classList.remove('hidden-view');
+            ruleBox.classList.remove('hidden-view');
+            modeSelector.classList.add('hidden-view');
+            startBtn.classList.remove('hidden-view');
+
+            updateStatDisplay();
+            loadNextQuestion();
+            startUIUpdater();
+        }
+
+        // 事件绑定
+        startBtn.addEventListener('click', () => {
+            ruleBox.classList.add('hidden-view');
+            modeSelector.classList.remove('hidden-view');
+            startBtn.classList.add('hidden-view');
+        });
+
+        modeTimeBtn.addEventListener('click', () => startGame('time'));
+        modeCountBtn.addEventListener('click', () => startGame('count'));
+        submitBtn.addEventListener('click', handleSubmit);
+        confirmResult.addEventListener('click', confirmAndBack);
+        contactLink.addEventListener('click', () => {
+            emailDisplay.style.display = emailDisplay.style.display === 'none' ? 'inline-block' : 'none';
+        });
+
+        loadAnswers();
+        window.addEventListener('beforeunload', () => {
+            if (timerInterval) clearInterval(timerInterval);
+        });
+    })();
+</script>
 </body>
 </html>
